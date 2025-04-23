@@ -1,0 +1,129 @@
+:root {
+    --primary-color: #3498db;
+    --secondary-color: #2980b9;
+    --text-color: #333;
+    --background-color: #f5f5f5;
+    --status-connected: #2ecc71;
+    --status-disconnected: #e74c3c;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    color: var(--text-color);
+    background-color: var(--background-color);
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.video-container {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    background-color: #000;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.video-container video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.controls {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.controls h2 {
+    margin-top: 0;
+    color: var(--primary-color);
+}
+
+.status {
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    display: inline-block;
+}
+
+.status[data-status="connected"] {
+    background-color: var(--status-connected);
+    color: white;
+}
+
+.status[data-status="disconnected"] {
+    background-color: var(--status-disconnected);
+    color: white;
+}
+
+.locations, .camera-views {
+    margin-bottom: 20px;
+}
+
+.locations h3, .camera-views h3 {
+    margin-bottom: 10px;
+    color: var(--secondary-color);
+}
+
+button {
+    padding: 10px 15px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    border: none;
+    border-radius: 4px;
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background-color: var(--secondary-color);
+}
+
+.delivery-btn {
+    background-color: #27ae60;
+}
+
+.delivery-btn:hover {
+    background-color: #219653;
+}
+
+.camera-btn {
+    background-color: #9b59b6;
+}
+
+.camera-btn:hover {
+    background-color: #8e44ad;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
+    button {
+        display: block;
+        width: 100%;
+        margin-bottom: 10px;
+    }
+}
