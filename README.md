@@ -51,13 +51,12 @@ initialize((streamerUrl = "ws://localhost:80"));
 Edit `api-manager.js` to update runtime paths and locations:
 
 ```javascript
-// Update drone actor runtime path (changes every PIE restart)
-this.droneActorPath =
-  "/Memory/UEDPIE_0_[YOUR_PIE_SESSION].NewMap:PersistentLevel.FbxScene_Drone_C_[YOUR_INSTANCE_ID]";
+// 更新无人机actor运行时路径 (与(1).py文件保持一致)
+this.droneActorPath = "/Game/UEDPIE_0_NewMap.NewMap:PersistentLevel.NewMap_C_5";
 
-// Update level script actor path
+// 更新关卡脚本actor路径
 this.levelScriptActorPath =
-  "/Game/UEDPIE_0_NewMap.NewMap:PersistentLevel.NewMap_C_[YOUR_INSTANCE_ID]";
+  "/Game/UEDPIE_0_NewMap.NewMap:PersistentLevel.NewMap_C_5";
 
 // Add/modify delivery locations
 this.locations = {
@@ -138,8 +137,8 @@ Ensure your UE project has the following functions implemented:
 
 1. **Drone Actor Interface**:
 
-   - `SetTargetLocation(X: float, Y: float, Z: float)` - 设置无人机目标位置
-   - `Action()` - 触发无人机动作
+   - `SetLocation(X: float, Y: float, Z: float)` - 设置无人机位置 (更新函数名)
+   - `Fly()` - 触发无人机飞行动作 (更新函数名)
 
 2. **Level Script Interface**:
    - `ChangeView()` - 改变摄像头视角

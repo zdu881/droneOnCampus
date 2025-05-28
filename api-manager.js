@@ -1,14 +1,14 @@
 // Web Remote Control API管理器，用于与UE进行HTTP通信
 class UnrealEngineAPIManager {
   constructor() {
-    this.baseUrl = "http://localhost:30010/remote/object/call";
+    this.baseUrl = "http://192.168.21.1:30010/remote/object/call";
     this.headers = {
       "Content-Type": "application/json",
     };
 
-    // 运行时路径配置 - 这些路径是动态的，每次PIE启动都可能改变
+    // 运行时路径配置 - 更新为与(1).py文件一致的路径
     this.droneActorPath =
-      "/Memory/UEDPIE_0_450VU4JLHPSITSM21TWRCZ36J.NewMap:PersistentLevel.FbxScene_Drone_C_UAID_107C61AAC641276C02_1958446408";
+      "/Game/UEDPIE_0_NewMap.NewMap:PersistentLevel.NewMap_C_5"; // 更新为新的无人机路径
     this.levelScriptActorPath =
       "/Game/UEDPIE_0_NewMap.NewMap:PersistentLevel.NewMap_C_5";
 
@@ -64,18 +64,18 @@ class UnrealEngineAPIManager {
     }
   }
 
-  // 设置无人机目标位置 (对应 setlocation.py)
+  // 设置无人机目标位置 - 更新函数名为SetLocation
   async setDroneLocation(x, y, z) {
-    return await this.sendRequest(this.droneActorPath, "SetTargetLocation", {
+    return await this.sendRequest(this.droneActorPath, "SetLocation", {
       X: x,
       Y: y,
       Z: z,
     });
   }
 
-  // 触发无人机动作 (对应 fly.py)
+  // 触发无人机动作 - 更新函数名为Fly
   async triggerDroneAction() {
-    return await this.sendRequest(this.droneActorPath, "Action", {});
+    return await this.sendRequest(this.droneActorPath, "Fly", {});
   }
 
   // 改变摄像头视角 (对应 changeview.py)
@@ -83,7 +83,7 @@ class UnrealEngineAPIManager {
     return await this.sendRequest(this.levelScriptActorPath, "ChangeView", {});
   }
 
-  // 开始配送任务
+  // 开始配送任务 - 更新坐标值以匹配(1).py文件
   async startDelivery(fromLocation, toLocation) {
     if (!this.locations[toLocation]) {
       console.error(`未知的目标位置: ${toLocation}`);
@@ -93,18 +93,23 @@ class UnrealEngineAPIManager {
     const targetPos = this.locations[toLocation];
     console.log(`开始配送任务: ${fromLocation} → ${toLocation}`);
 
-    // 首先设置目标位置
-    const setLocationResult = await this.setDroneLocation(
-      targetPos.x,
-      targetPos.y,
-      targetPos.z
+    // 使用SetLocation函数而不是SetTargetLocation
+    const setLocationResult = await this.sendRequest(
+      this.droneActorPath,
+      "SetLocation",
+      {
+        X: targetPos.x,
+        Y: targetPos.y,
+        Z: targetPos.z,
+      }
     );
+
     if (!setLocationResult.success) {
       return setLocationResult;
     }
 
-    // 然后触发无人机动作
-    return await this.triggerDroneAction();
+    // 使用Fly函数而不是Action
+    return await this.sendRequest(this.droneActorPath, "Fly", {});
   }
 
   // 更新运行时路径（当PIE重启时需要调用）

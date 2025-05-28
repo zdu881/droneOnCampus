@@ -92,14 +92,14 @@ function addDebugControls() {
   debugPanel.className = "debug-panel";
   debugPanel.innerHTML = `
         <h3>调试控制</h3>
-        <button id="test-drone-action">测试无人机动作</button>
+        <button id="test-drone-action">测试无人机动作(Fly)</button>
         <button id="test-change-view">测试切换视角</button>
         <div>
             <label>自定义位置:</label>
-            <input type="number" id="custom-x" placeholder="X" value="-850">
-            <input type="number" id="custom-y" placeholder="Y" value="-30">
+            <input type="number" id="custom-x" placeholder="X" value="-1600">
+            <input type="number" id="custom-y" placeholder="Y" value="-350">
             <input type="number" id="custom-z" placeholder="Z" value="62">
-            <button id="set-custom-location">设置位置</button>
+            <button id="set-custom-location">设置位置(SetLocation)</button>
         </div>
     `;
 
