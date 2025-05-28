@@ -1,38 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Campus Drone Delivery Demo</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
     <div class="container">
-        <div class="video-container">
-            <video id="video" autoplay muted playsinline></video>
+      <div class="video-container">
+        <video id="video" autoplay muted playsinline></video>
+      </div>
+
+      <div class="controls">
+        <h2>Campus Drone Delivery</h2>
+        <div class="status" id="status">Disconnected</div>
+
+        <div class="locations">
+          <h3>Delivery Locations</h3>
+          <button class="delivery-btn" data-from="Warehouse" data-to="Library">
+            Warehouse → Library
+          </button>
+          <button
+            class="delivery-btn"
+            data-from="Warehouse"
+            data-to="Dormitory"
+          >
+            Warehouse → Dormitory
+          </button>
+          <button class="delivery-btn" data-from="Library" data-to="Cafeteria">
+            Library → Cafeteria
+          </button>
         </div>
-        
-        <div class="controls">
-            <h2>Campus Drone Delivery</h2>
-            <div class="status" id="status">Disconnected</div>
-            
-            <div class="locations">
-                <h3>Delivery Locations</h3>
-                <button class="delivery-btn" data-from="Warehouse" data-to="Library">Warehouse → Library</button>
-                <button class="delivery-btn" data-from="Warehouse" data-to="Dormitory">Warehouse → Dormitory</button>
-                <button class="delivery-btn" data-from="Library" data-to="Cafeteria">Library → Cafeteria</button>
-            </div>
-            
-            <div class="camera-views">
-                <h3>Camera Views</h3>
-                <button class="camera-btn" data-view="follow">Follow Drone</button>
-                <button class="camera-btn" data-view="overhead">Overhead View</button>
-                <button class="camera-btn" data-view="firstperson">Drone View</button>
-            </div>
+
+        <div class="camera-views">
+          <h3>Camera Views</h3>
+          <button class="camera-btn" data-view="follow">Follow Drone</button>
+          <button class="camera-btn" data-view="overhead">Overhead View</button>
+          <button class="camera-btn" data-view="firstperson">Drone View</button>
         </div>
+      </div>
     </div>
 
     <script src="pixel-streaming.js"></script>
+    <script src="api-manager.js"></script>
     <script src="app.js"></script>
-</body>
+  </body>
 </html>
