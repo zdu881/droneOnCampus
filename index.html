@@ -10,6 +10,56 @@
     <div class="container">
       <div class="video-container">
         <video id="video" autoplay muted playsinline></video>
+        
+        <!-- Data Overlay - Top Left -->
+        <div class="data-overlay-tl" id="data-overlay-tl">
+          <div class="data-title">🚁 DRONE TELEMETRY</div>
+          <div class="data-item">
+            <span class="data-label">Position X:</span>
+            <span class="data-value" id="drone-x">-850.00</span>
+          </div>
+          <div class="data-item">
+            <span class="data-label">Position Y:</span>
+            <span class="data-value" id="drone-y">-30.00</span>
+          </div>
+          <div class="data-item">
+            <span class="data-label">Altitude:</span>
+            <span class="data-value" id="drone-z">62.00m</span>
+          </div>
+          <div class="data-item">
+            <span class="data-label">Battery:</span>
+            <span class="data-value" id="drone-battery">87%</span>
+          </div>
+          <div class="data-item">
+            <span class="data-label">Speed:</span>
+            <span class="data-value" id="drone-speed">15.2 m/s</span>
+          </div>
+        </div>
+
+        <!-- Data Overlay - Top Right -->
+        <div class="data-overlay-tr" id="data-overlay-tr">
+          <div class="data-title">📊 MISSION STATUS</div>
+          <div class="data-item">
+            <span class="data-label">Status:</span>
+            <span class="data-value" id="mission-status">STANDBY</span>
+          </div>
+          <div class="data-item">
+            <span class="data-label">Target:</span>
+            <span class="data-value" id="mission-target">Library</span>
+          </div>
+          <div class="data-item">
+            <span class="data-label">Distance:</span>
+            <span class="data-value" id="target-distance">245.6m</span>
+          </div>
+          <div class="data-item">
+            <span class="data-label">Wind Speed:</span>
+            <span class="data-value warning" id="wind-speed">12.3 km/h</span>
+          </div>
+          <div class="data-item">
+            <span class="data-label">System Time:</span>
+            <span class="data-value" id="system-time">14:58:32</span>
+          </div>
+        </div>
       </div>
 
       <div class="controls">

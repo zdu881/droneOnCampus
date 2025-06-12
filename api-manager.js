@@ -1,16 +1,15 @@
 // Web Remote Control API管理器，用于与UE进行HTTP通信
 class UnrealEngineAPIManager {
   constructor() {
-    this.baseUrl = "http://192.168.21.1:30010/remote/object/call";
+    this.baseUrl = "http://10.30.2.11:30010/remote/object/call";
     this.headers = {
       "Content-Type": "application/json",
     };
 
     // 运行时路径配置 - 更新为与(1).py文件一致的路径
-    this.droneActorPath =
-      "/Game/UEDPIE_0_NewMap.NewMap:PersistentLevel.NewMap_C_5"; // 更新为新的无人机路径
+    this.droneActorPath = "/Game/NewMap.NewMap:PersistentLevel.NewMap_C_0"; // 更新为新的无人机路径
     this.levelScriptActorPath =
-      "/Game/UEDPIE_0_NewMap.NewMap:PersistentLevel.NewMap_C_5";
+      "/Game/NewMap.NewMap:PersistentLevel.NewMap_C_0";
 
     // 预定义的位置坐标
     this.locations = {

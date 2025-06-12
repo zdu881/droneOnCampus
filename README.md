@@ -8,7 +8,7 @@ This is the web frontend for visualizing drone deliveries on campus using Unreal
 droneOnCampus/
 ├── index.html        # Main HTML file with UI structure
 ├── styles.css       # CSS styling for the interface
-├── pixel-streaming.js # Pixel Streaming integration
+├── pixel-streaming.js # Pixel Streaming iframe integration
 ├── api-manager.js   # UE Web Remote Control API manager
 └── app.js           # Application logic and controls
 ```
@@ -19,7 +19,7 @@ droneOnCampus/
 
    - Modern web browser (Chrome, Firefox, Edge)
    - Python 3.x (for local testing)
-   - Unreal Engine with Pixel Streaming server running
+   - Unreal Engine with Pixel Streaming server running on port 80
    - UE Web Remote Control API enabled (port 30010)
 
 2. **Installation**:
@@ -37,14 +37,20 @@ droneOnCampus/
 
 ## Configuration
 
-### Pixel Streaming Connection
+### Pixel Streaming Connection (iframe 模式)
 
 Edit `pixel-streaming.js` to change the streaming server URL:
 
 ```javascript
-// Change this line to match your UE server
-initialize((streamerUrl = "ws://localhost:80"));
+// Change this line to match your UE Pixel Streaming server
+initialize((streamerUrl = "http://10.30.2.11:80"));
 ```
+
+The frontend now uses iframe embedding instead of loading external libraries:
+
+- More reliable connection
+- No CDN dependencies
+- Automatic fallback to API-only mode
 
 ### UE Web Remote Control API
 
@@ -52,11 +58,11 @@ Edit `api-manager.js` to update runtime paths and locations:
 
 ```javascript
 // 更新无人机actor运行时路径 (与(1).py文件保持一致)
-this.droneActorPath = "/Game/UEDPIE_0_NewMap.NewMap:PersistentLevel.NewMap_C_5";
+this.droneActorPath = "/Game/UEDPIE_0_NewMap.NewMap:PersistentLevel.NewMap_C_0";
 
 // 更新关卡脚本actor路径
 this.levelScriptActorPath =
-  "/Game/UEDPIE_0_NewMap.NewMap:PersistentLevel.NewMap_C_5";
+  "/Game/UEDPIE_0_NewMap.NewMap:PersistentLevel.NewMap_C_0";
 
 // Add/modify delivery locations
 this.locations = {
@@ -78,9 +84,15 @@ Edit `index.html` to add/remove delivery locations:
 
 ## Integration with Unreal Engine
 
-The frontend communicates with UE via two methods:
+The frontend now uses iframe-based Pixel Streaming integration:
 
-### 1. Web Remote Control API (HTTP)
+### 1. Pixel Streaming (iframe)
+
+- Direct embedding of UE Pixel Streaming page
+- No external library dependencies
+- Automatic error handling and fallback modes
+
+### 2. Web Remote Control API (HTTP)
 
 Used for sending commands to UE:
 
@@ -107,30 +119,6 @@ Used for sending commands to UE:
   ueApiManager.startDelivery("Warehouse", "Library");
   ```
 
-### 2. Pixel Streaming (WebSocket)
-
-Used for receiving real-time updates from UE:
-
-- **Status Updates**:
-
-  ```json
-  {
-    "type": "statusUpdate",
-    "status": "inProgress",
-    "message": "Drone en route"
-  }
-  ```
-
-- **Delivery Updates**:
-  ```json
-  {
-    "type": "deliveryUpdate",
-    "deliveryId": "123",
-    "status": "completed",
-    "location": "Library"
-  }
-  ```
-
 ## UE Blueprint Interface Requirements
 
 Ensure your UE project has the following functions implemented:
@@ -144,6 +132,13 @@ Ensure your UE project has the following functions implemented:
    - `ChangeView()` - 改变摄像头视角
 
 ## Troubleshooting
+
+### Pixel Streaming Issues
+
+- If iframe fails to load, the system automatically offers:
+  - Retry connection option
+  - API-only mode (control without video)
+- Check that UE Pixel Streaming server is running on the correct port
 
 ### Runtime Path Issues
 

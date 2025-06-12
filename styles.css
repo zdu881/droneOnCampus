@@ -1,129 +1,601 @@
+/* Digital Twin Sci-Fi Theme Variables */
 :root {
-    --primary-color: #3498db;
-    --secondary-color: #2980b9;
-    --text-color: #333;
-    --background-color: #f5f5f5;
-    --status-connected: #2ecc71;
-    --status-disconnected: #e74c3c;
+  /* Sci-Fi Color Palette */
+  --primary-neon: #00ffff;
+  --secondary-neon: #0099ff;
+  --accent-neon: #ff0080;
+  --success-neon: #00ff41;
+  --warning-neon: #ffaa00;
+  --danger-neon: #ff3030;
+  
+  /* Dark Theme Base */
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #1a1a2e;
+  --bg-tertiary: #16213e;
+  --bg-overlay: rgba(10, 10, 15, 0.85);
+  --bg-glass: rgba(26, 26, 46, 0.3);
+  
+  /* Text Colors */
+  --text-primary: #ffffff;
+  --text-secondary: #a0a9c0;
+  --text-neon: #00ffff;
+  --text-data: #00ff41;
+  
+  /* Effects */
+  --glow-primary: 0 0 20px var(--primary-neon);
+  --glow-secondary: 0 0 15px var(--secondary-neon);
+  --glow-accent: 0 0 10px var(--accent-neon);
+  --border-glow: 0 0 8px rgba(0, 255, 255, 0.5);
+  
+  /* Grid Pattern */
+  --grid-color: rgba(0, 255, 255, 0.1);
 }
+
+/* Global Styles */
+* {
+  box-sizing: border-box;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap');
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin: 0;
-    padding: 0;
-    color: var(--text-color);
-    background-color: var(--background-color);
+  font-family: 'Rajdhani', monospace;
+  margin: 0;
+  padding: 0;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  background-image: 
+    linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+  overflow-x: hidden;
+  animation: backgroundPulse 4s ease-in-out infinite alternate;
 }
 
+@keyframes backgroundPulse {
+  0% { background-color: var(--bg-primary); }
+  100% { background-color: #0a0a12; }
+}
+
+/* Container Layout */
 .container {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 15px;
+  position: relative;
 }
 
+.container::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 25% 25%, rgba(0, 255, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(255, 0, 128, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Video Container with Sci-Fi Frame */
 .video-container {
-    position: relative;
-    width: 100%;
-    padding-bottom: 56.25%; /* 16:9 aspect ratio */
-    background-color: #000;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 
+    var(--glow-primary),
+    inset 0 0 50px rgba(0, 255, 255, 0.1);
+  border: 2px solid var(--primary-neon);
+  animation: containerGlow 3s ease-in-out infinite alternate;
 }
 
-.video-container video {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+@keyframes containerGlow {
+  0% { 
+    box-shadow: 
+      0 0 20px var(--primary-neon),
+      inset 0 0 50px rgba(0, 255, 255, 0.1);
+  }
+  100% { 
+    box-shadow: 
+      0 0 30px var(--primary-neon),
+      0 0 60px rgba(0, 255, 255, 0.3),
+      inset 0 0 50px rgba(0, 255, 255, 0.15);
+  }
 }
 
+.video-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    linear-gradient(45deg, transparent 48%, rgba(0, 255, 255, 0.1) 49%, rgba(0, 255, 255, 0.1) 51%, transparent 52%),
+    linear-gradient(-45deg, transparent 48%, rgba(0, 255, 255, 0.1) 49%, rgba(0, 255, 255, 0.1) 51%, transparent 52%);
+  background-size: 20px 20px;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0.3;
+}
+
+.video-container video,
+#pixel-streaming-iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+/* Data Overlay Areas */
+.data-overlay-tl,
+.data-overlay-tr {
+  position: absolute;
+  top: 20px;
+  width: 280px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--primary-neon);
+  border-radius: 8px;
+  padding: 15px;
+  font-family: 'Orbitron', monospace;
+  font-size: 14px;
+  color: var(--text-primary);
+  box-shadow: var(--border-glow);
+  z-index: 10;
+  animation: dataGlow 2s ease-in-out infinite alternate;
+}
+
+.data-overlay-tl {
+  left: 20px;
+}
+
+.data-overlay-tr {
+  right: 20px;
+}
+
+@keyframes dataGlow {
+  0% { 
+    box-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
+    border-color: var(--primary-neon);
+  }
+  100% { 
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.8);
+    border-color: var(--secondary-neon);
+  }
+}
+
+.data-overlay-tl::before,
+.data-overlay-tr::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  right: -1px;
+  bottom: -1px;
+  background: linear-gradient(45deg, var(--primary-neon), var(--secondary-neon), var(--primary-neon));
+  border-radius: 8px;
+  z-index: -1;
+  opacity: 0.3;
+  animation: borderFlow 3s linear infinite;
+}
+
+@keyframes borderFlow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+.data-title {
+  font-weight: 700;
+  color: var(--primary-neon);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 12px;
+  text-shadow: 0 0 5px var(--primary-neon);
+}
+
+.data-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+}
+
+.data-label {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.data-value {
+  color: var(--text-data);
+  font-weight: 600;
+  font-family: 'Orbitron', monospace;
+  text-shadow: 0 0 3px var(--success-neon);
+  animation: dataFlicker 0.1s ease-in-out infinite alternate;
+}
+
+@keyframes dataFlicker {
+  0% { opacity: 0.9; }
+  100% { opacity: 1; }
+}
+
+.data-value.warning {
+  color: var(--warning-neon);
+  text-shadow: 0 0 3px var(--warning-neon);
+}
+
+.data-value.danger {
+  color: var(--danger-neon);
+  text-shadow: 0 0 3px var(--danger-neon);
+  animation: dangerPulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes dangerPulse {
+  0% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+/* Controls Panel Redesign */
 .controls {
-    margin-top: 20px;
-    padding: 20px;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-top: 25px;
+  padding: 30px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(15px);
+  border-radius: 15px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    var(--glow-secondary),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--secondary-neon);
+  position: relative;
+  overflow: hidden;
+}
+
+.controls::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.1), transparent);
+  animation: scanLine 4s linear infinite;
+}
+
+@keyframes scanLine {
+  0% { left: -100%; }
+  100% { left: 100%; }
 }
 
 .controls h2 {
-    margin-top: 0;
-    color: var(--primary-color);
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: var(--primary-neon);
+  font-family: 'Orbitron', monospace;
+  font-weight: 900;
+  font-size: 28px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: var(--glow-primary);
+  text-align: center;
+  position: relative;
 }
 
+.controls h2::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--primary-neon), transparent);
+  box-shadow: 0 0 10px var(--primary-neon);
+}
+
+/* Status Indicator */
 .status {
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-weight: bold;
-    margin-bottom: 20px;
-    display: inline-block;
+  padding: 12px 20px;
+  border-radius: 25px;
+  font-weight: 700;
+  margin-bottom: 25px;
+  display: inline-block;
+  font-family: 'Orbitron', monospace;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+  animation: statusPulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes statusPulse {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.02); }
 }
 
 .status[data-status="connected"] {
-    background-color: var(--status-connected);
-    color: white;
+  background: linear-gradient(45deg, var(--success-neon), #00cc33);
+  color: var(--bg-primary);
+  box-shadow: var(--glow-primary);
+  text-shadow: none;
 }
 
 .status[data-status="disconnected"] {
-    background-color: var(--status-disconnected);
-    color: white;
+  background: linear-gradient(45deg, var(--danger-neon), #cc0000);
+  color: white;
+  box-shadow: 0 0 20px var(--danger-neon);
 }
 
-.locations, .camera-views {
-    margin-bottom: 20px;
+.status[data-status="connecting"] {
+  background: linear-gradient(45deg, var(--warning-neon), #ff8800);
+  color: var(--bg-primary);
+  box-shadow: 0 0 20px var(--warning-neon);
+  animation: connectingPulse 1s ease-in-out infinite alternate;
 }
 
-.locations h3, .camera-views h3 {
-    margin-bottom: 10px;
-    color: var(--secondary-color);
+@keyframes connectingPulse {
+  0% { opacity: 0.7; }
+  100% { opacity: 1; }
 }
 
+.status[data-status="api-only"] {
+  background: linear-gradient(45deg, var(--accent-neon), #cc0066);
+  color: white;
+  box-shadow: 0 0 20px var(--accent-neon);
+}
+
+.status[data-status="fallback"] {
+  background: linear-gradient(45deg, #666, #999);
+  color: white;
+}
+
+/* Section Headers */
+.locations,
+.camera-views {
+  margin-bottom: 30px;
+}
+
+.locations h3,
+.camera-views h3 {
+  margin-bottom: 15px;
+  color: var(--secondary-neon);
+  font-family: 'Orbitron', monospace;
+  font-weight: 700;
+  font-size: 18px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 0 0 8px var(--secondary-neon);
+  position: relative;
+  padding-left: 15px;
+}
+
+.locations h3::before,
+.camera-views h3::before {
+  content: '▶';
+  position: absolute;
+  left: 0;
+  color: var(--primary-neon);
+  animation: arrowPulse 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes arrowPulse {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.2); }
+}
+
+/* Futuristic Buttons */
 button {
-    padding: 10px 15px;
-    margin-right: 10px;
-    margin-bottom: 10px;
-    border: none;
-    border-radius: 4px;
-    background-color: var(--primary-color);
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.2s;
+  padding: 12px 25px;
+  margin-right: 15px;
+  margin-bottom: 15px;
+  border: 2px solid var(--primary-neon);
+  border-radius: 8px;
+  background: var(--bg-glass);
+  color: var(--text-primary);
+  font-weight: 600;
+  font-family: 'Rajdhani', monospace;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.3), transparent);
+  transition: left 0.5s ease;
+}
+
+button:hover::before {
+  left: 100%;
 }
 
 button:hover {
-    background-color: var(--secondary-color);
+  background: rgba(0, 255, 255, 0.1);
+  box-shadow: var(--border-glow);
+  transform: translateY(-2px);
+  text-shadow: 0 0 5px var(--primary-neon);
+}
+
+button:active {
+  transform: translateY(0);
+  box-shadow: 0 0 15px var(--primary-neon);
 }
 
 .delivery-btn {
-    background-color: #27ae60;
+  border-color: var(--success-neon);
+  color: var(--success-neon);
 }
 
 .delivery-btn:hover {
-    background-color: #219653;
+  background: rgba(0, 255, 65, 0.1);
+  box-shadow: 0 0 8px var(--success-neon);
+  border-color: var(--success-neon);
 }
 
 .camera-btn {
-    background-color: #9b59b6;
+  border-color: var(--accent-neon);
+  color: var(--accent-neon);
 }
 
 .camera-btn:hover {
-    background-color: #8e44ad;
+  background: rgba(255, 0, 128, 0.1);
+  box-shadow: 0 0 8px var(--accent-neon);
+  border-color: var(--accent-neon);
 }
 
+/* Error Placeholders Styling */
+#streaming-error-placeholder,
+#api-only-placeholder {
+  animation: fadeIn 0.5s ease-in-out;
+  background: 
+    var(--bg-secondary),
+    radial-gradient(circle at center, rgba(0, 255, 255, 0.1) 0%, transparent 70%);
+  backdrop-filter: blur(10px);
+}
+
+#streaming-error-placeholder h3,
+#api-only-placeholder h3 {
+  font-family: 'Orbitron', monospace;
+  color: var(--primary-neon);
+  text-shadow: var(--glow-primary);
+  margin-bottom: 20px;
+}
+
+/* Debug Panel Sci-Fi Style */
+.debug-panel {
+  margin-top: 30px;
+  padding: 20px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  border: 1px solid var(--warning-neon);
+  box-shadow: 0 0 15px rgba(255, 170, 0, 0.3);
+}
+
+.debug-panel h3 {
+  margin-top: 0;
+  color: var(--warning-neon);
+  font-family: 'Orbitron', monospace;
+  text-shadow: 0 0 8px var(--warning-neon);
+}
+
+.debug-panel h4 {
+  color: var(--secondary-neon);
+  font-family: 'Orbitron', monospace;
+  font-size: 14px;
+  margin-top: 15px;
+  margin-bottom: 10px;
+}
+
+.debug-panel label {
+  display: inline-block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.debug-panel input {
+  padding: 8px 12px;
+  margin-right: 8px;
+  margin-bottom: 8px;
+  border: 1px solid var(--primary-neon);
+  border-radius: 4px;
+  background: var(--bg-glass);
+  color: var(--text-primary);
+  font-family: 'Orbitron', monospace;
+  font-size: 12px;
+  backdrop-filter: blur(5px);
+}
+
+.debug-panel input:focus {
+  outline: none;
+  box-shadow: 0 0 8px var(--primary-neon);
+  border-color: var(--secondary-neon);
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
-    .container {
-        padding: 10px;
-    }
-    
-    button {
-        display: block;
-        width: 100%;
-        margin-bottom: 10px;
-    }
+  .container {
+    padding: 10px;
+  }
+
+  .data-overlay-tl,
+  .data-overlay-tr {
+    width: 220px;
+    padding: 12px;
+    font-size: 12px;
+  }
+
+  .data-overlay-tl {
+    left: 10px;
+  }
+
+  .data-overlay-tr {
+    right: 10px;
+  }
+
+  button {
+    display: block;
+    width: 100%;
+    margin-bottom: 12px;
+    margin-right: 0;
+  }
+
+  .controls h2 {
+    font-size: 24px;
+  }
+
+  .controls {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .data-overlay-tl,
+  .data-overlay-tr {
+    width: calc(100% - 20px);
+    left: 10px;
+    right: auto;
+  }
+
+  .data-overlay-tr {
+    top: 200px;
+  }
+}
+
+/* Loading Animation */
+@keyframes loading {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+
+.loading {
+  animation: loading 1.5s ease-in-out infinite;
 }
