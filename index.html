@@ -66,28 +66,30 @@
         <h2>Campus Drone Delivery</h2>
         <div class="status" id="status">Disconnected</div>
 
-        <div class="locations">
-          <h3>Delivery Locations</h3>
-          <button class="delivery-btn" data-from="Warehouse" data-to="Library">
-            Warehouse → Library
-          </button>
-          <button
-            class="delivery-btn"
-            data-from="Warehouse"
-            data-to="Dormitory"
-          >
-            Warehouse → Dormitory
-          </button>
-          <button class="delivery-btn" data-from="Library" data-to="Cafeteria">
-            Library → Cafeteria
-          </button>
-        </div>
+        <div class="control-grid">
+          <div class="locations">
+            <h3>Delivery Missions</h3>
+            <div class="button-row">
+              <button class="delivery-btn" data-from="Warehouse" data-to="Library">
+                Warehouse → Library
+              </button>
+              <button class="delivery-btn" data-from="Warehouse" data-to="Dormitory">
+                Warehouse → Dormitory
+              </button>
+              <button class="delivery-btn" data-from="Library" data-to="Cafeteria">
+                Library → Cafeteria
+              </button>
+            </div>
+          </div>
 
-        <div class="camera-views">
-          <h3>Camera Views</h3>
-          <button class="camera-btn" data-view="follow">Follow Drone</button>
-          <button class="camera-btn" data-view="overhead">Overhead View</button>
-          <button class="camera-btn" data-view="firstperson">Drone View</button>
+          <div class="camera-views">
+            <h3>Camera Control</h3>
+            <div class="button-row">
+              <button class="camera-btn" data-view="follow">Follow Drone</button>
+              <button class="camera-btn" data-view="overhead">Overhead View</button>
+              <button class="camera-btn" data-view="firstperson">Drone View</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
