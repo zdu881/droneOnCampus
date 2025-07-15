@@ -212,11 +212,11 @@
             <!-- 任务管理面板 -->
             <div id="task-management-content" class="panel-item drone-panel">
               <div class="data-title">任务管理</div>
-              
+
               <!-- 任务控制区域 -->
               <div class="task-control-section">
                 <div class="section-title">任务控制</div>
-                
+
                 <!-- 当前任务状态 -->
                 <div class="current-task-status">
                   <div class="kpi-metric">
@@ -235,9 +235,19 @@
 
                 <!-- 任务操作按钮 -->
                 <div class="task-actions">
-                  <button id="start-task-btn" class="action-btn primary">开始任务</button>
-                  <button id="pause-task-btn" class="action-btn secondary" disabled>暂停任务</button>
-                  <button id="stop-task-btn" class="action-btn danger" disabled>停止任务</button>
+                  <button id="start-task-btn" class="action-btn primary">
+                    开始任务
+                  </button>
+                  <button
+                    id="pause-task-btn"
+                    class="action-btn secondary"
+                    disabled
+                  >
+                    暂停任务
+                  </button>
+                  <button id="stop-task-btn" class="action-btn danger" disabled>
+                    停止任务
+                  </button>
                 </div>
               </div>
 
@@ -247,7 +257,7 @@
                 <div id="task-queue" class="task-queue">
                   <!-- 任务项目将由JavaScript动态添加 -->
                 </div>
-                
+
                 <!-- 添加任务 -->
                 <div class="add-task-form">
                   <select id="task-type-select" class="task-dropdown">
@@ -256,8 +266,15 @@
                     <option value="inspection">🔍 检查任务</option>
                     <option value="emergency">🚨 紧急任务</option>
                   </select>
-                  <input type="text" id="task-description" placeholder="任务描述" class="task-input" />
-                  <button id="add-task-btn" class="action-btn secondary">添加任务</button>
+                  <input
+                    type="text"
+                    id="task-description"
+                    placeholder="任务描述"
+                    class="task-input"
+                  />
+                  <button id="add-task-btn" class="action-btn secondary">
+                    添加任务
+                  </button>
                 </div>
               </div>
 
