@@ -144,8 +144,8 @@ body {
   backdrop-filter: blur(12px);
   border-top: 1px solid var(--border-color);
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
-  z-index: 15;
-  max-height: 35vh;
+  z-index: 10; /* 降低z-index，确保不遮挡统一面板 */
+  max-height: 30vh; /* 限制高度为视口高度的30% */
   overflow-y: auto;
 }
 
@@ -194,13 +194,11 @@ body {
 }
 
 /* Section Headers */
-.locations,
-.camera-views {
+.locations {
   margin-bottom: 24px;
 }
 
-.locations h3,
-.camera-views h3 {
+.locations h3 {
   margin-bottom: 12px;
   color: var(--text-primary);
   font-weight: 600;
@@ -232,26 +230,29 @@ button:hover {
 
 button:active {
   transform: translateY(0);
+  box-shadow: 0 0 15px var(--primary-neon);
 }
 
 .delivery-btn {
-  border-color: var(--success-color);
-  color: var(--success-color);
+  border-color: var(--success-neon);
+  color: var(--success-neon);
 }
 
 .delivery-btn:hover {
-  background: var(--success-color);
-  color: white;
+  background: rgba(0, 255, 65, 0.1);
+  box-shadow: 0 0 8px var(--success-neon);
+  border-color: var(--success-neon);
 }
 
 .camera-btn {
-  border-color: var(--info-color);
-  color: var(--info-color);
+  border-color: var(--accent-neon);
+  color: var(--accent-neon);
 }
 
 .camera-btn:hover {
-  background: var(--info-color);
-  color: white;
+  background: rgba(255, 0, 128, 0.1);
+  box-shadow: 0 0 8px var(--accent-neon);
+  border-color: var(--accent-neon);
 }
 
 /* Error Placeholders */
@@ -339,411 +340,666 @@ button:active {
   min-width: 120px;
 }
 
-/* Enhanced Component Layouts */
-.map-controls {
+/* ===== 面板布局系统重构 ===== */
+
+/* 场景选择器 - 顶部中心固定 */
+.scenario-selector {
   position: absolute;
   top: 15px;
-  left: 15px;
-  z-index: 20;
-}
-
-.camera-preset-panel {
-  position: absolute;
-  top: 260px;
-  right: 15px;
-  z-index: 16;
-  max-width: 200px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
   background: rgba(255, 255, 255, 0.95);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
-  padding: 16px;
+  padding: 12px 16px;
   backdrop-filter: blur(8px);
   box-shadow: var(--shadow-md);
 }
 
-.station-management-panel {
-  position: absolute;
-  bottom: 350px;
-  left: 15px;
-  z-index: 16;
-  max-width: 240px;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  padding: 16px;
-  backdrop-filter: blur(8px);
-  box-shadow: var(--shadow-md);
-}
-
-.task-control-panel {
-  position: absolute;
-  bottom: 350px;
-  right: 15px;
-  z-index: 16;
-  max-width: 280px;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  padding: 16px;
-  backdrop-filter: blur(8px);
-  box-shadow: var(--shadow-md);
-}
-
-/* Network KPI Panel */
-.network-kpi-panel {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  width: 280px;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  padding: 16px;
-  font-size: 14px;
-  color: var(--text-primary);
-  box-shadow: var(--shadow-md);
-  z-index: 10;
-  backdrop-filter: blur(8px);
-}
-
-/* Signal Quality Panel */
-.signal-quality-panel {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  width: 260px;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  padding: 16px;
-  font-size: 14px;
-  color: var(--text-primary);
-  box-shadow: var(--shadow-md);
-  z-index: 10;
-  backdrop-filter: blur(8px);
-}
-
-/* 5G Network Slice Control Panel */
-.network-slice-panel {
-  position: absolute;
-  bottom: 350px;
-  left: 15px;
-  z-index: 16;
-  max-width: 320px;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  padding: 16px;
-  backdrop-filter: blur(8px);
-  box-shadow: var(--shadow-md);
-}
-
-/* Agent Decision Panel */
-.agent-decision-panel {
-  position: absolute;
-  bottom: 350px;
-  right: 15px;
-  z-index: 16;
-  max-width: 350px;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  padding: 16px;
-  backdrop-filter: blur(8px);
-  box-shadow: var(--shadow-md);
-}
-
-/* KPI Metric Styling */
-.kpi-metric {
+.scenario-buttons {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--bg-tertiary);
+  gap: 8px;
 }
 
-.kpi-label {
-  color: var(--text-secondary);
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.kpi-value {
-  color: var(--text-primary);
-  font-weight: 600;
-  font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
-}
-
-.kpi-value.excellent {
-  color: var(--success-color);
-}
-
-.kpi-value.good {
-  color: var(--info-color);
-}
-
-.kpi-value.warning {
-  color: var(--warning-color);
-}
-
-.kpi-value.poor {
-  color: var(--danger-color);
-}
-
-/* Signal Quality Bar */
-.signal-quality-bar {
-  width: 100%;
-  height: 8px;
-  background: var(--bg-tertiary);
-  border-radius: 4px;
-  overflow: hidden;
-  margin: 8px 0;
-}
-
-.signal-quality-fill {
-  height: 100%;
-  transition: width 0.3s ease, background-color 0.3s ease;
-  border-radius: 4px;
-}
-
-/* 5QI Selector */
-.qos-selector {
-  margin: 12px 0;
-}
-
-.qos-selector select {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid var(--border-color);
+.scenario-btn {
+  padding: 8px 16px;
+  border: 1px solid var(--primary-color);
   border-radius: 4px;
   background: var(--bg-primary);
-  color: var(--text-primary);
-  font-size: 13px;
+  color: var(--primary-color);
+  font-weight: 500;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
 }
 
-.qos-selector select:focus {
+.scenario-btn.active {
+  background: var(--primary-color);
+  color: white;
+}
+
+.scenario-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ===== 统一控制面板系统 ===== */
+
+/* 统一控制面板容器 */
+.unified-control-panel {
+  position: absolute;
+  top: 70px; /* 在场景选择器下方 */
+  right: 20px;
+  width: 380px;
+  max-height: calc(100vh - 120px);
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-md);
+  z-index: 20;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 面板选择器 */
+.panel-selector {
+  padding: 16px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  flex-shrink: 0;
+}
+
+.panel-selector label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.panel-dropdown {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.panel-dropdown:focus {
   outline: none;
   border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
 }
 
-/* Network Performance Chart Container */
-.performance-chart {
-  margin: 16px 0;
-  height: 120px;
-  background: var(--bg-secondary);
-  border-radius: 4px;
-  position: relative;
-  overflow: hidden;
+.panel-dropdown:hover {
+  border-color: var(--primary-color);
 }
 
-.chart-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: var(--text-muted);
-  font-size: 12px;
-}
-
-/* Agent Decision Log */
-.decision-log {
-  max-height: 150px;
+/* 面板内容区域 */
+.panel-content {
+  flex: 1;
+  padding: 20px;
   overflow-y: auto;
-  background: var(--bg-secondary);
-  border-radius: 4px;
-  padding: 12px;
-  margin: 12px 0;
-  font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
-  font-size: 12px;
+  min-height: 300px;
+  max-height: calc(100vh - 220px);
 }
 
-.decision-entry {
-  margin-bottom: 8px;
-  padding: 4px 0;
-  border-bottom: 1px solid var(--border-color);
+/* 面板项目 */
+.panel-item {
+  display: none;
 }
 
-.decision-timestamp {
-  color: var(--text-muted);
-  font-size: 11px;
+.panel-item.active {
+  display: block;
+  animation: fadeIn 0.3s ease-in-out;
 }
 
-.decision-text {
-  color: var(--text-primary);
-  margin-top: 2px;
-}
-
-/* Network Slice Status Indicators */
-.slice-status {
-  display: flex;
-  align-items: center;
-  margin: 8px 0;
-}
-
-.slice-indicator {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  margin-right: 8px;
-}
-
-.slice-indicator.active {
-  background: var(--success-color);
-}
-
-.slice-indicator.inactive {
-  background: var(--secondary-color);
-}
-
-.slice-indicator.configuring {
-  background: var(--warning-color);
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%,
-  100% {
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
     opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
+    transform: translateY(0);
   }
 }
 
-/* Position and Coordinate Display */
-.coordinate-display {
-  font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
-  font-size: 12px;
-  background: var(--bg-secondary);
-  padding: 8px;
-  border-radius: 4px;
-  margin: 8px 0;
+/* 场景特定的面板显示控制 */
+body.drone-scenario .vehicle-panel {
+  display: none !important;
 }
 
-/* QoS Priority Buttons */
-.qos-priority-buttons {
+body.vehicle-scenario .drone-panel {
+  display: none !important;
+}
+
+/* 如果在无人机场景下选择了车辆面板选项，强制隐藏 */
+body.drone-scenario .panel-dropdown option[value^="mec-"],
+body.drone-scenario .panel-dropdown option[value^="vehicle-"],
+body.drone-scenario .panel-dropdown option[value^="network-slice"],
+body.drone-scenario .panel-dropdown option[value^="agent-"] {
+  display: none;
+}
+
+/* 如果在车辆场景下选择了无人机面板选项，强制隐藏 */
+body.vehicle-scenario .panel-dropdown option[value^="network-kpi"],
+body.vehicle-scenario .panel-dropdown option[value^="signal-quality"],
+body.vehicle-scenario .panel-dropdown option[value^="camera-"],
+body.vehicle-scenario .panel-dropdown option[value^="station-"],
+body.vehicle-scenario .panel-dropdown option[value^="task-"] {
+  display: none;
+}
+
+/* 摄像头控制按钮布局 */
+.camera-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.camera-controls .camera-btn {
+  width: 100%;
+  padding: 10px 16px;
+  border: 1px solid var(--info-color);
+  border-radius: 6px;
+  background: var(--bg-primary);
+  color: var(--info-color);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.camera-controls .camera-btn:hover {
+  background: var(--info-color);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* 优化现有组件在新面板中的显示 */
+.panel-item .qos-priority-buttons {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  margin: 12px 0;
+  margin: 16px 0;
 }
 
-.qos-btn {
-  padding: 8px 12px;
+.panel-item .vehicle-route-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.panel-item .agent-controls {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.panel-item .agent-controls button {
+  flex: 1;
+}
+
+/* ===== 基站管理面板样式 ===== */
+
+/* 分区标题 */
+.section-title {
+  font-weight: 600;
+  color: var(--primary-color);
+  margin: 16px 0 8px 0;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 4px;
+}
+
+/* 添加基站区域 */
+.add-station-section {
+  margin-bottom: 20px;
+}
+
+.station-type-selector {
+  margin-bottom: 12px;
+}
+
+.station-type-selector label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.station-dropdown {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.station-dropdown:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+}
+
+/* 位置输入 */
+.station-position {
+  margin-bottom: 12px;
+}
+
+.position-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.position-input {
+  padding: 6px 8px;
   border: 1px solid var(--border-color);
   border-radius: 4px;
   background: var(--bg-primary);
   color: var(--text-primary);
   font-size: 12px;
+  text-align: center;
+}
+
+.position-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+}
+
+.station-name-input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.station-name-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+}
+
+/* 操作按钮 */
+.action-btn {
+  padding: 8px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.qos-btn.active {
+.action-btn.primary {
   background: var(--primary-color);
   color: white;
   border-color: var(--primary-color);
 }
 
-.qos-btn:hover {
-  border-color: var(--primary-color);
+.action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
-/* Emergency Override Button */
-.emergency-override {
-  background: var(--danger-color) !important;
-  color: white !important;
-  border-color: var(--danger-color) !important;
-  font-weight: 600;
+.action-btn.primary:hover {
+  background: #0056b3;
+  border-color: #0056b3;
 }
 
-.emergency-override:hover {
-  background: #c82333 !important;
-  border-color: #c82333 !important;
+/* 基站列表 */
+.stations-list-section {
+  margin-bottom: 20px;
 }
 
-/* Real-time Status Indicators */
-.realtime-status {
+.stations-list {
+  max-height: 150px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--bg-secondary);
+}
+
+.station-item {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+
+.station-item:last-child {
+  border-bottom: none;
+}
+
+.station-info {
   display: flex;
   align-items: center;
-  margin: 8px 0;
+  gap: 8px;
 }
 
-.status-dot {
+.station-type-icon {
+  font-size: 14px;
+}
+
+.station-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.station-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.station-location {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+}
+
+.station-controls {
+  display: flex;
+  gap: 4px;
+}
+
+.station-btn {
+  padding: 2px 6px;
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  font-size: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.station-btn.delete {
+  color: var(--danger-color);
+  border-color: var(--danger-color);
+}
+
+.station-btn:hover {
+  background: var(--bg-tertiary);
+}
+
+.station-btn.delete:hover {
+  background: var(--danger-color);
+  color: white;
+}
+
+/* 基站状态指示器 */
+.station-status {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  margin-right: 8px;
-  animation: blink 2s infinite;
+  margin-left: 8px;
 }
 
-.status-dot.connected {
+.station-status.online {
+  background: var(--success-color);
+  animation: pulse 2s infinite;
+}
+
+.station-status.offline {
+  background: var(--secondary-color);
+}
+
+.station-status.error {
+  background: var(--danger-color);
+  animation: blink 1s infinite;
+}
+
+/* 基站统计 */
+.station-stats {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+}
+
+/* ===== 任务管理面板样式 ===== */
+
+/* 任务控制区域 */
+.task-control-section {
+  margin-bottom: 20px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.current-task-status {
+  margin-bottom: 16px;
+}
+
+.task-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.task-actions .action-btn {
+  flex: 1;
+  min-width: 80px;
+}
+
+/* 任务队列区域 */
+.task-queue-section {
+  margin-bottom: 20px;
+}
+
+.task-queue {
+  max-height: 200px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+.task-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  border-left: 3px solid var(--accent-color);
+  transition: all 0.2s ease;
+}
+
+.task-item.current {
+  background: rgba(0, 153, 255, 0.2);
+  border-left-color: #0099ff;
+}
+
+.task-item:last-child {
+  margin-bottom: 0;
+}
+
+.task-info {
+  flex: 1;
+}
+
+.task-type {
+  font-size: 12px;
+  color: var(--accent-color);
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.task-description {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.task-actions-mini {
+  display: flex;
+  gap: 4px;
+}
+
+.task-action-btn {
+  padding: 4px 8px;
+  font-size: 11px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+}
+
+.task-action-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.task-action-btn.execute {
+  background: var(--success-color);
+  color: white;
+}
+
+.task-action-btn.remove {
+  background: var(--danger-color);
+  color: white;
+}
+
+/* 添加任务表单 */
+.add-task-form {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.task-dropdown,
+.task-input {
+  flex: 1;
+  min-width: 120px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.task-dropdown:focus,
+.task-input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.task-dropdown option {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* 任务统计 */
+.task-stats {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+}
+
+/* 任务状态指示器 */
+.task-status-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.task-status-indicator.pending {
+  background: #ffa500;
+}
+
+.task-status-indicator.running {
   background: var(--success-color);
 }
 
-.status-dot.transmitting {
-  background: var(--info-color);
+.task-status-indicator.paused {
+  background: #ffeb3b;
 }
 
-.status-dot.error {
+.task-status-indicator.completed {
+  background: var(--accent-color);
+}
+
+.task-status-indicator.failed {
   background: var(--danger-color);
 }
 
-@keyframes blink {
-  0%,
-  50% {
-    opacity: 1;
-  }
-  51%,
-  100% {
-    opacity: 0.3;
+/* 任务队列滚动条 */
+.task-queue::-webkit-scrollbar {
+  width: 4px;
+}
+
+.task-queue::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+}
+
+.task-queue::-webkit-scrollbar-thumb {
+  background: rgba(255, 170, 0, 0.4);
+  border-radius: 2px;
+}
+
+.task-queue::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 170, 0, 0.6);
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+  .unified-control-panel {
+    width: 350px;
   }
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
-  .container {
-    padding: 0;
-  }
-
-  .controls {
-    padding: 16px 20px;
-  }
-
-  .controls h2 {
-    font-size: 20px;
-  }
-
-  .control-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  .button-row {
-    flex-direction: column;
-  }
-
-  .button-row button {
-    flex: none;
-    width: 100%;
-    margin-bottom: 8px;
-  }
-
-  .data-overlay-tl,
-  .data-overlay-tr {
-    width: calc(50vw - 15px);
-    padding: 12px;
-    font-size: 13px;
-  }
-
-  .data-overlay-tl {
+  .unified-control-panel {
+    position: relative;
+    top: auto;
+    right: auto;
     left: 10px;
+    width: calc(100vw - 20px);
+    margin: 20px 0;
+    max-height: 400px;
   }
 
-  .data-overlay-tr {
-    right: 10px;
+  .panel-content {
+    max-height: 300px;
   }
 }
 
@@ -762,32 +1018,6 @@ button:active {
   .controls {
     padding: 16px;
   }
-}
-button:active {
-  transform: translateY(0);
-  box-shadow: 0 0 15px var(--primary-neon);
-}
-
-.delivery-btn {
-  border-color: var(--success-neon);
-  color: var(--success-neon);
-}
-
-.delivery-btn:hover {
-  background: rgba(0, 255, 65, 0.1);
-  box-shadow: 0 0 8px var(--success-neon);
-  border-color: var(--success-neon);
-}
-
-.camera-btn {
-  border-color: var(--accent-neon);
-  color: var(--accent-neon);
-}
-
-.camera-btn:hover {
-  background: rgba(255, 0, 128, 0.1);
-  box-shadow: 0 0 8px var(--accent-neon);
-  border-color: var(--accent-neon);
 }
 
 /* Error Placeholders Styling */
@@ -865,73 +1095,6 @@ button:active {
   border-color: var(--secondary-neon);
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .container {
-    padding: 10px;
-  }
-
-  .data-overlay-tl,
-  .data-overlay-tr {
-    width: 220px;
-    padding: 12px;
-    font-size: 12px;
-  }
-
-  .data-overlay-tl {
-    left: 10px;
-  }
-
-  .data-overlay-tr {
-    right: 10px;
-  }
-
-  button {
-    display: block;
-    width: 100%;
-    margin-bottom: 12px;
-    margin-right: 0;
-  }
-
-  .controls h2 {
-    font-size: 24px;
-  }
-
-  .controls {
-    padding: 20px;
-  }
-}
-
-@media (max-width: 480px) {
-  .data-overlay-tl,
-  .data-overlay-tr {
-    width: calc(100% - 20px);
-    left: 10px;
-    right: auto;
-  }
-
-  .data-overlay-tr {
-    top: 200px;
-  }
-}
-
-/* Loading Animation */
-@keyframes loading {
-  0% {
-    opacity: 0.5;
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0.5;
-  }
-}
-
-.loading {
-  animation: loading 1.5s ease-in-out infinite;
-}
-
 /* Control Grid Layout */
 .control-grid {
   display: grid;
@@ -940,13 +1103,11 @@ button:active {
   margin-top: 10px;
 }
 
-.locations,
-.camera-views {
+.locations {
   margin-bottom: 0;
 }
 
-.locations h3,
-.camera-views h3 {
+.locations h3 {
   margin-bottom: 10px;
   font-size: 16px;
 }
@@ -997,35 +1158,6 @@ button:active {
   z-index: 20;
 }
 
-/* Camera Preset Panel (Top-Right) - Adjusted to avoid data overlay */
-.camera-preset-panel {
-  position: absolute;
-  top: 260px !important; /* Move below the data overlay */
-  right: 15px !important;
-  z-index: 16;
-  max-width: 200px;
-}
-
-/* Station Management Panel (Bottom-Left) - Adjusted positioning */
-.station-management-panel {
-  position: absolute;
-  bottom: 350px !important; /* Move further above the controls panel */
-  left: 15px !important;
-  z-index: 16;
-  max-width: 240px;
-  max-height: 180px;
-}
-
-/* Task Control Panel (Bottom-Right) - Adjusted positioning */
-.task-control-panel {
-  position: absolute;
-  bottom: 350px !important; /* Move further above the controls panel */
-  right: 15px !important;
-  z-index: 16;
-  max-width: 280px;
-  max-height: 220px;
-}
-
 /* Ensure data overlays don't interfere */
 .data-overlay-tl {
   left: 20px;
@@ -1039,43 +1171,11 @@ button:active {
   z-index: 12;
 }
 
-/* Responsive adjustments for enhanced components */
-@media (max-width: 1200px) {
-  .camera-preset-panel {
-    top: 280px !important;
-    max-width: 180px;
-  }
-
-  .station-management-panel {
-    bottom: 300px !important;
-    max-width: 220px;
-  }
-
-  .task-control-panel {
-    bottom: 300px !important;
-    max-width: 260px;
-  }
-}
-
 @media (max-width: 768px) {
   /* Stack panels vertically on mobile */
   .camera-preset-panel {
     top: auto !important;
     bottom: 520px !important;
-    right: 10px !important;
-    left: auto !important;
-    max-width: calc(100vw - 20px);
-  }
-
-  .station-management-panel {
-    bottom: 400px !important;
-    left: 10px !important;
-    right: auto !important;
-    max-width: calc(100vw - 20px);
-  }
-
-  .task-control-panel {
-    bottom: 280px !important;
     right: 10px !important;
     left: auto !important;
     max-width: calc(100vw - 20px);
@@ -1111,33 +1211,50 @@ button:active {
     bottom: 600px !important;
   }
 
-  .station-management-panel {
-    bottom: 480px !important;
-  }
-
-  .task-control-panel {
-    bottom: 360px !important;
-  }
-
   .qos-priority-buttons {
     grid-template-columns: 1fr;
   }
 }
 
-/* Ensure panels don't overflow viewport */
-.camera-preset-panel,
-.station-management-panel,
-.task-control-panel {
-  max-height: 30vh;
-  overflow-y: auto;
+/* Scenario Selector */
+.scenario-selector {
+  position: absolute;
+  top: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 25;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 12px 16px;
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-md);
 }
 
-/* Add subtle backdrop to distinguish panels */
-.camera-preset-panel,
-.station-management-panel,
-.task-control-panel {
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+.scenario-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.scenario-btn {
+  padding: 8px 16px;
+  border: 1px solid var(--primary-color);
+  border-radius: 4px;
+  background: var(--bg-primary);
+  color: var(--primary-color);
+  font-weight: 500;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.scenario-btn.active {
+  background: var(--primary-color);
+  color: white;
+}
+
+.scenario-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }

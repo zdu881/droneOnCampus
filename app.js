@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (result.success) {
           console.log(`配送任务已启动: ${from} → ${to}`);
           updateStatus(`配送任务进行中: ${from} → ${to}`, "inProgress");
-          
+
           // Start mission display with simulated data
           startMissionDisplay(from, to);
         } else {
@@ -42,7 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       try {
         // 所有摄像头切换都调用UE的ChangeView函数
-        const result = await ueApiManager.changeView();
+        const result = await ueApiManager.changeView(view);
 
         if (result.success) {
           console.log(`摄像头视角已切换: ${view}`);
@@ -97,36 +97,36 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Data Display Management
 let droneData = {
-  position: { x: -850.00, y: -30.00, z: 62.00 },
+  position: { x: -850.0, y: -30.0, z: 62.0 },
   battery: 87,
   speed: 15.2,
   mission: {
-    status: 'STANDBY',
-    target: 'Library',
-    distance: 245.6
+    status: "STANDBY",
+    target: "Library",
+    distance: 245.6,
   },
   environment: {
     windSpeed: 12.3,
-    temperature: 22.5
-  }
+    temperature: 22.5,
+  },
 };
 
 let missionInProgress = false;
 let dataUpdateInterval;
 
 function initializeDataDisplays() {
-  console.log('初始化数据显示...');
-  
+  console.log("初始化数据显示...");
+
   // Start real-time data updates
   startDataUpdates();
-  
+
   // Update system time every second
   setInterval(updateSystemTime, 1000);
-  
+
   // Initial display update
   updateAllDisplays();
-  
-  console.log('数据显示初始化完成');
+
+  console.log("数据显示初始化完成");
 }
 
 function startDataUpdates() {
@@ -146,15 +146,15 @@ function simulateIdleData() {
   droneData.position.x += (Math.random() - 0.5) * 2;
   droneData.position.y += (Math.random() - 0.5) * 2;
   droneData.position.z += (Math.random() - 0.5) * 1;
-  
+
   // Battery slowly decreases
   if (droneData.battery > 15) {
     droneData.battery -= Math.random() * 0.1;
   }
-  
+
   // Wind speed variation
   droneData.environment.windSpeed = 8 + Math.random() * 8;
-  
+
   // Low speed when idle
   droneData.speed = Math.random() * 3;
 }
@@ -162,91 +162,92 @@ function simulateIdleData() {
 function simulateMissionData() {
   // Simulate mission progress
   const targetLocation = ueApiManager.locations[droneData.mission.target];
-  
+
   if (targetLocation) {
     // Move towards target
     const dx = targetLocation.x - droneData.position.x;
     const dy = targetLocation.y - droneData.position.y;
     const dz = targetLocation.z - droneData.position.z;
-    
-    const distance = Math.sqrt(dx*dx + dy*dy + dz*dz);
-    
+
+    const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
     if (distance > 5) {
       // Move closer to target
       const moveSpeed = 0.3;
-      droneData.position.x += dx * moveSpeed / distance;
-      droneData.position.y += dy * moveSpeed / distance;
-      droneData.position.z += dz * moveSpeed / distance;
-      
+      droneData.position.x += (dx * moveSpeed) / distance;
+      droneData.position.y += (dy * moveSpeed) / distance;
+      droneData.position.z += (dz * moveSpeed) / distance;
+
       droneData.speed = 15 + Math.random() * 10;
       droneData.mission.distance = distance;
-      droneData.mission.status = 'EN ROUTE';
+      droneData.mission.status = "EN ROUTE";
     } else {
       // Arrived at target
-      droneData.mission.status = 'DELIVERED';
+      droneData.mission.status = "DELIVERED";
       droneData.speed = 0;
       droneData.mission.distance = 0;
-      
+
       // Mission complete after a delay
       setTimeout(() => {
         missionInProgress = false;
-        droneData.mission.status = 'STANDBY';
-        droneData.mission.target = 'None';
+        droneData.mission.status = "STANDBY";
+        droneData.mission.target = "None";
       }, 3000);
     }
   }
-  
+
   // Battery drains faster during missions
   droneData.battery -= Math.random() * 0.3;
-  
+
   // Higher wind resistance during flight
   droneData.environment.windSpeed = 10 + Math.random() * 15;
 }
 
 function updateAllDisplays() {
   // Update drone telemetry (left overlay)
-  updateElement('drone-x', droneData.position.x.toFixed(2));
-  updateElement('drone-y', droneData.position.y.toFixed(2));
-  updateElement('drone-z', droneData.position.z.toFixed(2) + 'm');
-  
+  updateElement("drone-x", droneData.position.x.toFixed(2));
+  updateElement("drone-y", droneData.position.y.toFixed(2));
+  updateElement("drone-z", droneData.position.z.toFixed(2) + "m");
+
   // Battery with color coding
-  const batteryElement = document.getElementById('drone-battery');
+  const batteryElement = document.getElementById("drone-battery");
   if (batteryElement) {
-    batteryElement.textContent = droneData.battery.toFixed(1) + '%';
-    batteryElement.className = 'data-value';
+    batteryElement.textContent = droneData.battery.toFixed(1) + "%";
+    batteryElement.className = "data-value";
     if (droneData.battery < 20) {
-      batteryElement.classList.add('danger');
+      batteryElement.classList.add("danger");
     } else if (droneData.battery < 40) {
-      batteryElement.classList.add('warning');
+      batteryElement.classList.add("warning");
     }
   }
-  
-  updateElement('drone-speed', droneData.speed.toFixed(1) + ' m/s');
-  
+
+  updateElement("drone-speed", droneData.speed.toFixed(1) + " m/s");
+
   // Update mission status (right overlay)
-  const statusElement = document.getElementById('mission-status');
+  const statusElement = document.getElementById("mission-status");
   if (statusElement) {
     statusElement.textContent = droneData.mission.status;
-    statusElement.className = 'data-value';
-    if (droneData.mission.status === 'EN ROUTE') {
-      statusElement.classList.add('warning');
-    } else if (droneData.mission.status === 'DELIVERED') {
-      statusElement.style.color = 'var(--success-neon)';
+    statusElement.className = "data-value";
+    if (droneData.mission.status === "EN ROUTE") {
+      statusElement.classList.add("warning");
+    } else if (droneData.mission.status === "DELIVERED") {
+      statusElement.style.color = "var(--success-neon)";
     }
   }
-  
-  updateElement('mission-target', droneData.mission.target);
-  updateElement('target-distance', droneData.mission.distance.toFixed(1) + 'm');
-  
+
+  updateElement("mission-target", droneData.mission.target);
+  updateElement("target-distance", droneData.mission.distance.toFixed(1) + "m");
+
   // Wind speed with warning if too high
-  const windElement = document.getElementById('wind-speed');
+  const windElement = document.getElementById("wind-speed");
   if (windElement) {
-    windElement.textContent = droneData.environment.windSpeed.toFixed(1) + ' km/h';
-    windElement.className = 'data-value';
+    windElement.textContent =
+      droneData.environment.windSpeed.toFixed(1) + " km/h";
+    windElement.className = "data-value";
     if (droneData.environment.windSpeed > 20) {
-      windElement.classList.add('danger');
+      windElement.classList.add("danger");
     } else if (droneData.environment.windSpeed > 15) {
-      windElement.classList.add('warning');
+      windElement.classList.add("warning");
     }
   }
 }
@@ -260,19 +261,19 @@ function updateElement(id, value) {
 
 function updateSystemTime() {
   const now = new Date();
-  const timeString = now.toLocaleTimeString('zh-CN', { 
+  const timeString = now.toLocaleTimeString("zh-CN", {
     hour12: false,
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
   });
-  updateElement('system-time', timeString);
+  updateElement("system-time", timeString);
 }
 
 // Initialize enhanced components
 function initializeEnhancedComponents() {
-  console.log('初始化增强组件...');
-  
+  console.log("初始化增强组件...");
+
   // Initialize components in proper order
   setTimeout(() => {
     if (window.mapManager) {
@@ -280,37 +281,19 @@ function initializeEnhancedComponents() {
     }
   }, 500);
 
-  setTimeout(() => {
-    if (window.cameraPresetManager) {
-      cameraPresetManager.initialize();
-    }
-  }, 1000);
-
-  setTimeout(() => {
-    if (window.stationManager) {
-      stationManager.initialize();
-    }
-  }, 1500);
-
-  setTimeout(() => {
-    if (window.taskManager) {
-      taskManager.initialize();
-    }
-  }, 2000);
-
   // Setup data integration
   setupDataIntegration();
-  
-  console.log('增强组件初始化完成');
+
+  console.log("增强组件初始化完成");
 }
 
 // Setup data integration between components
 function setupDataIntegration() {
   // Update map manager with drone position changes
   const originalUpdateAllDisplays = updateAllDisplays;
-  updateAllDisplays = function() {
+  updateAllDisplays = function () {
     originalUpdateAllDisplays();
-    
+
     // Update map manager with new drone position
     if (window.mapManager) {
       mapManager.updateDronePosition(
@@ -322,11 +305,11 @@ function setupDataIntegration() {
   };
 
   // Listen for task completion to update mission data
-  window.addEventListener('taskComplete', (event) => {
+  window.addEventListener("taskComplete", (event) => {
     const task = event.detail;
-    if (task.type === 'delivery') {
-      droneData.mission.target = task.targetLocation || 'None';
-      droneData.mission.status = 'STANDBY';
+    if (task.type === "delivery") {
+      droneData.mission.target = task.targetLocation || "None";
+      droneData.mission.status = "STANDBY";
       missionInProgress = false;
     }
   });
@@ -335,27 +318,27 @@ function setupDataIntegration() {
 // Enhanced mission start function
 function startMissionDisplay(from, to) {
   console.log(`开始任务显示: ${from} → ${to}`);
-  
+
   missionInProgress = true;
-  droneData.mission.status = 'PREPARING';
+  droneData.mission.status = "PREPARING";
   droneData.mission.target = to;
-  
+
   // Calculate initial distance
   const targetLocation = ueApiManager.locations[to];
   if (targetLocation) {
     const dx = targetLocation.x - droneData.position.x;
     const dy = targetLocation.y - droneData.position.y;
     const dz = targetLocation.z - droneData.position.z;
-    droneData.mission.distance = Math.sqrt(dx*dx + dy*dy + dz*dz);
+    droneData.mission.distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
   }
-  
+
   // Update display immediately
   updateAllDisplays();
-  
+
   // Start mission after brief delay
   setTimeout(() => {
     if (missionInProgress) {
-      droneData.mission.status = 'LAUNCHING';
+      droneData.mission.status = "LAUNCHING";
     }
   }, 2000);
 }

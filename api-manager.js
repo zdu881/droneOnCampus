@@ -254,6 +254,31 @@ class UnrealEngineAPIManager {
       {}
     );
   }
+
+  // 设置车辆位置 (Vehicle Scenario)
+  async setVehiclePosition(x, y, z = 0) {
+    return await this.sendRequest(this.droneActorPath, "SetVehicleLocation", {
+      X: x,
+      Y: y,
+      Z: z,
+    });
+  }
+
+  // 启动车辆移动 (Vehicle Scenario)
+  async startVehicleMovement(route) {
+    return await this.sendRequest(
+      this.levelScriptActorPath,
+      "StartVehicleRoute",
+      {
+        Route: route,
+      }
+    );
+  }
+
+  // 获取车辆状态 (Vehicle Scenario)
+  async getVehicleStatus() {
+    return await this.sendRequest(this.droneActorPath, "GetVehicleStatus", {});
+  }
 }
 
 // 创建全局实例

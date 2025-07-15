@@ -3,119 +3,437 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>5G Campus Drone Network Control</title>
+    <title>5G Campus Network Control - Multi-Scenario</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <div class="container">
+      <!-- 场景选择器 -->
+      <div class="scenario-selector">
+        <div class="data-title">Scenario Selection</div>
+        <div class="scenario-buttons">
+          <button
+            id="drone-scenario-btn"
+            class="scenario-btn active"
+            data-scenario="drone"
+          >
+            无人机配送
+          </button>
+          <button
+            id="vehicle-scenario-btn"
+            class="scenario-btn"
+            data-scenario="vehicle"
+          >
+            自动驾驶车
+          </button>
+        </div>
+      </div>
+
       <div class="video-container">
         <video id="video" autoplay muted playsinline></video>
 
-        <!-- Network KPI Panel -->
-        <div class="network-kpi-panel">
-          <div class="data-title">Network KPI</div>
-          <div class="kpi-metric">
-            <span class="kpi-label">Bandwidth</span>
-            <span class="kpi-value" id="bandwidth-value">-- Mbps</span>
-          </div>
-          <div class="kpi-metric">
-            <span class="kpi-label">RTT Latency</span>
-            <span class="kpi-value" id="rtt-value">-- ms</span>
-          </div>
-          <div class="kpi-metric">
-            <span class="kpi-label">Packet Loss</span>
-            <span class="kpi-value" id="packet-loss-value">-- %</span>
-          </div>
-          <div class="kpi-metric">
-            <span class="kpi-label">5QI Level</span>
-            <span class="kpi-value" id="qos-level-value">--</span>
-          </div>
-          <div class="realtime-status">
-            <div class="status-dot connected" id="network-status-dot"></div>
-            <span>Network Active</span>
-          </div>
-        </div>
-
-        <!-- Signal Quality Panel -->
-        <div class="signal-quality-panel">
-          <div class="data-title">Signal Quality</div>
-          <div class="kpi-metric">
-            <span class="kpi-label">Position</span>
-            <span class="kpi-value coordinate-display" id="drone-position"
-              >X: --, Y: --, Z: --</span
-            >
-          </div>
-          <div class="kpi-metric">
-            <span class="kpi-label">Signal Strength</span>
-            <span class="kpi-value" id="signal-strength-value">--</span>
-          </div>
-          <div class="signal-quality-bar">
-            <div class="signal-quality-fill" id="signal-quality-fill"></div>
-          </div>
-          <div class="kpi-metric">
-            <span class="kpi-label">Coverage Area</span>
-            <span class="kpi-value" id="coverage-area-value">Unknown</span>
-          </div>
-        </div>
-
-        <!-- 5G Network Slice Control Panel -->
-        <div class="network-slice-panel">
-          <div class="data-title">5G Network Slice Control</div>
-
-          <div class="qos-selector">
-            <label for="qos-select">QoS Profile (5QI):</label>
-            <select id="qos-select">
-              <option value="1">5QI=1 (Ultra-low latency)</option>
-              <option value="2">5QI=2 (Low latency, high reliability)</option>
-              <option value="5">5QI=5 (IMS Signaling)</option>
-              <option value="7">5QI=7 (Voice/Video calls)</option>
-              <option value="8">5QI=8 (Video streaming)</option>
-              <option value="9" selected>5QI=9 (Best effort)</option>
+        <!-- 统一控制面板 -->
+        <div class="unified-control-panel">
+          <!-- 面板选择器 -->
+          <div class="panel-selector">
+            <label for="panel-select">控制面板:</label>
+            <select id="panel-select" class="panel-dropdown">
+              <!-- 无人机场景选项 -->
+              <optgroup label="无人机场景" class="drone-options">
+                <option value="network-kpi">网络KPI</option>
+                <option value="signal-quality">信号质量</option>
+                <option value="camera-presets">摄像头预设</option>
+                <option value="base-station-management">基站管理</option>
+                <option value="task-management">任务管理</option>
+              </optgroup>
+              <!-- 车辆场景选项 -->
+              <optgroup label="自动驾驶车场景" class="vehicle-options">
+                <option value="mec-servers">MEC服务器</option>
+                <option value="vehicle-control">车辆控制</option>
+                <option value="network-slice">网络切片控制</option>
+                <option value="agent-decision">Agent决策</option>
+              </optgroup>
             </select>
           </div>
 
-          <div class="slice-status">
-            <div class="slice-indicator" id="slice-status-indicator"></div>
-            <span id="slice-status-text">Slice Status: Inactive</span>
-          </div>
+          <!-- 面板内容区域 -->
+          <div class="panel-content">
+            <!-- 无人机场景面板 -->
 
-          <div class="qos-priority-buttons">
-            <button class="qos-btn" id="optimize-latency">
-              Optimize Latency
-            </button>
-            <button class="qos-btn" id="optimize-bandwidth">
-              Optimize Bandwidth
-            </button>
-            <button class="qos-btn" id="balanced-mode">Balanced Mode</button>
-            <button class="qos-btn emergency-override" id="emergency-override">
-              Emergency Override
-            </button>
-          </div>
-        </div>
+            <!-- 网络KPI面板 -->
+            <div id="network-kpi-content" class="panel-item drone-panel active">
+              <div class="data-title">Network KPI</div>
+              <div class="kpi-metric">
+                <span class="kpi-label">Bandwidth</span>
+                <span class="kpi-value" id="bandwidth-value">-- Mbps</span>
+              </div>
+              <div class="kpi-metric">
+                <span class="kpi-label">RTT Latency</span>
+                <span class="kpi-value" id="rtt-value">-- ms</span>
+              </div>
+              <div class="kpi-metric">
+                <span class="kpi-label">Packet Loss</span>
+                <span class="kpi-value" id="packet-loss-value">-- %</span>
+              </div>
+              <div class="kpi-metric">
+                <span class="kpi-label">5QI Level</span>
+                <span class="kpi-value" id="qos-level-value">--</span>
+              </div>
+              <div class="realtime-status">
+                <div class="status-dot connected" id="network-status-dot"></div>
+                <span>Network Active</span>
+              </div>
+            </div>
 
-        <!-- Agent Decision Panel -->
-        <div class="agent-decision-panel">
-          <div class="data-title">AI Agent Decisions</div>
+            <!-- 信号质量面板 -->
+            <div id="signal-quality-content" class="panel-item drone-panel">
+              <div class="data-title">Signal Quality</div>
+              <div class="kpi-metric">
+                <span class="kpi-label">Position</span>
+                <span class="kpi-value coordinate-display" id="drone-position"
+                  >X: --, Y: --, Z: --</span
+                >
+              </div>
+              <div class="kpi-metric">
+                <span class="kpi-label">Signal Strength</span>
+                <span class="kpi-value" id="signal-strength-value">--</span>
+              </div>
+              <div class="kpi-metric">
+                <span class="kpi-label">Connection Quality</span>
+                <span class="kpi-value" id="connection-quality-value">--</span>
+              </div>
+              <div class="signal-quality-bar">
+                <div class="signal-quality-fill" id="signal-quality-fill"></div>
+              </div>
+              <div class="realtime-status">
+                <div
+                  class="status-dot transmitting"
+                  id="signal-status-dot"
+                ></div>
+                <span>Signal Active</span>
+              </div>
+            </div>
 
-          <div class="realtime-status">
-            <div class="status-dot transmitting" id="agent-status-dot"></div>
-            <span>Agent Analyzing...</span>
-          </div>
+            <!-- 摄像头预设面板 -->
+            <div id="camera-presets-content" class="panel-item drone-panel">
+              <div class="data-title">Camera Presets</div>
+              <div class="camera-controls">
+                <button class="camera-btn" data-view="overview">
+                  Overview
+                </button>
+                <button class="camera-btn" data-view="tracking">
+                  Tracking
+                </button>
+                <button class="camera-btn" data-view="close-up">
+                  Close-up
+                </button>
+              </div>
+            </div>
 
-          <div class="decision-log" id="decision-log">
-            <div class="decision-entry">
-              <div class="decision-timestamp">
-                Waiting for agent decisions...
+            <!-- 基站管理面板 -->
+            <div
+              id="base-station-management-content"
+              class="panel-item drone-panel"
+            >
+              <div class="data-title">基站设备管理</div>
+
+              <!-- 添加基站控制 -->
+              <div class="add-station-section">
+                <div class="section-title">添加基站</div>
+                <div class="station-type-selector">
+                  <label for="station-type-select">基站类型:</label>
+                  <select id="station-type-select" class="station-dropdown">
+                    <option value="charging">🔋 充电基站</option>
+                    <option value="communication">📡 通信基站</option>
+                    <option value="weather">🌡️ 气象站</option>
+                    <option value="security">🛡️ 安全基站</option>
+                  </select>
+                </div>
+
+                <div class="station-position">
+                  <div class="position-inputs">
+                    <input
+                      type="number"
+                      id="station-x"
+                      placeholder="X坐标"
+                      class="position-input"
+                    />
+                    <input
+                      type="number"
+                      id="station-y"
+                      placeholder="Y坐标"
+                      class="position-input"
+                    />
+                    <input
+                      type="number"
+                      id="station-z"
+                      placeholder="Z坐标"
+                      class="position-input"
+                    />
+                  </div>
+                  <input
+                    type="text"
+                    id="station-name"
+                    placeholder="基站名称"
+                    class="station-name-input"
+                  />
+                </div>
+
+                <button id="add-station-btn" class="action-btn primary">
+                  添加基站
+                </button>
+              </div>
+
+              <!-- 基站列表 -->
+              <div class="stations-list-section">
+                <div class="section-title">基站列表</div>
+                <div id="stations-list" class="stations-list">
+                  <!-- 基站项目将由JavaScript动态添加 -->
+                </div>
+              </div>
+
+              <!-- 基站统计 -->
+              <div class="station-stats">
+                <div class="kpi-metric">
+                  <span class="kpi-label">总基站数</span>
+                  <span class="kpi-value" id="total-stations">0</span>
+                </div>
+                <div class="kpi-metric">
+                  <span class="kpi-label">在线基站</span>
+                  <span class="kpi-value" id="online-stations">0</span>
+                </div>
+                <div class="kpi-metric">
+                  <span class="kpi-label">故障基站</span>
+                  <span class="kpi-value" id="failed-stations">0</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 任务管理面板 -->
+            <div id="task-management-content" class="panel-item drone-panel">
+              <div class="data-title">任务管理</div>
+              
+              <!-- 任务控制区域 -->
+              <div class="task-control-section">
+                <div class="section-title">任务控制</div>
+                
+                <!-- 当前任务状态 -->
+                <div class="current-task-status">
+                  <div class="kpi-metric">
+                    <span class="kpi-label">当前任务</span>
+                    <span class="kpi-value" id="current-task">待机中</span>
+                  </div>
+                  <div class="kpi-metric">
+                    <span class="kpi-label">任务进度</span>
+                    <span class="kpi-value" id="task-progress">0%</span>
+                  </div>
+                  <div class="kpi-metric">
+                    <span class="kpi-label">任务状态</span>
+                    <span class="kpi-value" id="task-status">空闲</span>
+                  </div>
+                </div>
+
+                <!-- 任务操作按钮 -->
+                <div class="task-actions">
+                  <button id="start-task-btn" class="action-btn primary">开始任务</button>
+                  <button id="pause-task-btn" class="action-btn secondary" disabled>暂停任务</button>
+                  <button id="stop-task-btn" class="action-btn danger" disabled>停止任务</button>
+                </div>
+              </div>
+
+              <!-- 任务队列 -->
+              <div class="task-queue-section">
+                <div class="section-title">任务队列</div>
+                <div id="task-queue" class="task-queue">
+                  <!-- 任务项目将由JavaScript动态添加 -->
+                </div>
+                
+                <!-- 添加任务 -->
+                <div class="add-task-form">
+                  <select id="task-type-select" class="task-dropdown">
+                    <option value="delivery">📦 配送任务</option>
+                    <option value="patrol">🛡️ 巡逻任务</option>
+                    <option value="inspection">🔍 检查任务</option>
+                    <option value="emergency">🚨 紧急任务</option>
+                  </select>
+                  <input type="text" id="task-description" placeholder="任务描述" class="task-input" />
+                  <button id="add-task-btn" class="action-btn secondary">添加任务</button>
+                </div>
+              </div>
+
+              <!-- 任务统计 -->
+              <div class="task-stats">
+                <div class="kpi-metric">
+                  <span class="kpi-label">总任务数</span>
+                  <span class="kpi-value" id="total-tasks">0</span>
+                </div>
+                <div class="kpi-metric">
+                  <span class="kpi-label">已完成</span>
+                  <span class="kpi-value" id="completed-tasks">0</span>
+                </div>
+                <div class="kpi-metric">
+                  <span class="kpi-label">队列中</span>
+                  <span class="kpi-value" id="queued-tasks">0</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 车辆场景面板 -->
+
+            <!-- MEC服务器面板 -->
+            <div id="mec-servers-content" class="panel-item vehicle-panel">
+              <div class="data-title">MEC服务器状态</div>
+              <div class="mec-server" id="mec-east">
+                <div class="mec-status">
+                  <div class="mec-indicator" id="mec-east-indicator"></div>
+                  <span>东区MEC</span>
+                </div>
+                <div class="mec-details">
+                  <span class="mec-ip">IP: 192.168.1.10</span>
+                  <span class="mec-latency" id="mec-east-latency">-- ms</span>
+                </div>
+              </div>
+              <div class="mec-server" id="mec-west">
+                <div class="mec-status">
+                  <div class="mec-indicator" id="mec-west-indicator"></div>
+                  <span>西区MEC</span>
+                </div>
+                <div class="mec-details">
+                  <span class="mec-ip">IP: 192.168.1.20</span>
+                  <span class="mec-latency" id="mec-west-latency">-- ms</span>
+                </div>
+              </div>
+              <div class="mec-server" id="mec-north">
+                <div class="mec-status">
+                  <div class="mec-indicator" id="mec-north-indicator"></div>
+                  <span>北区MEC</span>
+                </div>
+                <div class="mec-details">
+                  <span class="mec-ip">IP: 192.168.1.30</span>
+                  <span class="mec-latency" id="mec-north-latency">-- ms</span>
+                </div>
+              </div>
+              <div class="current-connection">
+                <div class="data-title">当前连接</div>
+                <div class="connection-info">
+                  <span id="current-mec-name">--</span>
+                  <span id="current-mec-rtt" class="kpi-value">-- ms</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 车辆控制面板 -->
+            <div id="vehicle-control-content" class="panel-item vehicle-panel">
+              <div class="data-title">车辆控制</div>
+              <div class="vehicle-status">
+                <div class="kpi-metric">
+                  <span class="kpi-label">位置</span>
+                  <span
+                    class="kpi-value coordinate-display"
+                    id="vehicle-position"
+                    >X: --, Y: --</span
+                  >
+                </div>
+                <div class="kpi-metric">
+                  <span class="kpi-label">速度</span>
+                  <span class="kpi-value" id="vehicle-speed">-- km/h</span>
+                </div>
+                <div class="kpi-metric">
+                  <span class="kpi-label">方向</span>
+                  <span class="kpi-value" id="vehicle-direction">--</span>
+                </div>
+              </div>
+              <div class="vehicle-route-buttons">
+                <button class="route-btn" data-route="city-loop">
+                  城市环路
+                </button>
+                <button class="route-btn" data-route="east-west">
+                  东西路线
+                </button>
+                <button class="route-btn" data-route="north-south">
+                  南北路线
+                </button>
+              </div>
+              <div class="auto-handover-control">
+                <label>
+                  <input type="checkbox" id="auto-handover-enabled" checked />
+                  自动MEC切换
+                </label>
+              </div>
+            </div>
+
+            <!-- 网络切片控制面板 -->
+            <div id="network-slice-content" class="panel-item vehicle-panel">
+              <div class="data-title">5G Network Slice Control</div>
+              <div class="qos-selector">
+                <label for="qos-select">QoS Profile (5QI):</label>
+                <select id="qos-select">
+                  <option value="1">5QI=1 (Ultra-low latency)</option>
+                  <option value="2">
+                    5QI=2 (Low latency, high reliability)
+                  </option>
+                  <option value="5">5QI=5 (IMS Signaling)</option>
+                  <option value="7">5QI=7 (Voice/Video calls)</option>
+                  <option value="8">5QI=8 (Video streaming)</option>
+                  <option value="9" selected>5QI=9 (Best effort)</option>
+                </select>
+              </div>
+              <div class="slice-status">
+                <div class="slice-indicator" id="slice-status-indicator"></div>
+                <span id="slice-status-text">Slice Status: Inactive</span>
+              </div>
+              <div class="qos-priority-buttons">
+                <button class="qos-btn" id="optimize-latency">
+                  Optimize Latency
+                </button>
+                <button class="qos-btn" id="optimize-bandwidth">
+                  Optimize Bandwidth
+                </button>
+                <button class="qos-btn" id="balanced-mode">
+                  Balanced Mode
+                </button>
+                <button
+                  class="qos-btn emergency-override"
+                  id="emergency-override"
+                >
+                  Emergency Override
+                </button>
+              </div>
+            </div>
+
+            <!-- Agent决策面板 -->
+            <div id="agent-decision-content" class="panel-item vehicle-panel">
+              <div class="data-title">Agent Decision Engine</div>
+              <div class="decision-status">
+                <div class="realtime-status">
+                  <div class="status-dot" id="agent-status-dot"></div>
+                  <span id="agent-status-text">Monitoring</span>
+                </div>
+              </div>
+              <div class="decision-metrics">
+                <div class="kpi-metric">
+                  <span class="kpi-label">Decision Count</span>
+                  <span class="kpi-value" id="decision-count">0</span>
+                </div>
+                <div class="kpi-metric">
+                  <span class="kpi-label">Success Rate</span>
+                  <span class="kpi-value" id="success-rate">--</span>
+                </div>
+              </div>
+              <div class="decision-log" id="decision-log">
+                <div class="decision-entry">
+                  <div class="decision-timestamp">系统初始化</div>
+                  <div class="decision-text">Agent已就绪，开始监控</div>
+                </div>
+              </div>
+              <div class="agent-controls">
+                <button class="qos-btn" id="force-optimization">
+                  强制优化
+                </button>
+                <button class="qos-btn" id="clear-log">清除日志</button>
               </div>
             </div>
           </div>
-
-          <button
-            id="trigger-optimization"
-            style="width: 100%; margin-top: 12px"
-          >
-            Trigger Network Optimization
-          </button>
         </div>
       </div>
 
@@ -150,21 +468,6 @@
               </button>
             </div>
           </div>
-
-          <div class="camera-views">
-            <h3>Camera Views</h3>
-            <div class="button-row">
-              <button class="camera-btn" data-view="follow">
-                Follow Drone
-              </button>
-              <button class="camera-btn" data-view="overhead">
-                Overhead View
-              </button>
-              <button class="camera-btn" data-view="firstperson">
-                Drone View
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -172,6 +475,12 @@
     <script src="pixel-streaming.js"></script>
     <script src="api-manager.js"></script>
     <script src="network-manager.js"></script>
+    <script src="map-manager.js"></script>
+    <script src="agent-manager.js"></script>
+    <script src="vehicle-manager.js"></script>
+    <script src="unified-panel-manager.js"></script>
+    <script src="unified-base-station-manager.js"></script>
+    <script src="unified-task-manager.js"></script>
     <script src="app.js"></script>
   </body>
 </html>
