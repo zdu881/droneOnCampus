@@ -1,17 +1,69 @@
-# Campus Drone Delivery Visualization - Frontend
+# Campus Drone Delivery Visualization - Enhanced Frontend
 
-This is the web frontend for visualizing drone deliveries on campus using Unreal Engine Pixel Streaming technology and Web Remote Control API.
+This is an enhanced web frontend for comprehensive drone campus management, featuring map visualization, camera presets, station management, and task control using Unreal Engine Pixel Streaming technology and Web Remote Control API.
 
 ## Project Structure
 
 ```
 droneOnCampus/
-├── index.html        # Main HTML file with UI structure
-├── styles.css       # CSS styling for the interface
-├── pixel-streaming.js # Pixel Streaming iframe integration
-├── api-manager.js   # UE Web Remote Control API manager
-└── app.js           # Application logic and controls
+├── index.html           # Main HTML file with UI structure
+├── styles.css          # Enhanced CSS styling for sci-fi interface
+├── pixel-streaming.js   # Pixel Streaming iframe integration
+├── api-manager.js       # Enhanced UE Web Remote Control API manager
+├── map-manager.js       # 2D/3D map switching and visualization
+├── camera-presets.js    # Multiple camera preset management
+├── station-manager.js   # Base station equipment management
+├── task-manager.js      # Task creation, execution and monitoring
+└── app.js              # Enhanced application logic and integration
 ```
+
+## Enhanced Features
+
+### 🗺️ **Map Management**
+- **2D/3D View Switching**: Toggle between flat campus map and 3D scene
+- **Interactive Campus Map**: Built with Leaflet.js for responsive navigation
+- **Real-time Drone Tracking**: Live position updates on both map and 3D views
+- **Building Markers**: Pre-marked campus locations (Library, Dormitory, Cafeteria, etc.)
+- **Click-to-Navigate**: Set drone target by clicking map locations
+
+### 📹 **Camera Preset System**
+- **Multiple Preset Positions**: 6 pre-configured camera angles
+  - 🚪 Main Gate View
+  - 📚 Library Overview 
+  - 🏠 Dormitory Zone
+  - 🍽️ Cafeteria Plaza
+  - 🔬 Lab Building Top
+  - 🏟️ Stadium Panorama
+- **Follow Mode**: Dynamic drone-following camera
+- **One-Click Switching**: Instant preset activation
+- **Visual Feedback**: Active preset indication
+
+### 🏗️ **Station Management**
+- **Multiple Station Types**:
+  - 🔋 **Charging Stations**: Drone power and docking
+  - 📡 **Communication Hubs**: Signal relay and data transmission
+  - 🌡️ **Weather Stations**: Environmental monitoring
+  - 🛡️ **Security Stations**: Surveillance and alerts
+- **Interactive Addition**: Modal-based station creation
+- **Real-time Status**: Online/offline monitoring
+- **Map Integration**: Station markers on campus map
+
+### 📋 **Advanced Task Management**
+- **Task Types**:
+  - 📦 **Delivery Missions**: Package transport with route planning
+  - 🔍 **Patrol Tasks**: Security and facility inspection
+  - 📊 **Data Collection**: Environmental monitoring and analytics
+- **Task Creation Wizard**: Comprehensive task configuration
+- **Quick Task Buttons**: Pre-configured common operations
+- **Progress Tracking**: Real-time task execution monitoring
+- **Task Queue**: Automatic sequential task execution
+
+### 🎨 **Enhanced User Interface**
+- **Sci-Fi Theme**: Cyberpunk-inspired visual design
+- **Real-time Data Overlays**: Live telemetry and mission status
+- **Responsive Layout**: Multi-panel control interface
+- **Status Notifications**: Success/error feedback system
+- **Debug Controls**: Developer tools and testing functions
 
 ## Setup Instructions
 

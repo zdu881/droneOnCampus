@@ -3,91 +3,166 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Campus Drone Delivery Demo</title>
+    <title>5G Campus Drone Network Control</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <div class="container">
       <div class="video-container">
         <video id="video" autoplay muted playsinline></video>
-        
-        <!-- Data Overlay - Top Left -->
-        <div class="data-overlay-tl" id="data-overlay-tl">
-          <div class="data-title">🚁 DRONE TELEMETRY</div>
-          <div class="data-item">
-            <span class="data-label">Position X:</span>
-            <span class="data-value" id="drone-x">-850.00</span>
+
+        <!-- Network KPI Panel -->
+        <div class="network-kpi-panel">
+          <div class="data-title">Network KPI</div>
+          <div class="kpi-metric">
+            <span class="kpi-label">Bandwidth</span>
+            <span class="kpi-value" id="bandwidth-value">-- Mbps</span>
           </div>
-          <div class="data-item">
-            <span class="data-label">Position Y:</span>
-            <span class="data-value" id="drone-y">-30.00</span>
+          <div class="kpi-metric">
+            <span class="kpi-label">RTT Latency</span>
+            <span class="kpi-value" id="rtt-value">-- ms</span>
           </div>
-          <div class="data-item">
-            <span class="data-label">Altitude:</span>
-            <span class="data-value" id="drone-z">62.00m</span>
+          <div class="kpi-metric">
+            <span class="kpi-label">Packet Loss</span>
+            <span class="kpi-value" id="packet-loss-value">-- %</span>
           </div>
-          <div class="data-item">
-            <span class="data-label">Battery:</span>
-            <span class="data-value" id="drone-battery">87%</span>
+          <div class="kpi-metric">
+            <span class="kpi-label">5QI Level</span>
+            <span class="kpi-value" id="qos-level-value">--</span>
           </div>
-          <div class="data-item">
-            <span class="data-label">Speed:</span>
-            <span class="data-value" id="drone-speed">15.2 m/s</span>
+          <div class="realtime-status">
+            <div class="status-dot connected" id="network-status-dot"></div>
+            <span>Network Active</span>
           </div>
         </div>
 
-        <!-- Data Overlay - Top Right -->
-        <div class="data-overlay-tr" id="data-overlay-tr">
-          <div class="data-title">📊 MISSION STATUS</div>
-          <div class="data-item">
-            <span class="data-label">Status:</span>
-            <span class="data-value" id="mission-status">STANDBY</span>
+        <!-- Signal Quality Panel -->
+        <div class="signal-quality-panel">
+          <div class="data-title">Signal Quality</div>
+          <div class="kpi-metric">
+            <span class="kpi-label">Position</span>
+            <span class="kpi-value coordinate-display" id="drone-position"
+              >X: --, Y: --, Z: --</span
+            >
           </div>
-          <div class="data-item">
-            <span class="data-label">Target:</span>
-            <span class="data-value" id="mission-target">Library</span>
+          <div class="kpi-metric">
+            <span class="kpi-label">Signal Strength</span>
+            <span class="kpi-value" id="signal-strength-value">--</span>
           </div>
-          <div class="data-item">
-            <span class="data-label">Distance:</span>
-            <span class="data-value" id="target-distance">245.6m</span>
+          <div class="signal-quality-bar">
+            <div class="signal-quality-fill" id="signal-quality-fill"></div>
           </div>
-          <div class="data-item">
-            <span class="data-label">Wind Speed:</span>
-            <span class="data-value warning" id="wind-speed">12.3 km/h</span>
+          <div class="kpi-metric">
+            <span class="kpi-label">Coverage Area</span>
+            <span class="kpi-value" id="coverage-area-value">Unknown</span>
           </div>
-          <div class="data-item">
-            <span class="data-label">System Time:</span>
-            <span class="data-value" id="system-time">14:58:32</span>
+        </div>
+
+        <!-- 5G Network Slice Control Panel -->
+        <div class="network-slice-panel">
+          <div class="data-title">5G Network Slice Control</div>
+
+          <div class="qos-selector">
+            <label for="qos-select">QoS Profile (5QI):</label>
+            <select id="qos-select">
+              <option value="1">5QI=1 (Ultra-low latency)</option>
+              <option value="2">5QI=2 (Low latency, high reliability)</option>
+              <option value="5">5QI=5 (IMS Signaling)</option>
+              <option value="7">5QI=7 (Voice/Video calls)</option>
+              <option value="8">5QI=8 (Video streaming)</option>
+              <option value="9" selected>5QI=9 (Best effort)</option>
+            </select>
           </div>
+
+          <div class="slice-status">
+            <div class="slice-indicator" id="slice-status-indicator"></div>
+            <span id="slice-status-text">Slice Status: Inactive</span>
+          </div>
+
+          <div class="qos-priority-buttons">
+            <button class="qos-btn" id="optimize-latency">
+              Optimize Latency
+            </button>
+            <button class="qos-btn" id="optimize-bandwidth">
+              Optimize Bandwidth
+            </button>
+            <button class="qos-btn" id="balanced-mode">Balanced Mode</button>
+            <button class="qos-btn emergency-override" id="emergency-override">
+              Emergency Override
+            </button>
+          </div>
+        </div>
+
+        <!-- Agent Decision Panel -->
+        <div class="agent-decision-panel">
+          <div class="data-title">AI Agent Decisions</div>
+
+          <div class="realtime-status">
+            <div class="status-dot transmitting" id="agent-status-dot"></div>
+            <span>Agent Analyzing...</span>
+          </div>
+
+          <div class="decision-log" id="decision-log">
+            <div class="decision-entry">
+              <div class="decision-timestamp">
+                Waiting for agent decisions...
+              </div>
+            </div>
+          </div>
+
+          <button
+            id="trigger-optimization"
+            style="width: 100%; margin-top: 12px"
+          >
+            Trigger Network Optimization
+          </button>
         </div>
       </div>
 
       <div class="controls">
-        <h2>Campus Drone Delivery</h2>
+        <h2>5G Campus Drone Network Control</h2>
         <div class="status" id="status">Disconnected</div>
 
         <div class="control-grid">
           <div class="locations">
             <h3>Delivery Missions</h3>
             <div class="button-row">
-              <button class="delivery-btn" data-from="Warehouse" data-to="Library">
+              <button
+                class="delivery-btn"
+                data-from="Warehouse"
+                data-to="Library"
+              >
                 Warehouse → Library
               </button>
-              <button class="delivery-btn" data-from="Warehouse" data-to="Dormitory">
+              <button
+                class="delivery-btn"
+                data-from="Warehouse"
+                data-to="Dormitory"
+              >
                 Warehouse → Dormitory
               </button>
-              <button class="delivery-btn" data-from="Library" data-to="Cafeteria">
+              <button
+                class="delivery-btn"
+                data-from="Library"
+                data-to="Cafeteria"
+              >
                 Library → Cafeteria
               </button>
             </div>
           </div>
 
           <div class="camera-views">
-            <h3>Camera Control</h3>
+            <h3>Camera Views</h3>
             <div class="button-row">
-              <button class="camera-btn" data-view="follow">Follow Drone</button>
-              <button class="camera-btn" data-view="overhead">Overhead View</button>
-              <button class="camera-btn" data-view="firstperson">Drone View</button>
+              <button class="camera-btn" data-view="follow">
+                Follow Drone
+              </button>
+              <button class="camera-btn" data-view="overhead">
+                Overhead View
+              </button>
+              <button class="camera-btn" data-view="firstperson">
+                Drone View
+              </button>
             </div>
           </div>
         </div>
@@ -96,6 +171,7 @@
 
     <script src="pixel-streaming.js"></script>
     <script src="api-manager.js"></script>
+    <script src="network-manager.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

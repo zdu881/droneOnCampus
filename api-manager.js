@@ -118,10 +118,141 @@ class UnrealEngineAPIManager {
     console.log("已更新运行时路径");
   }
 
+  // 摄像头预设切换 (新增)
+  async setCameraPreset(presetName) {
+    return await this.sendRequest(
+      this.levelScriptActorPath,
+      "SetCameraPreset",
+      {
+        PresetName: presetName,
+      }
+    );
+  }
+
+  // 基站管理 (新增)
+  async addStation(stationType, x, y, z, stationName) {
+    return await this.sendRequest(this.levelScriptActorPath, "AddStation", {
+      StationType: stationType,
+      X: x,
+      Y: y,
+      Z: z,
+      StationName: stationName,
+    });
+  }
+
+  async updateStationStatus(stationId, status) {
+    return await this.sendRequest(
+      this.levelScriptActorPath,
+      "UpdateStationStatus",
+      {
+        StationID: stationId,
+        Status: status,
+      }
+    );
+  }
+
+  async removeStation(stationId) {
+    return await this.sendRequest(this.levelScriptActorPath, "RemoveStation", {
+      StationID: stationId,
+    });
+  }
+
+  async getStationStatus(stationId) {
+    return await this.sendRequest(
+      this.levelScriptActorPath,
+      "GetStationStatus",
+      {
+        StationID: stationId,
+      }
+    );
+  }
+
+  // 任务管理 (新增)
+  async startTask(taskType, parameters) {
+    return await this.sendRequest(this.levelScriptActorPath, "StartTask", {
+      TaskType: taskType,
+      Parameters: parameters,
+    });
+  }
+
+  async startPatrol(patrolArea, taskId) {
+    return await this.sendRequest(this.levelScriptActorPath, "StartPatrol", {
+      PatrolArea: patrolArea,
+      TaskID: taskId,
+    });
+  }
+
+  async startMonitoring(monitoringArea, taskId) {
+    return await this.sendRequest(
+      this.levelScriptActorPath,
+      "StartMonitoring",
+      {
+        MonitoringArea: monitoringArea,
+        TaskID: taskId,
+      }
+    );
+  }
+
+  async getTaskProgress(taskId) {
+    return await this.sendRequest(
+      this.levelScriptActorPath,
+      "GetTaskProgress",
+      {
+        TaskID: taskId,
+      }
+    );
+  }
+
+  async pauseTask(taskId) {
+    return await this.sendRequest(this.levelScriptActorPath, "PauseTask", {
+      TaskID: taskId,
+    });
+  }
+
+  async resumeTask(taskId) {
+    return await this.sendRequest(this.levelScriptActorPath, "ResumeTask", {
+      TaskID: taskId,
+    });
+  }
+
+  async stopTask(taskId) {
+    return await this.sendRequest(this.levelScriptActorPath, "StopTask", {
+      TaskID: taskId,
+    });
+  }
+
   // 添加或更新位置
   addLocation(name, x, y, z) {
     this.locations[name] = { x, y, z };
     console.log(`已添加/更新位置 ${name}: (${x}, ${y}, ${z})`);
+  }
+
+  // 获取系统状态 (新增)
+  async getSystemStatus() {
+    return await this.sendRequest(
+      this.levelScriptActorPath,
+      "GetSystemStatus",
+      {}
+    );
+  }
+
+  // 获取无人机状态 (新增)
+  async getDroneStatus() {
+    return await this.sendRequest(this.droneActorPath, "GetDroneStatus", {});
+  }
+
+  // 获取无人机当前位置
+  async getDronePosition() {
+    return await this.sendRequest(this.droneActorPath, "GetPosition", {});
+  }
+
+  // 获取信号质量信息
+  async getSignalQuality() {
+    return await this.sendRequest(
+      this.levelScriptActorPath,
+      "GetSignalQuality",
+      {}
+    );
   }
 }
 

@@ -2,6 +2,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initialize Pixel Streaming (保持原有功能)
   pixelStreamingManager.initialize();
 
+  // Initialize new enhanced components
+  initializeEnhancedComponents();
+
   // Initialize data displays
   initializeDataDisplays();
 
@@ -264,6 +267,69 @@ function updateSystemTime() {
     second: '2-digit'
   });
   updateElement('system-time', timeString);
+}
+
+// Initialize enhanced components
+function initializeEnhancedComponents() {
+  console.log('初始化增强组件...');
+  
+  // Initialize components in proper order
+  setTimeout(() => {
+    if (window.mapManager) {
+      mapManager.initialize();
+    }
+  }, 500);
+
+  setTimeout(() => {
+    if (window.cameraPresetManager) {
+      cameraPresetManager.initialize();
+    }
+  }, 1000);
+
+  setTimeout(() => {
+    if (window.stationManager) {
+      stationManager.initialize();
+    }
+  }, 1500);
+
+  setTimeout(() => {
+    if (window.taskManager) {
+      taskManager.initialize();
+    }
+  }, 2000);
+
+  // Setup data integration
+  setupDataIntegration();
+  
+  console.log('增强组件初始化完成');
+}
+
+// Setup data integration between components
+function setupDataIntegration() {
+  // Update map manager with drone position changes
+  const originalUpdateAllDisplays = updateAllDisplays;
+  updateAllDisplays = function() {
+    originalUpdateAllDisplays();
+    
+    // Update map manager with new drone position
+    if (window.mapManager) {
+      mapManager.updateDronePosition(
+        droneData.position.x,
+        droneData.position.y,
+        droneData.position.z
+      );
+    }
+  };
+
+  // Listen for task completion to update mission data
+  window.addEventListener('taskComplete', (event) => {
+    const task = event.detail;
+    if (task.type === 'delivery') {
+      droneData.mission.target = task.targetLocation || 'None';
+      droneData.mission.status = 'STANDBY';
+      missionInProgress = false;
+    }
+  });
 }
 
 // Enhanced mission start function
