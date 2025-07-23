@@ -1,4 +1,14 @@
 document.addEventListener("DOMContentLoaded", () => {
+  // 检查是否在新仪表板页面
+  if (
+    window.location.pathname.includes("dashboard.html") ||
+    document.querySelector(".app-container")
+  ) {
+    // 如果在新仪表板页面，不初始化旧的组件
+    console.log("Dashboard mode detected, skipping legacy initialization");
+    return;
+  }
+
   // Initialize Pixel Streaming (保持原有功能)
   pixelStreamingManager.initialize();
 
