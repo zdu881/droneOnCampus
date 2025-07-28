@@ -95,10 +95,17 @@
         <div class="viewport-container">
           <!-- 视频流/3D视口 -->
           <div class="viewport-content">
-            <video id="main-viewport" autoplay muted playsinline></video>
+            <video
+              id="main-viewport"
+              autoplay
+              muted
+              playsinline
+              style="display: none"
+            ></video>
             <iframe
               id="pixel-streaming-viewport"
-              style="display: none"
+              src="http://10.30.2.11:80"
+              style="width: 100%; height: 100%; border: none"
             ></iframe>
 
             <!-- 视口工具栏 -->
