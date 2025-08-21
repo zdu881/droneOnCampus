@@ -6,8 +6,9 @@
 class DashboardManager {
   constructor() {
     this.currentScenario = "drone";
-    this.currentTab = "configuration";
+    this.currentPage = "viewport"; // Default page
     this.isConnected = false;
+    this.selectedObjectId = null;
     this.droneData = {
       position: { x: -850.0, y: -30.0, z: 62.0 },
       battery: 87,
@@ -40,8 +41,8 @@ class DashboardManager {
     this.setupEventListeners();
     this.initializeDataUpdates();
     this.updateSystemTime();
-    this.setupConsole();
     this.loadSceneTree();
+    this.switchPage("viewport"); // Set initial page
 
     // 设置初始状态
     this.updateConnectionStatus("connecting");
@@ -54,21 +55,14 @@ class DashboardManager {
     // 场景切换
     document.querySelectorAll(".scenario-btn").forEach((btn) => {
       btn.addEventListener("click", (e) => {
-        this.switchScenario(e.target.dataset.scenario);
+        this.switchScenario(e.currentTarget.dataset.scenario);
       });
     });
 
-    // 底部标签切换
-    document.querySelectorAll(".bottom-tab-btn").forEach((btn) => {
+    // 左侧边栏页面切换
+    document.querySelectorAll(".sidebar-tabs .tab-btn").forEach((btn) => {
       btn.addEventListener("click", (e) => {
-        this.switchBottomTab(e.target.dataset.content);
-      });
-    });
-
-    // 侧边栏标签（暂时只是样式切换）
-    document.querySelectorAll(".tab-btn").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        this.switchSideTab(e.target.dataset.tab);
+        this.switchPage(e.currentTarget.dataset.tab);
       });
     });
 
@@ -188,37 +182,22 @@ class DashboardManager {
     this.logToConsole(`Switched to ${scenario} scenario`, "info");
   }
 
-  switchBottomTab(tabName) {
-    this.currentTab = tabName;
+  switchPage(pageName) {
+    this.currentPage = pageName;
 
-    // 更新标签按钮状态
-    document.querySelectorAll(".bottom-tab-btn").forEach((btn) => {
-      btn.classList.remove("active");
-      if (btn.dataset.content === tabName) {
-        btn.classList.add("active");
-      }
+    // 更新侧边栏按钮状态
+    document.querySelectorAll(".sidebar-tabs .tab-btn").forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.tab === pageName);
     });
 
-    // 显示对应内容
-    document.querySelectorAll(".tab-content").forEach((content) => {
-      content.classList.remove("active");
-    });
+    // 切换主内容页面
+    document
+      .querySelectorAll(".main-content-panel .main-content")
+      .forEach((page) => {
+        page.classList.toggle("active", page.id === `${pageName}-content-page`);
+      });
 
-    const targetContent = document.getElementById(`${tabName}-content`);
-    if (targetContent) {
-      targetContent.classList.add("active");
-    }
-  }
-
-  switchSideTab(tabName) {
-    document.querySelectorAll(".tab-btn").forEach((btn) => {
-      btn.classList.remove("active");
-      if (btn.dataset.tab === tabName) {
-        btn.classList.add("active");
-      }
-    });
-
-    this.logToConsole(`Switched to ${tabName} view`, "info");
+    this.logToConsole(`Switched to ${pageName} page`, "info");
   }
 
   async connectToUE() {
@@ -364,7 +343,7 @@ class DashboardManager {
     }
 
     const station = {
-      id: Date.now(),
+      id: `station-${Date.now()}`,
       type: stationType,
       position: { x: parseFloat(x), y: parseFloat(y), z: parseFloat(z) },
       name: name,
@@ -374,11 +353,12 @@ class DashboardManager {
     this.stations.push(station);
     this.updateStationsList();
     this.clearStationForm();
-
     this.logToConsole(
       `Station '${name}' deployed at (${x}, ${y}, ${z})`,
       "success"
     );
+    // Also update the scene tree
+    this.loadSceneTree();
   }
 
   updateStationsList() {
@@ -388,25 +368,34 @@ class DashboardManager {
     stationsList.innerHTML = this.stations
       .map(
         (station) => `
-            <div class="station-item" data-station-id="${station.id}">
-                <div class="station-info">
-                    <span class="station-name">${station.name}</span>
-                    <span class="station-type">${station.type}</span>
-                    <span class="station-position">(${station.position.x}, ${station.position.y}, ${station.position.z})</span>
-                </div>
-                <button class="remove-station-btn" onclick="dashboardManager.removeStation(${station.id})">
+            <div class="station-list-item" data-station-id="${station.id}">
+                <span><i class="fas fa-satellite-dish"></i> ${station.name}</span>
+                <button class="remove-station-btn" data-station-id="${station.id}">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
         `
       )
       .join("");
+
+    // Add event listeners for new remove buttons
+    stationsList.querySelectorAll(".remove-station-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const stationId = e.currentTarget.dataset.stationId;
+        this.removeStation(stationId);
+      });
+    });
   }
 
   removeStation(stationId) {
+    const stationToRemove = this.stations.find((s) => s.id === stationId);
+    if (stationToRemove) {
+      this.logToConsole(`Station '${stationToRemove.name}' removed`, "info");
+    }
     this.stations = this.stations.filter((station) => station.id !== stationId);
     this.updateStationsList();
-    this.logToConsole(`Station removed`, "info");
+    // Also update the scene tree
+    this.loadSceneTree();
   }
 
   clearStationForm() {
@@ -440,16 +429,7 @@ class DashboardManager {
 
   togglePropertiesPanel() {
     const panel = document.querySelector(".properties-panel");
-    const btn = document.getElementById("collapse-properties");
-    const icon = btn?.querySelector("i");
-
-    if (panel.style.display === "none") {
-      panel.style.display = "flex";
-      if (icon) icon.classList.replace("fa-chevron-left", "fa-chevron-right");
-    } else {
-      panel.style.display = "none";
-      if (icon) icon.classList.replace("fa-chevron-right", "fa-chevron-left");
-    }
+    panel?.classList.toggle("collapsed");
   }
 
   initializeDataUpdates() {
@@ -506,86 +486,73 @@ class DashboardManager {
       0,
       Math.min(100, 75 + (Math.random() - 0.5) * 30)
     );
-    this.networkData.packetLoss = Math.max(0, Math.random() * 0.5);
+    this.networkData.packetLoss = Math.random() * 0.5;
   }
 
   updateDisplays() {
     // 更新无人机遥测数据
-    this.updateElement("drone-x", this.droneData.position.x.toFixed(2));
-    this.updateElement("drone-y", this.droneData.position.y.toFixed(2));
-    this.updateElement("drone-z", this.droneData.position.z.toFixed(2) + "m");
-    this.updateElement("drone-speed", this.droneData.speed.toFixed(1) + " m/s");
-
-    // 电池状态带颜色
-    const batteryElement = document.getElementById("drone-battery");
-    if (batteryElement) {
-      batteryElement.textContent = this.droneData.battery.toFixed(1) + "%";
-      batteryElement.className = "value";
-      if (this.droneData.battery < 20) {
-        batteryElement.classList.add("danger");
-      } else if (this.droneData.battery < 40) {
-        batteryElement.classList.add("warning");
-      }
-    }
+    this.updateElementText("drone-x", this.droneData.position.x.toFixed(2));
+    this.updateElementText("drone-y", this.droneData.position.y.toFixed(2));
+    this.updateElementText("drone-z", this.droneData.position.z.toFixed(2));
+    this.updateElementText(
+      "drone-battery",
+      `${this.droneData.battery.toFixed(0)}%`
+    );
+    this.updateElementText(
+      "drone-speed",
+      `${this.droneData.speed.toFixed(1)} m/s`
+    );
 
     // 更新任务状态
-    const statusElement = document.getElementById("mission-status");
-    if (statusElement) {
-      statusElement.textContent = this.droneData.mission.status;
-      statusElement.className = "value";
-      if (this.droneData.mission.status === "EN ROUTE") {
-        statusElement.classList.add("warning");
-      }
-    }
-
-    this.updateElement("mission-target", this.droneData.mission.target);
-    this.updateElement(
+    this.updateElementText("mission-status", this.droneData.mission.status);
+    this.updateElementText("mission-target", this.droneData.mission.target);
+    this.updateElementText(
       "target-distance",
-      this.droneData.mission.distance.toFixed(1) + "m"
+      `${this.droneData.mission.distance.toFixed(1)} m`
     );
-    this.updateElement(
+    this.updateElementText(
       "wind-speed",
-      this.droneData.environment.windSpeed.toFixed(1) + " km/h"
+      `${this.droneData.environment.windSpeed.toFixed(1)} km/h`
     );
 
-    // 更新网络质量仪表
+    // 更新网络质量
     this.updateMeter("bandwidth", this.networkData.bandwidth, 100);
-    this.updateMeter("latency", 100 - this.networkData.latency, 100); // 延迟越低越好
-    this.updateMeter("signal", this.networkData.signalStrength, 100);
-
-    this.updateElement(
+    this.updateElementText(
       "bandwidth-value",
-      this.networkData.bandwidth.toFixed(1) + " Mbps"
+      `${this.networkData.bandwidth.toFixed(1)} Mbps`
     );
-    this.updateElement(
+    this.updateMeter("latency", this.networkData.latency, 100, true); // Invert for latency
+    this.updateElementText(
       "latency-value",
-      this.networkData.latency.toFixed(0) + " ms"
+      `${this.networkData.latency.toFixed(0)} ms`
     );
-    this.updateElement(
+    this.updateMeter("signal", this.networkData.signalStrength, 100);
+    this.updateElementText(
       "signal-value",
-      this.networkData.signalStrength.toFixed(0) + "%"
+      `${this.networkData.signalStrength.toFixed(0)}%`
     );
   }
 
-  updateElement(id, value) {
+  updateElementText(id, text) {
     const element = document.getElementById(id);
-    if (element) {
-      // 添加更新动画效果
-      element.classList.add("updating");
-      element.textContent = value;
-
-      // 移除动画类
-      setTimeout(() => {
-        element.classList.remove("updating");
-      }, 600);
+    if (element && element.textContent !== text) {
+      element.textContent = text;
     }
   }
 
-  updateMeter(meterType, value, max) {
-    const meterFill = document.getElementById(`${meterType}-meter`);
+  updateMeter(id, value, max, invert = false) {
+    const meterFill = document.getElementById(`${id}-meter`);
     if (meterFill) {
-      const percentage = Math.max(0, Math.min(100, (value / max) * 100));
-      meterFill.style.width = percentage + "%";
+      let percentage = (value / max) * 100;
+      if (invert) {
+        percentage = 100 - percentage;
+      }
+      meterFill.style.width = `${Math.min(100, Math.max(0, percentage))}%`;
+
+      meterFill.classList.remove("good", "medium", "bad");
+      if (percentage > 70) meterFill.classList.add("good");
+      else if (percentage > 30) meterFill.classList.add("medium");
+      else meterFill.classList.add("bad");
     }
   }
 
@@ -593,130 +560,147 @@ class DashboardManager {
     const timeElement = document.getElementById("system-time");
     if (timeElement) {
       const now = new Date();
-      const timeString = now.toLocaleTimeString("zh-CN", {
-        hour12: false,
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      });
-      timeElement.textContent = timeString;
+      timeElement.textContent = now.toLocaleTimeString("en-GB");
     }
   }
 
   setupConsole() {
+    this.logToConsole(
+      "Console initialized. Waiting for system logs...",
+      "info"
+    );
+  }
+
+  logToConsole(message, level = "info") {
     const consoleOutput = document.getElementById("console-output");
-    if (consoleOutput) {
-      this.consoleOutput = consoleOutput;
-    }
-  }
+    if (!consoleOutput) return;
 
-  logToConsole(message, type = "info") {
-    const timestamp = new Date().toLocaleTimeString("zh-CN");
-    const logEntry = {
-      timestamp,
-      message,
-      type,
-    };
+    const now = new Date();
+    const timestamp = now.toTimeString().split(" ")[0];
 
-    this.consoleMessages.push(logEntry);
+    const entry = document.createElement("div");
+    entry.className = "log-entry";
+    entry.innerHTML = `
+      <span class="log-time">${timestamp}</span>
+      <span class="log-level log-level-${level}">${level.toUpperCase()}</span>
+      <span class="log-message">${message}</span>
+    `;
 
-    // 限制消息数量
-    if (this.consoleMessages.length > 100) {
-      this.consoleMessages.shift();
-    }
-
-    this.updateConsoleDisplay();
-  }
-
-  updateConsoleDisplay() {
-    if (!this.consoleOutput) return;
-
-    const messageHTML = this.consoleMessages
-      .map((entry) => {
-        const colorClass =
-          entry.type === "error"
-            ? "color: #ef4444"
-            : entry.type === "warning"
-            ? "color: #f59e0b"
-            : entry.type === "success"
-            ? "color: #10b981"
-            : "color: #b4b8c1";
-
-        return `<div style="${colorClass}">[${entry.timestamp}] ${entry.message}</div>`;
-      })
-      .join("");
-
-    this.consoleOutput.innerHTML = messageHTML;
-    this.consoleOutput.scrollTop = this.consoleOutput.scrollHeight;
+    consoleOutput.appendChild(entry);
+    consoleOutput.scrollTop = consoleOutput.scrollHeight; // Auto-scroll
   }
 
   clearConsole() {
-    this.consoleMessages = [];
-    this.updateConsoleDisplay();
+    const consoleOutput = document.getElementById("console-output");
+    if (consoleOutput) {
+      consoleOutput.innerHTML = "";
+      this.logToConsole("Console cleared", "info");
+    }
   }
 
   loadSceneTree() {
-    const sceneTreeContent = document.getElementById("scene-tree-content");
-    if (!sceneTreeContent) return;
+    const treeContent = document.getElementById("scene-tree-content");
+    if (!treeContent) return;
 
     const sceneData = [
       {
+        id: "drone-1",
+        name: "Drone Alpha",
+        icon: "fa-drone",
+        type: "delivery",
+      },
+      {
+        id: "camera-main",
+        name: "Main Camera",
+        icon: "fa-video",
+        type: "camera",
+      },
+      {
+        id: "base-stations",
+        name: "Base Stations",
+        icon: "fa-broadcast-tower",
+        type: "group",
+        children: this.stations.map((s) => ({
+          id: s.id,
+          name: s.name,
+          icon: "fa-satellite-dish",
+          type: "station",
+        })),
+      },
+      {
+        id: "environment",
         name: "Environment",
-        type: "folder",
-        children: ["Lighting", "Weather", "Terrain"],
-      },
-      {
-        name: "Drone",
-        type: "object",
-        children: ["Position", "Rotation", "Battery"],
-      },
-      {
-        name: "Stations",
-        type: "folder",
-        children: this.stations.map((s) => s.name),
-      },
-      {
-        name: "Routes",
-        type: "folder",
-        children: ["Campus_Gate", "Library", "Cafeteria", "Dormitory"],
+        icon: "fa-cloud-sun",
+        type: "environment",
       },
     ];
 
-    // 简化的场景树显示
-    sceneTreeContent.innerHTML = sceneData
+    treeContent.innerHTML = this.buildTreeHtml(sceneData);
+    this.addTreeEventListeners();
+  }
+
+  buildTreeHtml(nodes, depth = 0) {
+    return nodes
       .map(
-        (item) => `
-            <div class="tree-item">
-                <i class="fas fa-${
-                  item.type === "folder" ? "folder" : "cube"
-                }"></i>
-                <span>${item.name}</span>
-            </div>
-        `
+        (node) => `
+      <div class="tree-item" data-node-id="${node.id}" data-node-type="${
+          node.type
+        }" style="--depth: ${depth * 20}px">
+        ${
+          node.children
+            ? `<i class="fas fa-chevron-down tree-item-toggle"></i>`
+            : '<span class="tree-item-icon-placeholder"></span>'
+        }
+        <i class="fas ${node.icon} tree-item-icon"></i>
+        <span>${node.name}</span>
+      </div>
+      ${node.children ? this.buildTreeHtml(node.children, depth + 1) : ""}
+    `
       )
       .join("");
+  }
+
+  addTreeEventListeners() {
+    document.querySelectorAll(".tree-item").forEach((item) => {
+      item.addEventListener("click", (e) => {
+        const target = e.currentTarget;
+        const nodeId = target.dataset.nodeId;
+        const nodeType = target.dataset.nodeType;
+
+        // Handle selection style
+        document
+          .querySelectorAll(".tree-item")
+          .forEach((i) => i.classList.remove("selected"));
+        target.classList.add("selected");
+
+        this.selectedObjectId = nodeId;
+        this.showObjectControls(nodeType);
+      });
+    });
+  }
+
+  showObjectControls(objectType) {
+    // Hide all control sections first
+    document
+      .querySelectorAll(".object-properties .control-section")
+      .forEach((section) => {
+        section.classList.remove("active");
+      });
+
+    // Show the relevant control section
+    const controlSection = document.getElementById(`${objectType}-controls`);
+    if (controlSection) {
+      controlSection.classList.add("active");
+    } else {
+      // Show default if no specific control found
+      document.getElementById("default-controls").classList.add("active");
+    }
   }
 
   delay(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
-
-  destroy() {
-    if (this.updateInterval) {
-      clearInterval(this.updateInterval);
-    }
-  }
 }
 
-// 全局初始化
-let dashboardManager;
-
-document.addEventListener("DOMContentLoaded", () => {
-  dashboardManager = new DashboardManager();
-  window.dashboardManager = dashboardManager; // 全局访问
-});
-
-// 导出给其他模块使用
-if (typeof module !== "undefined" && module.exports) {
-  module.exports = DashboardManager;
-}
+// 启动仪表板管理器
+const dashboardManager = new DashboardManager();

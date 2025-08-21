@@ -524,6 +524,13 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  transition: width 0.3s ease;
+}
+
+.properties-panel.collapsed {
+  width: 0;
+  padding: 0;
+  border-left: none;
 }
 
 .properties-header {
@@ -533,12 +540,14 @@ body {
   padding: 16px 20px;
   border-bottom: 1px solid var(--border-color);
   background: var(--tertiary-bg);
+  flex-shrink: 0;
 }
 
 .properties-header h3 {
   font-size: 16px;
   font-weight: 600;
   color: var(--text-primary);
+  white-space: nowrap;
 }
 
 .collapse-btn {
@@ -550,6 +559,15 @@ body {
   cursor: pointer;
   border-radius: 4px;
   transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.collapse-btn i {
+  transition: transform 0.3s ease;
+}
+
+.properties-panel.collapsed .collapse-btn i {
+  transform: rotate(180deg);
 }
 
 .collapse-btn:hover {
@@ -557,13 +575,20 @@ body {
   color: var(--text-primary);
 }
 
+.panel-content-wrapper {
+  flex-grow: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
 .scene-tree,
 .object-properties {
-  flex: 1;
+  /* flex: 1; */ /* No longer needed with wrapper */
   overflow-y: auto;
 }
 
-.tree-header {
+.tree-header,
+.properties-header-alt {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -573,6 +598,9 @@ body {
   font-size: 14px;
   font-weight: 500;
   color: var(--text-secondary);
+  position: sticky;
+  top: 0;
+  z-index: 5;
 }
 
 .tree-content,
@@ -580,87 +608,282 @@ body {
   padding: 16px 20px;
 }
 
-/* ===== 底部标签面板 ===== */
-.bottom-tabs {
-  height: 280px;
-  background: var(--secondary-bg);
+.properties-header-alt {
   border-top: 1px solid var(--border-color);
+}
+
+.object-properties {
+  border-top: 1px solid var(--border-color);
+  margin-top: -1px;
+}
+
+/* 场景树条目 */
+.tree-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-left: var(--depth, 0);
+  font-size: 13px;
+}
+
+.tree-item:hover {
+  background-color: var(--tertiary-bg);
+}
+
+.tree-item.selected {
+  background-color: var(--accent-primary);
+  color: var(--primary-bg);
+  font-weight: 600;
+}
+
+.tree-item-icon {
+  margin-right: 8px;
+  width: 16px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.tree-item.selected .tree-item-icon {
+  color: var(--primary-bg);
+}
+
+.tree-item-toggle {
+  cursor: pointer;
+  transition: transform 0.2s;
+  display: inline-block;
+}
+
+.tree-item-toggle.collapsed {
+  transform: rotate(-90deg);
+}
+
+/* 属性面板中的控制部分 */
+.control-section {
+  display: none; /* Hide by default */
+  margin-bottom: 20px;
+}
+
+.control-section.active {
+  display: block; /* Show when active */
+}
+
+.control-section h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent-primary);
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.placeholder-text {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 20px 0;
+}
+
+/* 配送路线按钮 */
+.delivery-routes,
+.camera-presets {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.delivery-btn,
+.camera-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: var(--tertiary-bg);
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.3s ease;
+}
+
+.delivery-btn:hover,
+.camera-btn:hover {
+  border-color: var(--accent-primary);
+  background: var(--secondary-bg);
+  color: var(--accent-primary);
+}
+
+.delivery-btn i,
+.camera-btn i {
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
+}
+
+.route-info {
   display: flex;
   flex-direction: column;
 }
 
-.tab-headers {
-  display: flex;
-  border-bottom: 1px solid var(--border-color);
-  background: var(--tertiary-bg);
+.route-name,
+.camera-btn span {
+  font-weight: 500;
+  color: var(--text-primary);
 }
 
-.bottom-tab-btn {
+.route-distance {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* 基站控制 */
+.station-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.station-type-selector,
+.position-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#station-type {
+  background: var(--primary-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 10px 12px;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.position-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+.position-inputs input,
+#station-name {
+  grid-column: span 1;
+}
+#station-name {
+  grid-column: 1 / -1;
+}
+
+.stations-list {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.station-list-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border-bottom: 3px solid transparent;
-  font-size: 13px;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--tertiary-bg);
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.station-list-item span {
   font-weight: 500;
 }
 
-.bottom-tab-btn.active {
-  color: var(--accent-primary);
-  border-bottom-color: var(--accent-primary);
+.remove-station-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.remove-station-btn:hover {
+  color: var(--danger-color);
+}
+
+/* ===== 主内容面板 ===== */
+.main-content-panel {
+  flex: 1;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+}
+
+.main-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none; /* 默认隐藏 */
+  flex-direction: column;
+  background-color: var(--primary-bg);
+}
+
+.main-content.active {
+  display: flex; /* 激活时显示 */
+  z-index: 10;
+}
+
+/* 视口作为主内容时的特殊处理 */
+#viewport-content-page {
+  background-color: #000;
+}
+
+/* ===== 通用页面样式 ===== */
+.page-header {
+  padding: 24px 32px;
+  border-bottom: 1px solid var(--border-color);
   background: var(--secondary-bg);
 }
 
-.bottom-tab-btn:hover:not(.active) {
+.page-header h1 {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.page-header p {
+  font-size: 14px;
   color: var(--text-secondary);
-  background: var(--secondary-bg);
 }
 
-.tab-content-area {
+.page-content {
   flex: 1;
   overflow-y: auto;
+  padding: 24px 32px;
 }
 
-.tab-content {
-  display: none;
-  padding: 20px;
-  height: 100%;
-}
-
-.tab-content.active {
-  display: block;
-}
-
-/* ===== 配置表单样式 ===== */
 .config-section,
-.delivery-section,
-.camera-section,
-.station-section,
 .console-section {
+  background: var(--secondary-bg);
+  border-radius: var(--border-radius-lg);
+  padding: 24px;
   margin-bottom: 24px;
+  border: 1px solid var(--border-color);
 }
 
 .config-section h4,
-.delivery-section h4,
-.camera-section h4,
-.station-section h4 {
-  color: var(--accent-primary);
+.console-header h4 {
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 16px;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 8px;
+  color: var(--accent-primary);
 }
 
 .config-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
 }
 
 .config-item {
@@ -671,208 +894,70 @@ body {
 
 .config-item label {
   font-size: 12px;
-  color: var(--text-secondary);
   font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  color: var(--text-secondary);
 }
 
-.config-item input,
-.config-item select {
-  padding: 10px 12px;
+input[type="text"],
+input[type="number"] {
+  background: var(--primary-bg);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
-  background: var(--tertiary-bg);
+  padding: 10px 12px;
   color: var(--text-primary);
   font-size: 14px;
-  transition: all 0.3s ease;
+  transition: border-color 0.3s, box-shadow 0.3s;
 }
 
-.config-item input:focus,
-.config-item select:focus {
+input[type="text"]:focus,
+input[type="number"]:focus {
   outline: none;
   border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+  box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.2);
 }
 
-/* ===== 按钮样式 ===== */
 .action-btn {
-  padding: 10px 20px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  background: var(--tertiary-bg);
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-weight: 500;
-  font-size: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 40px;
+  padding: 10px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: var(--tertiary-bg);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.action-btn:hover {
+  background: var(--secondary-bg);
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
 }
 
 .action-btn.primary-btn {
   background: var(--accent-primary);
-  border-color: var(--accent-primary);
   color: var(--primary-bg);
-}
-
-.action-btn.connect-btn {
-  background: var(--success-color);
-  border-color: var(--success-color);
-  color: white;
-}
-
-.action-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-.action-btn.primary-btn:hover {
+  border-color: var(--accent-primary);
   box-shadow: var(--glow-primary);
 }
 
-.action-btn.connect-btn:hover {
-  box-shadow: var(--glow-success);
+.action-btn.primary-btn:hover {
+  opacity: 0.9;
 }
 
-/* ===== 配送按钮 ===== */
-.delivery-routes {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.route-item {
-  width: 100%;
-}
-
-.delivery-btn {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px;
-  border: 1px solid var(--success-color);
-  border-radius: var(--border-radius-lg);
-  background: var(--tertiary-bg);
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.delivery-btn:hover {
-  background: var(--success-color);
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: var(--glow-success);
-}
-
-.delivery-btn i {
-  font-size: 20px;
-  color: var(--success-color);
-  transition: color 0.3s ease;
-}
-
-.delivery-btn:hover i {
-  color: white;
-}
-
-.route-info {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-}
-
-.route-name {
-  font-weight: 600;
+.action-btn i {
   font-size: 14px;
 }
 
-.route-distance {
-  font-size: 12px;
-  color: var(--text-muted);
-  font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
-}
-
-/* ===== 摄像头按钮 ===== */
-.camera-presets {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-}
-
-.camera-btn {
+.console-section.full-height {
+  height: calc(100% - 48px); /* Adjust based on padding */
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 16px;
-  border: 1px solid var(--info-color);
-  border-radius: var(--border-radius-lg);
-  background: var(--tertiary-bg);
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: all 0.3s ease;
 }
 
-.camera-btn:hover {
-  background: var(--info-color);
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
-}
-
-.camera-btn i {
-  font-size: 24px;
-}
-
-.camera-btn span {
-  font-size: 12px;
-  font-weight: 500;
-}
-
-/* ===== 基站管理 ===== */
-.station-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.station-type-selector {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.position-inputs {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr) 2fr;
-  gap: 8px;
-}
-
-.position-inputs input {
-  padding: 8px 12px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  background: var(--tertiary-bg);
-  color: var(--text-primary);
-  font-size: 13px;
-}
-
-.stations-list {
-  margin-top: 16px;
-  max-height: 120px;
-  overflow-y: auto;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  background: var(--tertiary-bg);
-}
-
-/* ===== 控制台样式 ===== */
 .console-header {
   display: flex;
   justify-content: space-between;
@@ -881,32 +966,77 @@ body {
 }
 
 .clear-btn {
-  padding: 6px 12px;
-  border: 1px solid var(--danger-color);
-  border-radius: var(--border-radius);
-  background: transparent;
-  color: var(--danger-color);
+  background: none;
+  border: none;
+  color: var(--text-muted);
   cursor: pointer;
-  transition: all 0.3s ease;
   font-size: 12px;
-  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.3s;
 }
 
 .clear-btn:hover {
-  background: var(--danger-color);
-  color: white;
+  color: var(--danger-color);
 }
 
 .console-output {
+  flex: 1;
   background: var(--primary-bg);
-  border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
   padding: 16px;
-  height: 160px;
   overflow-y: auto;
   font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
   font-size: 12px;
-  line-height: 1.4;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.console-output .log-entry {
+  margin-bottom: 4px;
+}
+
+.console-output .log-time {
+  color: var(--text-muted);
+  margin-right: 12px;
+}
+
+.console-output .log-level-info {
+  color: var(--info-color);
+}
+.console-output .log-level-warn {
+  color: var(--warning-color);
+}
+.console-output .log-level-error {
+  color: var(--danger-color);
+}
+
+/* 占位符页面样式 */
+.placeholder-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.placeholder-page i {
+  font-size: 64px;
+  margin-bottom: 24px;
+  opacity: 0.5;
+}
+
+.placeholder-page h1 {
+  font-size: 28px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.placeholder-page p {
+  font-size: 16px;
 }
 
 /* ===== 响应式设计 ===== */
@@ -914,318 +1044,50 @@ body {
   .properties-panel {
     width: 280px;
   }
-
-  .network-quality {
-    width: 320px;
+  .header-center {
+    display: none;
   }
 }
 
 @media (max-width: 992px) {
-  .properties-panel {
+  .sidebar-tabs {
+    width: 60px;
+  }
+  .tab-btn {
+    padding: 12px 4px;
+  }
+  .tab-btn span {
     display: none;
   }
-
-  .data-panel {
-    min-width: 200px;
+  .tab-btn i {
+    font-size: 22px;
   }
-
-  .config-grid {
-    grid-template-columns: 1fr;
+  .data-overlays {
+    display: none; /* 在较小屏幕上隐藏覆盖层以避免混乱 */
   }
 }
 
 @media (max-width: 768px) {
-  .app-header {
-    padding: 0 10px;
+  .properties-panel {
+    position: absolute;
+    right: 0;
+    top: 60px; /* header height */
+    bottom: 0;
+    height: auto;
+    z-index: 900;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
   }
-
-  .scenario-switcher {
-    transform: scale(0.9);
-  }
-
-  .data-overlays {
-    left: 10px;
-    right: 10px;
-  }
-
-  .camera-presets {
-    grid-template-columns: 1fr;
-  }
-
-  .position-inputs {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ===== 滚动条样式 ===== */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--secondary-bg);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-primary);
-}
-
-/* ===== 加载动画 ===== */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(50px);
-  }
-  to {
-    opacity: 1;
+  .properties-panel:not(.collapsed) {
     transform: translateX(0);
   }
-}
-
-@keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-50px);
+  .collapse-btn {
+    display: block; /* 确保在移动设备上可见 */
   }
-  to {
-    opacity: 1;
-    transform: translateX(0);
+  .header-left .connection-status span {
+    display: none;
   }
-}
-
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes glow {
-  0%,
-  100% {
-    box-shadow: 0 0 5px var(--accent-primary);
-  }
-  50% {
-    box-shadow: 0 0 20px var(--accent-primary);
-  }
-}
-
-@keyframes dataFlow {
-  0% {
-    background-position: 0% 0%;
-  }
-  100% {
-    background-position: 100% 0%;
-  }
-}
-
-.data-panel {
-  animation: fadeInUp 0.5s ease-out;
-}
-
-.data-panel:nth-child(1) {
-  animation: slideInLeft 0.6s ease-out;
-}
-
-.data-panel:nth-child(2) {
-  animation: slideInRight 0.6s ease-out;
-}
-
-.data-panel:nth-child(3) {
-  animation: fadeInUp 0.7s ease-out;
-}
-
-.tab-content {
-  animation: scaleIn 0.4s ease-out;
-}
-
-.properties-panel {
-  animation: slideInRight 0.8s ease-out;
-}
-
-.sidebar-tabs {
-  animation: slideInLeft 0.8s ease-out;
-}
-
-/* 连接状态动画 */
-.status-dot[data-status="connected"] {
-  animation: glow 2s infinite;
-}
-
-/* 数据流动效果 */
-.meter-fill::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.3),
-    transparent
-  );
-  animation: dataFlow 2s infinite;
-}
-
-/* 按钮悬停放大效果 */
-.action-btn,
-.delivery-btn,
-.camera-btn {
-  transform: scale(1);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.action-btn:hover,
-.delivery-btn:hover,
-.camera-btn:hover {
-  transform: scale(1.05) translateY(-2px);
-}
-
-/* 工具栏图标旋转效果 */
-.tool-btn i {
-  transition: transform 0.3s ease;
-}
-
-.tool-btn:hover i {
-  transform: rotate(360deg);
-}
-
-/* 数据更新闪烁效果 */
-@keyframes dataUpdate {
-  0%,
-  100% {
-    background-color: transparent;
-  }
-  50% {
-    background-color: rgba(0, 212, 255, 0.1);
-  }
-}
-
-.data-value {
-  transition: all 0.3s ease;
-}
-
-.data-value.updating {
-  animation: dataUpdate 0.6s ease;
-}
-
-/* 控制台消息滚动效果 */
-.console-output {
-  scroll-behavior: smooth;
-}
-
-/* 场景树展开动画 */
-.tree-item {
-  transition: all 0.3s ease;
-  border-radius: 4px;
-  padding: 4px 8px;
-  margin: 2px 0;
-}
-
-.tree-item:hover {
-  background: var(--tertiary-bg);
-  transform: translateX(4px);
-}
-
-/* 进度条填充动画 */
-.meter-fill {
-  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-/* 面板收缩展开动画 */
-.properties-panel {
-  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.properties-panel.collapsed {
-  width: 0;
-  overflow: hidden;
-}
-
-/* 标签切换淡入效果 */
-.tab-content {
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.tab-content.active {
-  opacity: 1;
-}
-
-/* 悬停时的微光效果 */
-@keyframes shimmerHover {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-.action-btn::before,
-.delivery-btn::before,
-.camera-btn::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.1),
-    transparent
-  );
-  background-size: 200% 100%;
-  transform: translateX(-100%);
-  transition: transform 0.6s ease;
-  border-radius: inherit;
-}
-
-.action-btn:hover::before,
-.delivery-btn:hover::before,
-.camera-btn:hover::before {
-  animation: shimmerHover 0.8s ease;
-}
-
-/* ===== 悬停效果 ===== */
-.data-panel:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-}
-
-/* ===== 高对比度模式支持 ===== */
-@media (prefers-contrast: high) {
-  :root {
-    --border-color: #fff;
-    --text-secondary: #fff;
-    --text-muted: #ccc;
+  .system-time {
+    display: none;
   }
 }
