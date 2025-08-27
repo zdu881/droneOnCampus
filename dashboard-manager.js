@@ -9,6 +9,7 @@ class DashboardManager {
     this.currentPage = "viewport"; // Default page
     this.isConnected = false;
     this.selectedObjectId = null;
+    this.rayClusterManager = null; // Ray cluster manager instance
     this.droneData = {
       position: { x: -850.0, y: -30.0, z: 62.0 },
       battery: 87,
@@ -196,6 +197,11 @@ class DashboardManager {
       .forEach((page) => {
         page.classList.toggle("active", page.id === `${pageName}-content-page`);
       });
+
+    // 初始化Ray Cluster管理器（如果切换到rayCluster页面）
+    if (pageName === 'rayCluster' && !this.rayClusterManager) {
+      this.initRayClusterManager();
+    }
 
     this.logToConsole(`Switched to ${pageName} page`, "info");
   }
@@ -697,6 +703,21 @@ class DashboardManager {
     }
   }
 
+  // 初始化Ray Cluster管理器
+  initRayClusterManager() {
+    try {
+      if (typeof RayClusterManager !== 'undefined') {
+        this.rayClusterManager = new RayClusterManager();
+        this.rayClusterManager.initialize();
+        this.logToConsole("Ray Cluster Manager initialized", "success");
+      } else {
+        this.logToConsole("RayClusterManager not available", "warning");
+      }
+    } catch (error) {
+      this.logToConsole(`Failed to initialize Ray Cluster Manager: ${error.message}`, "error");
+    }
+  }
+
   delay(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
@@ -704,3 +725,5 @@ class DashboardManager {
 
 // 启动仪表板管理器
 const dashboardManager = new DashboardManager();
+// 确保在全局作用域中可用
+window.dashboardManager = dashboardManager;

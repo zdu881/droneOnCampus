@@ -89,6 +89,10 @@
             <i class="fas fa-chart-line"></i>
             <span>遥测</span>
           </button>
+          <button class="tab-btn" data-tab="rayCluster">
+            <i class="fas fa-server"></i>
+            <span>Ray集群</span>
+          </button>
         </div>
 
         <!-- 主内容面板 -->
@@ -340,6 +344,103 @@
               <p>此功能正在开发中</p>
             </div>
           </div>
+
+          <!-- Ray集群监控页面 -->
+          <div class="main-content" id="rayCluster-content-page">
+            <div class="ray-cluster-container">
+              <!-- 集群状态头部 -->
+              <div class="cluster-header">
+                <div class="cluster-title">
+                  <i class="fas fa-server"></i>
+                  <h2>CastRay 集群监控系统</h2>
+                </div>
+                <div class="cluster-status">
+                  <div class="cluster-status-indicator disconnected">
+                    <div class="status-dot"></div>
+                    <span>未连接</span>
+                  </div>
+                  <div class="connection-info">
+                    <small id="cluster-data-source">正在连接 CastRay 后端...</small>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 控制面板 -->
+              <div class="cluster-controls">
+                <div class="control-group">
+                  <button id="refresh-cluster-btn" class="cluster-btn primary">
+                    <i class="fas fa-sync-alt"></i>
+                    刷新数据
+                  </button>
+                  <button id="restart-cluster-btn" class="cluster-btn">
+                    <i class="fas fa-redo"></i>
+                    重启集群
+                  </button>
+                  <button id="stop-cluster-btn" class="cluster-btn danger">
+                    <i class="fas fa-stop"></i>
+                    停止集群
+                  </button>
+                  <button id="cluster-file-transfer-btn" class="cluster-btn">
+                    <i class="fas fa-upload"></i>
+                    文件传输
+                  </button>
+                </div>
+              </div>
+
+              <!-- 集群统计面板 -->
+              <div class="cluster-metrics">
+                <div class="metric-card" data-metric="total-nodes">
+                  <div class="metric-title">总节点数</div>
+                  <div class="metric-value">0</div>
+                  <div class="metric-change positive">+0</div>
+                </div>
+                <div class="metric-card" data-metric="alive-nodes">
+                  <div class="metric-title">活跃节点</div>
+                  <div class="metric-value">0</div>
+                  <div class="metric-change positive">+0</div>
+                </div>
+                <div class="metric-card" data-metric="cpu-usage">
+                  <div class="metric-title">CPU使用率</div>
+                  <div class="metric-value">0%</div>
+                  <div class="metric-change positive">+0%</div>
+                </div>
+                <div class="metric-card" data-metric="memory-usage">
+                  <div class="metric-title">内存使用率</div>
+                  <div class="metric-value">0%</div>
+                  <div class="metric-change positive">+0%</div>
+                </div>
+              </div>
+
+              <!-- 节点列表 -->
+              <div class="cluster-nodes-panel">
+                <div class="nodes-header">
+                  <h3>集群节点</h3>
+                  <div class="nodes-controls">
+                    <label>
+                      显示：
+                      <select id="nodes-filter">
+                        <option value="all">所有节点</option>
+                        <option value="active">活跃节点</option>
+                        <option value="inactive">非活跃节点</option>
+                      </select>
+                    </label>
+                  </div>
+                </div>
+                <div class="nodes-container" id="cluster-nodes-grid">
+                  <!-- 节点卡片将由JavaScript动态生成 -->
+                  <div class="empty-state" id="cluster-empty-state">
+                    <div class="empty-icon">🔌</div>
+                    <h3>未连接到 CastRay 后端</h3>
+                    <p>请确保 CastRay 服务正在运行</p>
+                    <div class="empty-actions">
+                      <button onclick="window.dashboardManager && window.dashboardManager.rayClusterManager ? window.dashboardManager.rayClusterManager.fetchClusterData() : console.log('Ray cluster manager not available')" class="retry-btn">重试连接</button>
+                      <a href="http://localhost:8000" target="_blank" class="check-backend-btn">检查后端服务</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- 右侧属性面板 -->
@@ -491,6 +592,7 @@
     <!-- JavaScript 模块 -->
     <script src="api-manager.js"></script>
     <script src="pixel-streaming.js"></script>
+    <script src="ray-cluster-manager.js"></script>
     <script src="dashboard-manager.js"></script>
   </body>
 </html>

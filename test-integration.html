@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ray Cluster Integration Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background: #2a2a2a;
+        }
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+        .warning { color: #ff9800; }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            background: #00ff9d;
+            color: black;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #00d4ff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Ray Cluster Integration Test</h1>
+
+    <div class="test-section">
+        <h3>1. Script Loading Test</h3>
+        <div id="script-test-result">Testing...</div>
+    </div>
+
+    <div class="test-section">
+        <h3>2. Class Definition Test</h3>
+        <div id="class-test-result">Testing...</div>
+    </div>
+
+    <div class="test-section">
+        <h3>3. Dashboard Manager Test</h3>
+        <div id="dashboard-test-result">Testing...</div>
+    </div>
+
+    <div class="test-section">
+        <h3>4. Manual Tests</h3>
+        <button onclick="testRayClusterManager()">Test Ray Cluster Manager</button>
+        <button onclick="testDashboardIntegration()">Test Dashboard Integration</button>
+        <div id="manual-test-result"></div>
+    </div>
+
+    <script src="ray-cluster-manager.js"></script>
+    <script src="dashboard-manager.js"></script>
+    
+    <script>
+        // Test 1: Script Loading
+        function testScriptLoading() {
+            const result = document.getElementById('script-test-result');
+            
+            if (typeof RayClusterManager !== 'undefined') {
+                result.innerHTML = '<span class="success">✓ RayClusterManager class loaded successfully</span>';
+            } else {
+                result.innerHTML = '<span class="error">✗ RayClusterManager class not found</span>';
+                return false;
+            }
+            
+            if (typeof DashboardManager !== 'undefined') {
+                result.innerHTML += '<br><span class="success">✓ DashboardManager class loaded successfully</span>';
+            } else {
+                result.innerHTML += '<br><span class="error">✗ DashboardManager class not found</span>';
+                return false;
+            }
+            
+            return true;
+        }
+
+        // Test 2: Class Definition
+        function testClassDefinition() {
+            const result = document.getElementById('class-test-result');
+            
+            try {
+                const rayManager = new RayClusterManager();
+                result.innerHTML = '<span class="success">✓ RayClusterManager can be instantiated</span>';
+                
+                // Check if required methods exist
+                const methods = ['initialize', 'fetchClusterData', 'updateClusterData', 'connectWebSocket'];
+                let allMethodsExist = true;
+                
+                for (const method of methods) {
+                    if (typeof rayManager[method] === 'function') {
+                        result.innerHTML += `<br><span class="success">✓ Method ${method} exists</span>`;
+                    } else {
+                        result.innerHTML += `<br><span class="error">✗ Method ${method} missing</span>`;
+                        allMethodsExist = false;
+                    }
+                }
+                
+                return allMethodsExist;
+            } catch (error) {
+                result.innerHTML = `<span class="error">✗ Error creating RayClusterManager: ${error.message}</span>`;
+                return false;
+            }
+        }
+
+        // Test 3: Dashboard Manager
+        function testDashboardManager() {
+            const result = document.getElementById('dashboard-test-result');
+            
+            if (window.dashboardManager) {
+                result.innerHTML = '<span class="success">✓ Global dashboardManager exists</span>';
+                
+                if (typeof window.dashboardManager.initRayClusterManager === 'function') {
+                    result.innerHTML += '<br><span class="success">✓ initRayClusterManager method exists</span>';
+                } else {
+                    result.innerHTML += '<br><span class="error">✗ initRayClusterManager method missing</span>';
+                }
+                
+                return true;
+            } else {
+                result.innerHTML = '<span class="error">✗ Global dashboardManager not found</span>';
+                return false;
+            }
+        }
+
+        // Manual Test: Ray Cluster Manager
+        function testRayClusterManager() {
+            const result = document.getElementById('manual-test-result');
+            result.innerHTML = '<div>Testing Ray Cluster Manager...</div>';
+            
+            try {
+                const manager = new RayClusterManager();
+                result.innerHTML += '<div class="success">✓ Ray Cluster Manager created</div>';
+                
+                // Test connection (this will fail without backend, but we can test the method call)
+                manager.fetchClusterData().catch(error => {
+                    result.innerHTML += `<div class="warning">⚠ Backend connection failed (expected): ${error.message}</div>`;
+                });
+                
+                result.innerHTML += '<div class="success">✓ fetchClusterData method called successfully</div>';
+                
+            } catch (error) {
+                result.innerHTML += `<div class="error">✗ Error: ${error.message}</div>`;
+            }
+        }
+
+        // Manual Test: Dashboard Integration
+        function testDashboardIntegration() {
+            const result = document.getElementById('manual-test-result');
+            result.innerHTML = '<div>Testing Dashboard Integration...</div>';
+            
+            if (window.dashboardManager) {
+                try {
+                    window.dashboardManager.initRayClusterManager();
+                    result.innerHTML += '<div class="success">✓ Ray Cluster Manager initialized via Dashboard Manager</div>';
+                    
+                    if (window.dashboardManager.rayClusterManager) {
+                        result.innerHTML += '<div class="success">✓ Ray Cluster Manager instance created</div>';
+                    } else {
+                        result.innerHTML += '<div class="error">✗ Ray Cluster Manager instance not created</div>';
+                    }
+                } catch (error) {
+                    result.innerHTML += `<div class="error">✗ Integration error: ${error.message}</div>`;
+                }
+            } else {
+                result.innerHTML += '<div class="error">✗ Dashboard Manager not available</div>';
+            }
+        }
+
+        // Run automatic tests when page loads
+        window.onload = function() {
+            setTimeout(() => {
+                testScriptLoading();
+                testClassDefinition();
+                testDashboardManager();
+            }, 500);
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Ray Cluster Manager</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #1a1a1a;
+            color: white;
+            padding: 20px;
+        }
+        .debug-section {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #333;
+            background: #2a2a2a;
+        }
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+        .warning { color: #ff9800; }
+    </style>
+</head>
+<body>
+    <h1>Debug Ray Cluster Manager</h1>
+    
+    <div class="debug-section">
+        <h3>Script Load Check</h3>
+        <div id="load-status">Loading...</div>
+    </div>
+
+    <div class="debug-section">
+        <h3>Console Output</h3>
+        <div id="console-output"></div>
+    </div>
+
+    <script>
+        // Capture console output
+        const consoleOutput = document.getElementById('console-output');
+        const originalLog = console.log;
+        const originalError = console.error;
+        
+        console.log = function(...args) {
+            consoleOutput.innerHTML += '<div class="success">[LOG] ' + args.join(' ') + '</div>';
+            originalLog.apply(console, args);
+        };
+        
+        console.error = function(...args) {
+            consoleOutput.innerHTML += '<div class="error">[ERROR] ' + args.join(' ') + '</div>';
+            originalError.apply(console, args);
+        };
+        
+        console.log('Console capture started');
+    </script>
+
+    <!-- Load Ray Cluster Manager -->
+    <script src="ray-cluster-manager.js"></script>
+    
+    <script>
+        document.getElementById('load-status').innerHTML = 'Checking RayClusterManager...';
+        
+        setTimeout(() => {
+            const loadStatus = document.getElementById('load-status');
+            
+            if (typeof RayClusterManager !== 'undefined') {
+                loadStatus.innerHTML = '<span class="success">✓ RayClusterManager loaded successfully</span>';
+                console.log('RayClusterManager is available:', RayClusterManager);
+                
+                try {
+                    const manager = new RayClusterManager();
+                    console.log('RayClusterManager instance created:', manager);
+                    loadStatus.innerHTML += '<br><span class="success">✓ Instance created successfully</span>';
+                } catch (error) {
+                    console.error('Error creating instance:', error);
+                    loadStatus.innerHTML += '<br><span class="error">✗ Error creating instance: ' + error.message + '</span>';
+                }
+            } else {
+                loadStatus.innerHTML = '<span class="error">✗ RayClusterManager not found</span>';
+                console.error('RayClusterManager is not defined');
+                
+                // Check window object
+                console.log('Available in window:', Object.keys(window).filter(key => key.includes('Ray')));
+                console.log('All script tags:', Array.from(document.scripts).map(s => s.src));
+            }
+        }, 100);
+    </script>
+</body>
+</html>

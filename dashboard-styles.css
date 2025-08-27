@@ -1049,6 +1049,336 @@ input[type="number"]:focus {
   }
 }
 
+/* Ray Cluster Monitoring Styles */
+.cluster-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.metric-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.metric-card:hover {
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 255, 157, 0.15);
+}
+
+.metric-title {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.metric-value {
+  color: var(--text-primary);
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  font-family: 'Orbitron', monospace;
+}
+
+.metric-change {
+  font-size: 0.85rem;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.metric-change.positive {
+  color: var(--success-color);
+  background: rgba(76, 175, 80, 0.1);
+}
+
+.metric-change.negative {
+  color: var(--danger-color);
+  background: rgba(244, 67, 54, 0.1);
+}
+
+.cluster-controls {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.control-btn {
+  padding: 12px 20px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  backdrop-filter: blur(10px);
+}
+
+.control-btn:hover {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(0, 255, 157, 0.2);
+}
+
+.control-btn:active {
+  transform: translateY(0);
+}
+
+.control-btn.danger:hover {
+  background: var(--danger-color);
+  border-color: var(--danger-color);
+  box-shadow: 0 4px 15px rgba(244, 67, 54, 0.2);
+}
+
+.nodes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.cluster-node-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.cluster-node-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.cluster-node-card:hover::before {
+  opacity: 1;
+}
+
+.cluster-node-card:hover {
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 255, 157, 0.15);
+}
+
+.node-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.node-title {
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.node-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.node-badge.alive {
+  background: rgba(76, 175, 80, 0.2);
+  color: var(--success-color);
+  border: 1px solid var(--success-color);
+}
+
+.node-badge.dead {
+  background: rgba(244, 67, 54, 0.2);
+  color: var(--danger-color);
+  border: 1px solid var(--danger-color);
+}
+
+.node-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.info-label {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.info-value {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-family: 'Orbitron', monospace;
+}
+
+.node-resources {
+  margin-top: 15px;
+}
+
+.resource-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.resource-label {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.stat-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-secondary);
+  border-radius: 3px;
+  margin: 0 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.stat-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+  position: relative;
+}
+
+.stat-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: shimmer 2s infinite;
+}
+
+.stat-fill.cpu {
+  background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+}
+
+.stat-fill.memory {
+  background: linear-gradient(90deg, #ff9800, #ff5722);
+}
+
+.stat-fill.disk {
+  background: linear-gradient(90deg, #9c27b0, #e91e63);
+}
+
+.resource-value {
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  min-width: 60px;
+  text-align: right;
+  font-family: 'Orbitron', monospace;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+}
+
+.empty-state-icon {
+  font-size: 3rem;
+  margin-bottom: 20px;
+  opacity: 0.5;
+}
+
+.empty-state-title {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+  color: var(--text-primary);
+}
+
+.empty-state-description {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.cluster-status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.cluster-status-indicator.connected {
+  background: rgba(76, 175, 80, 0.1);
+  color: var(--success-color);
+  border: 1px solid var(--success-color);
+}
+
+.cluster-status-indicator.disconnected {
+  background: rgba(244, 67, 54, 0.1);
+  color: var(--danger-color);
+  border: 1px solid var(--danger-color);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 @media (max-width: 992px) {
   .sidebar-tabs {
     width: 60px;
