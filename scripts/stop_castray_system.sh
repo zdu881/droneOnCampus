@@ -38,6 +38,7 @@ stop_service "castray"
 stop_service "frontend"
 
 # 清理端口
+pkill -f "python src/backend/python/rayoutput.py" 2>/dev/null || true
 pkill -f "python rayoutput.py" 2>/dev/null || true
 pkill -f "python main.py" 2>/dev/null || true
 pkill -f "http.server 8080" 2>/dev/null || true

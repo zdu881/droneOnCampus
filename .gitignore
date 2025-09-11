@@ -1,0 +1,45 @@
+# Logs
+*.log
+logs/*.log
+
+# Runtime data
+*.pid
+*.seed
+*.pid.lock
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Build outputs
+dist/
+build/
+*.tar.gz
+
+# Temporary files
+tmp/
+temp/
