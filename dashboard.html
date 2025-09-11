@@ -89,6 +89,10 @@
             <i class="fas fa-chart-line"></i>
             <span>遥测</span>
           </button>
+          <button class="tab-btn" data-tab="node-monitoring">
+            <i class="fas fa-server"></i>
+            <span>节点监控</span>
+          </button>
         </div>
 
         <!-- 主内容面板 -->
@@ -340,6 +344,264 @@
               <p>此功能正在开发中</p>
             </div>
           </div>
+
+          <!-- 节点监控页面 -->
+          <div class="main-content" id="node-monitoring-content-page">
+            <div class="node-monitoring-dashboard">
+              <div class="dashboard-header">
+                <h2><i class="fas fa-server"></i> 节点监控与管理</h2>
+                <div class="cluster-controls">
+                  <button id="pauseBtn" class="control-btn">
+                    <i class="fas fa-pause"></i> 暂停动画
+                  </button>
+                  <button id="resetBtn" class="control-btn">
+                    <i class="fas fa-refresh"></i> 刷新数据
+                  </button>
+                  <button id="castrayConnectBtn" class="control-btn primary">
+                    <i class="fas fa-plug"></i> 连接CastRay
+                  </button>
+                  <label class="speed-control">
+                    动画速度: 
+                    <input type="range" id="speedSlider" min="0.5" max="3" step="0.1" value="1">
+                  </label>
+                </div>
+              </div>
+
+              <!-- 统计信息面板 -->
+              <div class="unified-stats-section">
+                <div class="stats-panel ray-stats">
+                  <h3><i class="fas fa-server"></i> Ray集群统计</h3>
+                  <div class="stats-grid">
+                    <div class="stat-item">
+                      <span>活跃节点:</span>
+                      <span id="activeNodes">0</span>
+                    </div>
+                    <div class="stat-item">
+                      <span>平均CPU使用率:</span>
+                      <span id="avgCpu">0%</span>
+                    </div>
+                    <div class="stat-item">
+                      <span>平均内存使用率:</span>
+                      <span id="avgMemory">0%</span>
+                    </div>
+                    <div class="stat-item">
+                      <span>有线连接节点:</span>
+                      <span id="wiredNodes">0</span>
+                    </div>
+                    <div class="stat-item">
+                      <span>无线连接节点:</span>
+                      <span id="wirelessNodes">0</span>
+                    </div>
+                    <div class="stat-item">
+                      <span>总任务数:</span>
+                      <span id="totalTasks">0</span>
+                    </div>
+                    <div class="stat-item">
+                      <span>数据源:</span>
+                      <span id="dataSource">连接中...</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="stats-panel castray-stats">
+                  <h3><i class="fas fa-network-wired"></i> CastRay 状态</h3>
+                  <div class="stats-grid">
+                    <div class="stat-item">
+                      <span>连接状态:</span>
+                      <span id="castrayStatus" class="status-disconnected">断开</span>
+                    </div>
+                    <div class="stat-item">
+                      <span>CastRay节点数:</span>
+                      <span id="castrayNodeCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                      <span>活跃传输:</span>
+                      <span id="activeTransfers">0</span>
+                    </div>
+                    <div class="stat-item">
+                      <span>总传输次数:</span>
+                      <span id="totalTransfers">0</span>
+                    </div>
+                    <div class="stat-item">
+                      <span>成功传输:</span>
+                      <span id="successfulTransfers">0</span>
+                    </div>
+                    <div class="stat-item">
+                      <span>传输中:</span>
+                      <span id="ongoingTransfers">0</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="legend-panel">
+                  <h3>状态说明</h3>
+                  <div class="legend-grid">
+                    <div class="legend-item">
+                      <div class="legend-color low"></div>
+                      <span>低负载 (0-30%)</span>
+                    </div>
+                    <div class="legend-item">
+                      <div class="legend-color medium"></div>
+                      <span>中等负载 (31-70%)</span>
+                    </div>
+                    <div class="legend-item">
+                      <div class="legend-color high"></div>
+                      <span>高负载 (71-100%)</span>
+                    </div>
+                    <div class="legend-item">
+                      <div class="legend-color dead"></div>
+                      <span>节点离线</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 节点列表区域 -->
+              <div class="nodes-section">
+                <!-- Ray节点列表 -->
+                <div class="node-category">
+                  <h3><i class="fas fa-server"></i> Ray计算节点</h3>
+                  <div id="nodeListContainer" class="node-container"></div>
+                </div>
+
+                <!-- CastRay节点列表 -->
+                <div class="node-category">
+                  <h3><i class="fas fa-network-wired"></i> CastRay传输节点</h3>
+                  <div class="castray-node-controls">
+                    <div class="control-group">
+                      <input type="text" id="newNodeId" placeholder="节点ID (如: node_4)" class="control-input">
+                      <button id="createNodeBtn" class="control-btn">
+                        <i class="fas fa-plus"></i> 创建节点
+                      </button>
+                    </div>
+                  </div>
+                  <div id="castrayNodesContainer" class="castray-nodes-container"></div>
+                </div>
+              </div>
+
+              <!-- 文件传输控制 -->
+              <div class="file-transfer-section">
+                <div class="transfer-header">
+                  <h3><i class="fas fa-exchange-alt"></i> 文件传输控制</h3>
+                </div>
+                
+                <div class="transfer-controls">
+                  <h4>手动文件传输</h4>
+                  <div class="transfer-control-group">
+                    <select id="sourceNode" class="control-select">
+                      <option value="">选择源节点</option>
+                    </select>
+                    <select id="targetNode" class="control-select">
+                      <option value="">选择目标节点</option>
+                    </select>
+                    <select id="fileName" class="control-select">
+                      <option value="">选择文件</option>
+                    </select>
+                    <button id="startTransferBtn" class="control-btn primary">
+                      <i class="fas fa-play"></i> 开始传输
+                    </button>
+                    <button id="refreshFilesBtn" class="control-btn">
+                      <i class="fas fa-refresh"></i> 刷新文件列表
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="transfer-log">
+                  <h4>传输日志</h4>
+                  <div id="transferLogContainer" class="log-container"></div>
+                </div>
+              </div>
+
+              <!-- Ray集群发现功能 -->
+              <div class="cluster-discovery-section">
+                <div class="discovery-header">
+                  <h3><i class="fas fa-search"></i> Ray集群发现</h3>
+                </div>
+                
+                <div class="discovery-controls">
+                  <button id="discoverClustersBtn" class="control-btn primary">
+                    <i class="fas fa-radar"></i> 发现外部集群
+                  </button>
+                  <div class="discovery-status">
+                    <span>状态: </span>
+                    <span id="clusterDiscoveryStatus">未开始</span>
+                  </div>
+                </div>
+                
+                <div class="discovered-clusters">
+                  <h4>发现的集群</h4>
+                  <div id="discoveredClusters" class="clusters-container">
+                    <div class="no-data">点击"发现外部集群"开始扫描</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 自定义文件生成功能 -->
+              <div class="file-generation-section">
+                <div class="generation-header">
+                  <h3><i class="fas fa-file-plus"></i> 自定义文件生成</h3>
+                </div>
+                
+                <div class="generation-controls">
+                  <div class="control-group">
+                    <label for="customFileName">文件名:</label>
+                    <input type="text" id="customFileName" placeholder="例: test_file.txt" class="control-input">
+                  </div>
+                  
+                  <div class="control-group">
+                    <label for="customFileSize">文件大小:</label>
+                    <input type="text" id="customFileSize" placeholder="例: 1MB, 500KB, 10B" class="control-input">
+                  </div>
+                  
+                  <div class="control-group">
+                    <label for="customContentType">内容类型:</label>
+                    <select id="customContentType" class="control-select">
+                      <option value="text">文本内容</option>
+                      <option value="random">随机内容</option>
+                      <option value="pattern">模式内容</option>
+                    </select>
+                  </div>
+                  
+                  <button id="generateFileBtn" class="control-btn primary">
+                    <i class="fas fa-cog"></i> 生成文件
+                  </button>
+                  
+                  <div class="generation-status">
+                    <span>状态: </span>
+                    <span id="fileGenerationStatus">等待操作</span>
+                  </div>
+                </div>
+                
+                <!-- 预设大小快速生成 -->
+                <div class="preset-generation">
+                  <h4>快速生成</h4>
+                  <div class="preset-buttons">
+                    <button class="preset-btn" onclick="castrayIntegration.generatePresetFile('tiny')">
+                      1KB
+                    </button>
+                    <button class="preset-btn" onclick="castrayIntegration.generatePresetFile('small')">
+                      10KB
+                    </button>
+                    <button class="preset-btn" onclick="castrayIntegration.generatePresetFile('medium')">
+                      100KB
+                    </button>
+                    <button class="preset-btn" onclick="castrayIntegration.generatePresetFile('large')">
+                      1MB
+                    </button>
+                    <button class="preset-btn" onclick="castrayIntegration.generatePresetFile('huge')">
+                      10MB
+                    </button>
+                    <button class="preset-btn" onclick="castrayIntegration.generatePresetFile('massive')">
+                      100MB
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+            </div>
+          </div>
+
         </div>
 
         <!-- 右侧属性面板 -->
@@ -491,6 +753,8 @@
     <!-- JavaScript 模块 -->
     <script src="api-manager.js"></script>
     <script src="pixel-streaming.js"></script>
+    <script src="ray_monitor.js"></script>
+    <script src="castray_integration.js"></script>
     <script src="dashboard-manager.js"></script>
   </body>
 </html>

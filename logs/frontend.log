@@ -1,0 +1,25 @@
+127.0.0.1 - - [04/Sep/2025 19:06:49] "GET / HTTP/1.1" 200 -
+10.4.167.188 - - [04/Sep/2025 19:07:19] "GET / HTTP/1.1" 200 -
+10.4.167.188 - - [04/Sep/2025 19:07:19] "GET /styles.css HTTP/1.1" 200 -
+10.4.167.188 - - [04/Sep/2025 19:07:19] "GET /pixel-streaming.js HTTP/1.1" 200 -
+10.4.167.188 - - [04/Sep/2025 19:07:19] "GET /network-manager.js HTTP/1.1" 200 -
+10.4.167.188 - - [04/Sep/2025 19:07:19] "GET /api-manager.js HTTP/1.1" 200 -
+10.4.167.188 - - [04/Sep/2025 19:07:19] "GET /map-manager.js HTTP/1.1" 200 -
+10.4.167.188 - - [04/Sep/2025 19:07:19] "GET /agent-manager.js HTTP/1.1" 200 -
+10.4.167.188 - - [04/Sep/2025 19:07:19] "GET /unified-task-manager.js HTTP/1.1" 200 -
+10.4.167.188 - - [04/Sep/2025 19:07:19] "GET /unified-base-station-manager.js HTTP/1.1" 200 -
+10.4.167.188 - - [04/Sep/2025 19:07:19] "GET /vehicle-manager.js HTTP/1.1" 200 -
+10.4.167.188 - - [04/Sep/2025 19:07:19] "GET /unified-panel-manager.js HTTP/1.1" 200 -
+10.4.167.188 - - [04/Sep/2025 19:07:19] "GET /app.js HTTP/1.1" 200 -
+10.4.167.188 - - [04/Sep/2025 19:07:19] code 404, message File not found
+10.4.167.188 - - [04/Sep/2025 19:07:19] "GET /favicon.ico HTTP/1.1" 404 -
+10.4.167.188 - - [04/Sep/2025 19:07:27] "GET /dashboard.html HTTP/1.1" 200 -
+10.4.167.188 - - [04/Sep/2025 19:07:28] "GET /ray_monitor.js HTTP/1.1" 200 -
+10.4.167.188 - - [04/Sep/2025 19:07:28] "GET /castray_integration.js HTTP/1.1" 200 -
+10.4.167.188 - - [04/Sep/2025 19:07:28] "GET /dashboard-manager.js HTTP/1.1" 200 -
+10.4.167.188 - - [04/Sep/2025 19:07:28] "GET /dashboard-styles.css HTTP/1.1" 200 -
+10.4.167.188 - - [04/Sep/2025 19:08:27] "GET /dashboard.html HTTP/1.1" 304 -
+10.4.167.188 - - [04/Sep/2025 19:08:27] "GET /dashboard-styles.css HTTP/1.1" 304 -
+10.4.167.188 - - [04/Sep/2025 19:08:27] "GET /castray_integration.js HTTP/1.1" 304 -
+10.4.167.188 - - [04/Sep/2025 19:08:30] "GET /dashboard.html HTTP/1.1" 304 -
+10.4.167.188 - - [04/Sep/2025 19:08:33] "GET /dashboard.html HTTP/1.1" 304 -

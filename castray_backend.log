@@ -1,0 +1,29 @@
+/data/home/sim6g/rayCode/droneOnCampus/castray_backend.py:316: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("startup")
+/data/home/sim6g/rayCode/droneOnCampus/castray_backend.py:363: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("shutdown")
+INFO:     Started server process [3449447]
+INFO:     Waiting for application startup.
+INFO:__main__:正在初始化droneOnCampus CastRay集成系统...
+ERROR:    Traceback (most recent call last):
+  File "/data/home/sim6g/anaconda3/envs/ray/lib/python3.10/site-packages/starlette/routing.py", line 694, in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+  File "/data/home/sim6g/anaconda3/envs/ray/lib/python3.10/site-packages/starlette/routing.py", line 571, in __aenter__
+    await self._router.startup()
+  File "/data/home/sim6g/anaconda3/envs/ray/lib/python3.10/site-packages/starlette/routing.py", line 671, in startup
+    await handler()
+  File "/data/home/sim6g/rayCode/droneOnCampus/castray_backend.py", line 322, in startup_event
+    success = await cluster.initialize()
+AttributeError: 'CastingCluster' object has no attribute 'initialize'. Did you mean: 'initialize_ray'?
+
+ERROR:    Application startup failed. Exiting.

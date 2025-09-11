@@ -1,0 +1,526 @@
+bash: line 2: /data/home/sim6g/miniconda3/etc/profile.d/conda.sh: No such file or directory
+
+CondaError: Run 'conda init' before 'conda activate'
+
+INFO:__main__:已加载配置文件: config_linux.json
+/data/home/sim6g/rayCode/CastRay/main.py:121: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("startup")
+/data/home/sim6g/rayCode/CastRay/main.py:185: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("shutdown")
+INFO:__main__:启动Web服务器: 0.0.0.0:8000
+INFO:     Started server process [3451877]
+INFO:     Waiting for application startup.
+INFO:__main__:正在启动分布式消息传输系统...
+INFO:__main__:第 1/3 次尝试初始化Ray集群...
+INFO:ray_casting:🔍 尝试发现外部Ray集群...
+INFO:ray_cluster_discovery:🔍 开始扫描本地Ray集群...
+INFO:ray_cluster_discovery:发现Ray状态输出:
+INFO:ray_cluster_discovery:======== Autoscaler status: 2025-09-04 19:06:34.006227 ========
+Node status
+---------------------------------------------------------------
+Active:
+ 1 node_2a88f73b832c6950347f558b7a208bc329c4fa262c5c6f23b3a7b391
+ 1 node_2b04ab22e35a147e9102c5bfdffd438cd85edb67b5200c72892c8d84
+ 1 node_a1c106e7c152aef40e5bb9aa8ce53b977e4e0170ecb5b2ad8208474f
+ 1 node_2f424006a76ff85d872999ae84e645ad927beabeea0bfd635fb6ce3d
+ 1 node_b10e3dade20bbdeea3016d3d44bb574fc727c6d832f3c05810930915
+ 1 node_fa4e966343159d92da269d7234257f291c85a8ef3533b53473429cc6
+ 1 node_6164ca170b76829e0008080f6c6fc7cb3708a2174d4798e7c43d3937
+ 1 node_c8b0e9a23319fb8762e83a831f5e8bf6a3e34d9e28290f82cc8ff118
+ 1 node_4a32a50768c0af86070159c899c8fd154384e9cb3093cdeb12312c06
+ 1 node_3f8acd58bbfa22076a5182cf6c85348de925671ecd0292f84c6f6e24
+ 1 node_174070f215004eeb318f7a9eded144de25a350d45a6796fa755a8667
+ 1 node_c33162856635292d70482d1373830da06f5ad9bfb48d7575be59eec4
+ 1 node_dc3fb5bc1264892fccf5b08a15f836db54f655e6f71e938c3ea25297
+ 1 node_1927fe8da2293f0736b89be0caac07f3979a6edd85a0f74a79a75373
+ 1 node_562dee85831d0d83cc365c88122fed08a0588531ca8ade651770220d
+ 1 node_cc3dab737080baf9ed4b79cf9b1c7e41aa8a29b6ecd6208970d54dca
+ 1 node_0a4b1c86bda8cc7e55b6419e1def372374bd00488abfcdfd122bae8f
+ 1 node_a87888016dcba7456821b71d21731c2ecf278ab2fdb3ba1768b6dfca
+ 1 node_65beb6df74f99f1ce986d3b099085f06891ea7c342ee8e9647362632
+ 1 node_64e06abad7490c00f2d3e5f2d019a70af8d829694945e062e6ac558b
+ 1 node_d494f2f955239070eebdf151891318e0dbb58ef5f411193f66e6daa8
+ 1 node_51fe486c7a069a8bf95031fa5cd43ae2cc2a49cd6258d9f5628be4bd
+ 1 node_90fe35865d6cd2b397133a7ff07d75bd57c0d8f5132038d3eeef2f54
+Pending:
+ (no pending nodes)
+Recent failures:
+ (no failures)
+
+Resources
+---------------------------------------------------------------
+Total Usage:
+ 0.0/3664.0 CPU
+ 0.0/1.0 G1
+ 0.0/1.0 G2
+ 0.0/1.0 G3
+ 0.0/1.0 G4
+ 0.0/1.0 G5
+ 0.0/1.0 G6
+ 0.0/1.0 G7
+ 0.0/1.0 G8
+ 0.0/120.0 GPU
+ 0.0/1.0 J1
+ 0.0/1.0 M1
+ 0.0/1.0 M10
+ 0.0/1.0 M11
+ 0.0/1.0 M12
+ 0.0/1.0 M13
+ 0.0/1.0 M2
+ 0.0/1.0 M3
+ 0.0/1.0 M4
+ 0.0/1.0 M5
+ 0.0/1.0 M6
+ 0.0/1.0 M7
+ 0.0/1.0 M8
+ 0.0/1.0 M9
+ 0.0/21.0 Wired
+ 0.0/1.0 Wireless
+ 0B/17.24TiB memory
+ 0B/4.18TiB object_store_memory
+
+Total Constraints:
+ (no request_resources() constraints)
+Total Demands:
+ (no resource demands)
+
+INFO:ray_cluster_discovery:发现Ray Dashboard: http://127.0.0.1:8265
+INFO:ray_cluster_discovery:发现 48 个Ray集群
+INFO:ray_cluster_discovery:尝试连接到集群: {'source': 'dashboard_scan', 'dashboard_url': 'http://127.0.0.1:8265', 'dashboard_port': 8265, 'nodes': 0, 'resources': {}, 'status': 'active'}
+INFO:ray_cluster_discovery:尝试连接到外部Ray集群: {'source': 'dashboard_scan', 'dashboard_url': 'http://127.0.0.1:8265', 'dashboard_port': 8265, 'nodes': 0, 'resources': {}, 'status': 'active'}
+2025-09-04 19:06:43,315	INFO client_builder.py:244 -- Passing the following kwargs to ray.init() on the server: ignore_reinit_error, log_to_driver
+SIGTERM handler is not set because current thread is not the main thread.
+INFO:ray_cluster_discovery:成功连接到Ray集群 (端口 10001)
+INFO:ray_cluster_discovery:发现Ray集群: 23 个节点
+INFO:ray_cluster_discovery:集群资源: {'G7': 1.0, 'M2': 1.0, 'accelerator_type:G': 22.0, 'Wireless': 1.0, 'G3': 1.0, 'M7': 1.0, 'G6': 1.0, 'node:10.30.2.11': 23.0, 'M8': 1.0, 'G5': 1.0, 'node:__internal_head__': 1.0, 'J1': 1.0, 'CPU': 3664.0, 'G8': 1.0, 'M4': 1.0, 'M6': 1.0, 'G1': 1.0, 'object_store_memory': 4600000000000.0, 'G2': 1.0, 'Wired': 21.0, 'M9': 1.0, 'M5': 1.0, 'M3': 1.0, 'M12': 1.0, 'G4': 1.0, 'M11': 1.0, 'memory': 18955956375552.0, 'M13': 1.0, 'M10': 1.0, 'M1': 1.0, 'GPU': 120.0}
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_1
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_2
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_3
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_4
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_5
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_6
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_7
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_8
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_9
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_10
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_11
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_12
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_13
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_14
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_15
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_16
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_17
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_18
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_19
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_20
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_21
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_22
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_23
+INFO:ray_cluster_discovery:发现 53 个Actor
+INFO:ray_cluster_discovery:✅ 成功连接到外部Ray集群
+INFO:ray_casting:✅ 已连接到外部Ray集群
+INFO:ray_casting:发现 23 个外部节点
+INFO:__main__:Ray集群初始化成功
+INFO:__main__:系统启动完成
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:41698 - "GET /api/status HTTP/1.1" 200 OK
+INFO:ray_cluster_discovery:🔍 开始扫描本地Ray集群...
+INFO:ray_cluster_discovery:发现Ray状态输出:
+INFO:ray_cluster_discovery:======== Autoscaler status: 2025-09-04 19:07:09.104150 ========
+Node status
+---------------------------------------------------------------
+Active:
+ 1 node_2a88f73b832c6950347f558b7a208bc329c4fa262c5c6f23b3a7b391
+ 1 node_2b04ab22e35a147e9102c5bfdffd438cd85edb67b5200c72892c8d84
+ 1 node_a1c106e7c152aef40e5bb9aa8ce53b977e4e0170ecb5b2ad8208474f
+ 1 node_2f424006a76ff85d872999ae84e645ad927beabeea0bfd635fb6ce3d
+ 1 node_b10e3dade20bbdeea3016d3d44bb574fc727c6d832f3c05810930915
+ 1 node_fa4e966343159d92da269d7234257f291c85a8ef3533b53473429cc6
+ 1 node_6164ca170b76829e0008080f6c6fc7cb3708a2174d4798e7c43d3937
+ 1 node_c8b0e9a23319fb8762e83a831f5e8bf6a3e34d9e28290f82cc8ff118
+ 1 node_4a32a50768c0af86070159c899c8fd154384e9cb3093cdeb12312c06
+ 1 node_3f8acd58bbfa22076a5182cf6c85348de925671ecd0292f84c6f6e24
+ 1 node_174070f215004eeb318f7a9eded144de25a350d45a6796fa755a8667
+ 1 node_c33162856635292d70482d1373830da06f5ad9bfb48d7575be59eec4
+ 1 node_dc3fb5bc1264892fccf5b08a15f836db54f655e6f71e938c3ea25297
+ 1 node_1927fe8da2293f0736b89be0caac07f3979a6edd85a0f74a79a75373
+ 1 node_562dee85831d0d83cc365c88122fed08a0588531ca8ade651770220d
+ 1 node_cc3dab737080baf9ed4b79cf9b1c7e41aa8a29b6ecd6208970d54dca
+ 1 node_0a4b1c86bda8cc7e55b6419e1def372374bd00488abfcdfd122bae8f
+ 1 node_a87888016dcba7456821b71d21731c2ecf278ab2fdb3ba1768b6dfca
+ 1 node_65beb6df74f99f1ce986d3b099085f06891ea7c342ee8e9647362632
+ 1 node_64e06abad7490c00f2d3e5f2d019a70af8d829694945e062e6ac558b
+ 1 node_d494f2f955239070eebdf151891318e0dbb58ef5f411193f66e6daa8
+ 1 node_51fe486c7a069a8bf95031fa5cd43ae2cc2a49cd6258d9f5628be4bd
+ 1 node_90fe35865d6cd2b397133a7ff07d75bd57c0d8f5132038d3eeef2f54
+Pending:
+ (no pending nodes)
+Recent failures:
+ (no failures)
+
+Resources
+---------------------------------------------------------------
+Total Usage:
+ 0.0/3664.0 CPU
+ 0.0/1.0 G1
+ 0.0/1.0 G2
+ 0.0/1.0 G3
+ 0.0/1.0 G4
+ 0.0/1.0 G5
+ 0.0/1.0 G6
+ 0.0/1.0 G7
+ 0.0/1.0 G8
+ 0.0/120.0 GPU
+ 0.0/1.0 J1
+ 0.0/1.0 M1
+ 0.0/1.0 M10
+ 0.0/1.0 M11
+ 0.0/1.0 M12
+ 0.0/1.0 M13
+ 0.0/1.0 M2
+ 0.0/1.0 M3
+ 0.0/1.0 M4
+ 0.0/1.0 M5
+ 0.0/1.0 M6
+ 0.0/1.0 M7
+ 0.0/1.0 M8
+ 0.0/1.0 M9
+ 0.0/21.0 Wired
+ 0.0/1.0 Wireless
+ 0B/17.24TiB memory
+ 0B/4.18TiB object_store_memory
+
+Total Constraints:
+ (no request_resources() constraints)
+Total Demands:
+ (no resource demands)
+
+INFO:ray_cluster_discovery:发现Ray Dashboard: http://127.0.0.1:8265
+INFO:ray_cluster_discovery:发现 48 个Ray集群
+INFO:ray_cluster_discovery:尝试连接到集群: {'source': 'dashboard_scan', 'dashboard_url': 'http://127.0.0.1:8265', 'dashboard_port': 8265, 'nodes': 0, 'resources': {}, 'status': 'active'}
+INFO:ray_cluster_discovery:尝试连接到外部Ray集群: {'source': 'dashboard_scan', 'dashboard_url': 'http://127.0.0.1:8265', 'dashboard_port': 8265, 'nodes': 0, 'resources': {}, 'status': 'active'}
+2025-09-04 19:07:17,131	INFO client_builder.py:244 -- Passing the following kwargs to ray.init() on the server: ignore_reinit_error, log_to_driver
+SIGTERM handler is not set because current thread is not the main thread.
+INFO:ray_cluster_discovery:成功连接到Ray集群 (端口 10001)
+INFO:ray_cluster_discovery:发现Ray集群: 23 个节点
+INFO:ray_cluster_discovery:集群资源: {'G7': 1.0, 'M2': 1.0, 'accelerator_type:G': 22.0, 'Wireless': 1.0, 'G3': 1.0, 'M7': 1.0, 'G6': 1.0, 'node:10.30.2.11': 23.0, 'M8': 1.0, 'G5': 1.0, 'node:__internal_head__': 1.0, 'J1': 1.0, 'CPU': 3664.0, 'G8': 1.0, 'M4': 1.0, 'M6': 1.0, 'G1': 1.0, 'object_store_memory': 4600000000000.0, 'G2': 1.0, 'Wired': 21.0, 'M9': 1.0, 'M5': 1.0, 'M3': 1.0, 'M12': 1.0, 'G4': 1.0, 'M11': 1.0, 'memory': 18955956375552.0, 'M13': 1.0, 'M10': 1.0, 'M1': 1.0, 'GPU': 120.0}
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_1
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_2
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_3
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_4
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_5
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_6
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_7
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_8
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_9
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_10
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_11
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_12
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_13
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_14
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_15
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_16
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_17
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_18
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_19
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_20
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_21
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_22
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_23
+INFO:ray_cluster_discovery:发现 53 个Actor
+INFO:ray_cluster_discovery:✅ 成功连接到外部Ray集群
+INFO:     10.30.2.11:49546 - "POST /api/cluster/discover-external HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51253 - "OPTIONS /api/status HTTP/1.1" 405 Method Not Allowed
+INFO:     10.4.167.188:51256 - "OPTIONS /api/status HTTP/1.1" 405 Method Not Allowed
+INFO:     10.4.167.188:51273 - "OPTIONS /api/status HTTP/1.1" 405 Method Not Allowed
+INFO:     10.4.167.188:51281 - "OPTIONS /api/status HTTP/1.1" 405 Method Not Allowed
+INFO:     10.4.167.188:51284 - "OPTIONS /api/status HTTP/1.1" 405 Method Not Allowed
+INFO:     10.4.167.188:51284 - "GET /api/files HTTP/1.1" 404 Not Found
+INFO:     10.4.167.188:51284 - "GET /api/files HTTP/1.1" 404 Not Found
+INFO:     10.4.167.188:51284 - "OPTIONS /api/status HTTP/1.1" 405 Method Not Allowed
+INFO:     10.4.167.188:51293 - "OPTIONS /api/status HTTP/1.1" 405 Method Not Allowed
+INFO:     10.4.167.188:51299 - "OPTIONS /api/status HTTP/1.1" 405 Method Not Allowed
+INFO:ray_cluster_discovery:🔍 开始扫描本地Ray集群...
+INFO:ray_cluster_discovery:发现Ray状态输出:
+INFO:ray_cluster_discovery:======== Autoscaler status: 2025-09-04 19:08:04.257851 ========
+Node status
+---------------------------------------------------------------
+Active:
+ 1 node_2a88f73b832c6950347f558b7a208bc329c4fa262c5c6f23b3a7b391
+ 1 node_2b04ab22e35a147e9102c5bfdffd438cd85edb67b5200c72892c8d84
+ 1 node_a1c106e7c152aef40e5bb9aa8ce53b977e4e0170ecb5b2ad8208474f
+ 1 node_2f424006a76ff85d872999ae84e645ad927beabeea0bfd635fb6ce3d
+ 1 node_b10e3dade20bbdeea3016d3d44bb574fc727c6d832f3c05810930915
+ 1 node_fa4e966343159d92da269d7234257f291c85a8ef3533b53473429cc6
+ 1 node_6164ca170b76829e0008080f6c6fc7cb3708a2174d4798e7c43d3937
+ 1 node_c8b0e9a23319fb8762e83a831f5e8bf6a3e34d9e28290f82cc8ff118
+ 1 node_4a32a50768c0af86070159c899c8fd154384e9cb3093cdeb12312c06
+ 1 node_3f8acd58bbfa22076a5182cf6c85348de925671ecd0292f84c6f6e24
+ 1 node_174070f215004eeb318f7a9eded144de25a350d45a6796fa755a8667
+ 1 node_c33162856635292d70482d1373830da06f5ad9bfb48d7575be59eec4
+ 1 node_dc3fb5bc1264892fccf5b08a15f836db54f655e6f71e938c3ea25297
+ 1 node_1927fe8da2293f0736b89be0caac07f3979a6edd85a0f74a79a75373
+ 1 node_562dee85831d0d83cc365c88122fed08a0588531ca8ade651770220d
+ 1 node_cc3dab737080baf9ed4b79cf9b1c7e41aa8a29b6ecd6208970d54dca
+ 1 node_0a4b1c86bda8cc7e55b6419e1def372374bd00488abfcdfd122bae8f
+ 1 node_a87888016dcba7456821b71d21731c2ecf278ab2fdb3ba1768b6dfca
+ 1 node_65beb6df74f99f1ce986d3b099085f06891ea7c342ee8e9647362632
+ 1 node_64e06abad7490c00f2d3e5f2d019a70af8d829694945e062e6ac558b
+ 1 node_d494f2f955239070eebdf151891318e0dbb58ef5f411193f66e6daa8
+ 1 node_51fe486c7a069a8bf95031fa5cd43ae2cc2a49cd6258d9f5628be4bd
+ 1 node_90fe35865d6cd2b397133a7ff07d75bd57c0d8f5132038d3eeef2f54
+Pending:
+ (no pending nodes)
+Recent failures:
+ (no failures)
+
+Resources
+---------------------------------------------------------------
+Total Usage:
+ 0.0/3664.0 CPU
+ 0.0/1.0 G1
+ 0.0/1.0 G2
+ 0.0/1.0 G3
+ 0.0/1.0 G4
+ 0.0/1.0 G5
+ 0.0/1.0 G6
+ 0.0/1.0 G7
+ 0.0/1.0 G8
+ 0.0/120.0 GPU
+ 0.0/1.0 J1
+ 0.0/1.0 M1
+ 0.0/1.0 M10
+ 0.0/1.0 M11
+ 0.0/1.0 M12
+ 0.0/1.0 M13
+ 0.0/1.0 M2
+ 0.0/1.0 M3
+ 0.0/1.0 M4
+ 0.0/1.0 M5
+ 0.0/1.0 M6
+ 0.0/1.0 M7
+ 0.0/1.0 M8
+ 0.0/1.0 M9
+ 0.0/21.0 Wired
+ 0.0/1.0 Wireless
+ 0B/17.24TiB memory
+ 0B/4.18TiB object_store_memory
+
+Total Constraints:
+ (no request_resources() constraints)
+Total Demands:
+ (no resource demands)
+
+INFO:ray_cluster_discovery:发现Ray Dashboard: http://127.0.0.1:8265
+INFO:ray_cluster_discovery:发现 48 个Ray集群
+INFO:ray_cluster_discovery:尝试连接到集群: {'source': 'dashboard_scan', 'dashboard_url': 'http://127.0.0.1:8265', 'dashboard_port': 8265, 'nodes': 0, 'resources': {}, 'status': 'active'}
+INFO:ray_cluster_discovery:尝试连接到外部Ray集群: {'source': 'dashboard_scan', 'dashboard_url': 'http://127.0.0.1:8265', 'dashboard_port': 8265, 'nodes': 0, 'resources': {}, 'status': 'active'}
+2025-09-04 19:08:11,921	INFO client_builder.py:244 -- Passing the following kwargs to ray.init() on the server: ignore_reinit_error, log_to_driver
+SIGTERM handler is not set because current thread is not the main thread.
+INFO:ray_cluster_discovery:成功连接到Ray集群 (端口 10001)
+INFO:ray_cluster_discovery:发现Ray集群: 23 个节点
+INFO:ray_cluster_discovery:集群资源: {'G7': 1.0, 'M2': 1.0, 'accelerator_type:G': 22.0, 'Wireless': 1.0, 'G3': 1.0, 'M7': 1.0, 'G6': 1.0, 'node:10.30.2.11': 23.0, 'M8': 1.0, 'G5': 1.0, 'node:__internal_head__': 1.0, 'J1': 1.0, 'CPU': 3664.0, 'G8': 1.0, 'M4': 1.0, 'M6': 1.0, 'G1': 1.0, 'object_store_memory': 4600000000000.0, 'G2': 1.0, 'Wired': 21.0, 'M9': 1.0, 'M5': 1.0, 'M3': 1.0, 'M12': 1.0, 'G4': 1.0, 'M11': 1.0, 'memory': 18955956375552.0, 'M13': 1.0, 'M10': 1.0, 'M1': 1.0, 'GPU': 120.0}
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_1
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_2
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_3
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_4
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_5
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_6
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_7
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_8
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_9
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_10
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_11
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_12
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_13
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_14
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_15
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_16
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_17
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_18
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_19
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_20
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_21
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_22
+INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_23
+INFO:ray_cluster_discovery:发现 53 个Actor
+INFO:ray_cluster_discovery:✅ 成功连接到外部Ray集群
+INFO:     10.30.2.11:48188 - "POST /api/cluster/discover-external HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51299 - "OPTIONS /api/status HTTP/1.1" 405 Method Not Allowed
+INFO:     10.4.167.188:51376 - "OPTIONS /api/status HTTP/1.1" 405 Method Not Allowed
+INFO:     10.4.167.188:51394 - "GET / HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51394 - "GET /ui HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51394 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     10.4.167.188:51394 - "GET /api/file-generator/files HTTP/1.1" 404 Not Found
+INFO:     10.4.167.188:51395 - "WebSocket /ws" [accepted]
+INFO:     connection open
+INFO:     10.4.167.188:51394 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51394 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51396 - "OPTIONS /api/status HTTP/1.1" 405 Method Not Allowed
+INFO:     10.4.167.188:51396 - "OPTIONS /api/status HTTP/1.1" 405 Method Not Allowed
+INFO:     10.4.167.188:51410 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51410 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51396 - "OPTIONS /api/status HTTP/1.1" 405 Method Not Allowed
+INFO:     10.4.167.188:51423 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51423 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51396 - "OPTIONS /api/status HTTP/1.1" 405 Method Not Allowed
+INFO:     10.4.167.188:51435 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51435 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51441 - "OPTIONS /api/status HTTP/1.1" 405 Method Not Allowed
+INFO:__main__:生成自定义文件: test_1MB.txt (1048576 字节)
+INFO:     10.30.2.11:47774 - "POST /api/files/generate HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51444 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51444 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51446 - "OPTIONS /api/status HTTP/1.1" 405 Method Not Allowed
+INFO:     10.4.167.188:51444 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51444 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51447 - "OPTIONS /api/status HTTP/1.1" 405 Method Not Allowed
+INFO:     10.4.167.188:51457 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51457 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51463 - "OPTIONS /api/status HTTP/1.1" 405 Method Not Allowed
+INFO:     10.4.167.188:51464 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51464 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51466 - "OPTIONS /api/status HTTP/1.1" 405 Method Not Allowed
+INFO:     10.4.167.188:51476 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51476 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51477 - "OPTIONS /api/status HTTP/1.1" 405 Method Not Allowed
+INFO:     10.4.167.188:51479 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51479 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51480 - "OPTIONS /api/status HTTP/1.1" 405 Method Not Allowed
+INFO:     10.4.167.188:51492 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51492 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51497 - "OPTIONS /api/status HTTP/1.1" 405 Method Not Allowed
+INFO:     10.4.167.188:51504 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51504 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51510 - "OPTIONS /api/status HTTP/1.1" 405 Method Not Allowed
+INFO:     10.30.2.11:58712 - "GET /api/files/presets HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51518 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51518 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51525 - "OPTIONS /api/status HTTP/1.1" 405 Method Not Allowed
+INFO:     10.4.167.188:51526 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51526 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51533 - "OPTIONS /api/status HTTP/1.1" 405 Method Not Allowed
+INFO:     10.4.167.188:51526 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51526 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51545 - "OPTIONS /api/status HTTP/1.1" 405 Method Not Allowed
+INFO:     10.4.167.188:51558 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51558 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51564 - "OPTIONS /api/status HTTP/1.1" 405 Method Not Allowed
+INFO:     10.4.167.188:51567 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51567 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51577 - "OPTIONS /api/status HTTP/1.1" 405 Method Not Allowed
+INFO:     10.4.167.188:51567 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51567 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51579 - "OPTIONS /api/status HTTP/1.1" 405 Method Not Allowed
+INFO:     10.4.167.188:51567 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51567 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51586 - "OPTIONS /api/status HTTP/1.1" 405 Method Not Allowed
+INFO:     10.4.167.188:51567 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51567 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51595 - "OPTIONS /api/status HTTP/1.1" 405 Method Not Allowed
+INFO:     10.4.167.188:51567 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51567 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51625 - "OPTIONS /api/status HTTP/1.1" 405 Method Not Allowed
+INFO:     10.4.167.188:51626 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51626 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51642 - "OPTIONS /api/status HTTP/1.1" 405 Method Not Allowed
+INFO:     10.4.167.188:51626 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:51626 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:__main__:正在关闭系统...
+INFO:ray_casting:停止演示传输
+INFO:ray_casting:集群已关闭
+INFO:__main__:系统关闭完成
+ERROR:    Traceback (most recent call last):
+  File "/data/home/sim6g/anaconda3/envs/ray/lib/python3.10/asyncio/runners.py", line 44, in run
+    return loop.run_until_complete(main)
+  File "uvloop/loop.pyx", line 1512, in uvloop.loop.Loop.run_until_complete
+  File "uvloop/loop.pyx", line 1505, in uvloop.loop.Loop.run_until_complete
+  File "uvloop/loop.pyx", line 1379, in uvloop.loop.Loop.run_forever
+  File "uvloop/loop.pyx", line 557, in uvloop.loop.Loop._run
+  File "uvloop/handles/poll.pyx", line 216, in uvloop.loop.__on_uvpoll_event
+  File "uvloop/cbhandles.pyx", line 83, in uvloop.loop.Handle._run
+  File "uvloop/cbhandles.pyx", line 66, in uvloop.loop.Handle._run
+  File "uvloop/loop.pyx", line 399, in uvloop.loop.Loop._read_from_self
+  File "uvloop/loop.pyx", line 404, in uvloop.loop.Loop._invoke_signals
+  File "uvloop/loop.pyx", line 379, in uvloop.loop.Loop._ceval_process_signals
+  File "/data/home/sim6g/anaconda3/envs/ray/lib/python3.10/site-packages/ray/_private/worker.py", line 1539, in sigterm_handler
+    sys.exit(signum)
+SystemExit: 15
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/data/home/sim6g/anaconda3/envs/ray/lib/python3.10/site-packages/starlette/routing.py", line 701, in lifespan
+    await receive()
+  File "/data/home/sim6g/anaconda3/envs/ray/lib/python3.10/site-packages/uvicorn/lifespan/on.py", line 137, in receive
+    return await self.receive_queue.get()
+  File "/data/home/sim6g/anaconda3/envs/ray/lib/python3.10/asyncio/queues.py", line 159, in get
+    await getter
+asyncio.exceptions.CancelledError
+
+INFO:     connection closed
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/data/home/sim6g/anaconda3/envs/ray/lib/python3.10/asyncio/runners.py", line 44, in run
+    return loop.run_until_complete(main)
+  File "uvloop/loop.pyx", line 1512, in uvloop.loop.Loop.run_until_complete
+  File "uvloop/loop.pyx", line 1505, in uvloop.loop.Loop.run_until_complete
+  File "uvloop/loop.pyx", line 1379, in uvloop.loop.Loop.run_forever
+  File "uvloop/loop.pyx", line 557, in uvloop.loop.Loop._run
+  File "uvloop/handles/poll.pyx", line 216, in uvloop.loop.__on_uvpoll_event
+  File "uvloop/cbhandles.pyx", line 83, in uvloop.loop.Handle._run
+  File "uvloop/cbhandles.pyx", line 66, in uvloop.loop.Handle._run
+  File "uvloop/loop.pyx", line 399, in uvloop.loop.Loop._read_from_self
+  File "uvloop/loop.pyx", line 404, in uvloop.loop.Loop._invoke_signals
+  File "uvloop/loop.pyx", line 379, in uvloop.loop.Loop._ceval_process_signals
+  File "/data/home/sim6g/anaconda3/envs/ray/lib/python3.10/site-packages/ray/_private/worker.py", line 1539, in sigterm_handler
+    sys.exit(signum)
+SystemExit: 15
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/data/home/sim6g/anaconda3/envs/ray/lib/python3.10/site-packages/uvicorn/protocols/websockets/websockets_impl.py", line 244, in run_asgi
+    result = await self.app(self.scope, self.asgi_receive, self.asgi_send)  # type: ignore[func-returns-value]
+  File "/data/home/sim6g/anaconda3/envs/ray/lib/python3.10/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+  File "/data/home/sim6g/anaconda3/envs/ray/lib/python3.10/site-packages/fastapi/applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "/data/home/sim6g/anaconda3/envs/ray/lib/python3.10/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/data/home/sim6g/anaconda3/envs/ray/lib/python3.10/site-packages/starlette/middleware/errors.py", line 151, in __call__
+    await self.app(scope, receive, send)
+  File "/data/home/sim6g/anaconda3/envs/ray/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/data/home/sim6g/anaconda3/envs/ray/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/data/home/sim6g/anaconda3/envs/ray/lib/python3.10/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/data/home/sim6g/anaconda3/envs/ray/lib/python3.10/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/data/home/sim6g/anaconda3/envs/ray/lib/python3.10/site-packages/starlette/routing.py", line 364, in handle
+    await self.app(scope, receive, send)
+  File "/data/home/sim6g/anaconda3/envs/ray/lib/python3.10/site-packages/starlette/routing.py", line 97, in app
+    await wrap_app_handling_exceptions(app, session)(scope, receive, send)
+  File "/data/home/sim6g/anaconda3/envs/ray/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/data/home/sim6g/anaconda3/envs/ray/lib/python3.10/site-packages/starlette/routing.py", line 95, in app
+    await func(session)
+  File "/data/home/sim6g/anaconda3/envs/ray/lib/python3.10/site-packages/fastapi/routing.py", line 384, in app
+    await dependant.call(**solved_result.values)
+  File "/data/home/sim6g/rayCode/CastRay/main.py", line 234, in websocket_endpoint
+    websocket_connections.append(websocket)
+  File "/data/home/sim6g/anaconda3/envs/ray/lib/python3.10/asyncio/tasks.py", line 605, in sleep
+    return await future
+asyncio.exceptions.CancelledError
