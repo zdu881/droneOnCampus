@@ -484,7 +484,11 @@
                 <div class="transfer-header">
                   <h3><i class="fas fa-exchange-alt"></i> 文件传输控制</h3>
                 </div>
-                
+                <!-- 用户面板：由 user-manager.js 渲染 -->
+                <div id="userPanel" class="user-panel" style="margin:8px 0;">
+                  <!-- 用户选择、已分配节点等会在此处渲染 -->
+                </div>
+
                 <div class="transfer-controls">
                   <h4>手动文件传输</h4>
                   <div class="transfer-control-group">
@@ -751,6 +755,16 @@
     </div>
 
     <!-- JavaScript 模块 -->
+    <!-- 默认运行时配置（可被 app.js 或部署时覆盖） -->
+    <script>
+      window.appConfig = window.appConfig || {
+        // 与 quick_start.sh 输出保持一致的默认值
+        rayApiBase: 'http://10.30.2.11:9999',
+        castrayApiBase: 'http://10.30.2.11:8000',
+        frontendBase: 'http://10.30.2.11:8080'
+      };
+    </script>
+    <script src="js/user-manager.js"></script>
     <script src="js/api-manager.js"></script>
     <script src="js/pixel-streaming.js"></script>
     <script src="js/ray_monitor.js"></script>

@@ -21,60 +21,60 @@ class CastRayIntegration {
         const tabBtns = document.querySelectorAll('.tab-btn');
         const tabContents = document.querySelectorAll('.tab-content');
 
+        if (!tabBtns || tabBtns.length === 0) return;
+
         tabBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 const targetTab = btn.dataset.tab;
+                const targetEl = document.getElementById(targetTab);
+
+                if (!targetEl) {
+                    console.warn(`Tab target element not found: ${targetTab}`);
+                    return;
+                }
+
+                // 移除所有活跃状态（防护性检查，避免 null.classList 抛错）
+                tabBtns.forEach(b => { if (b && b.classList) b.classList.remove('active'); });
+                tabContents.forEach(content => { if (content && content.classList) content.classList.remove('active'); });
                 
-                // 移除所有活跃状态
-                tabBtns.forEach(b => b.classList.remove('active'));
-                tabContents.forEach(content => content.classList.remove('active'));
-                
-                // 添加活跃状态
-                btn.classList.add('active');
-                document.getElementById(targetTab).classList.add('active');
+                // 添加活跃状态（同样做空值检查）
+                if (btn && btn.classList) btn.classList.add('active');
+                if (targetEl && targetEl.classList) targetEl.classList.add('active');
             });
         });
     }
 
     setupEventListeners() {
         // 连接CastRay按钮
-        document.getElementById('castrayConnectBtn').addEventListener('click', () => {
-            this.connectToCastRay();
-        });
+        const castrayConnectBtn = document.getElementById('castrayConnectBtn');
+        if (castrayConnectBtn) castrayConnectBtn.addEventListener('click', () => this.connectToCastRay());
 
-        // 创建节点按钮
-        document.getElementById('createNodeBtn').addEventListener('click', () => {
-            this.createNode();
-        });
+        const createNodeBtn = document.getElementById('createNodeBtn');
+        if (createNodeBtn) createNodeBtn.addEventListener('click', () => this.createNode());
 
-        // 开始传输按钮
-        document.getElementById('startTransferBtn').addEventListener('click', () => {
-            this.startFileTransfer();
-        });
+        const startTransferBtn = document.getElementById('startTransferBtn');
+        if (startTransferBtn) startTransferBtn.addEventListener('click', () => this.startFileTransfer());
 
-        // 刷新文件列表按钮
-        document.getElementById('refreshFilesBtn').addEventListener('click', () => {
-            this.fetchAvailableFiles();
-        });
+        const refreshFilesBtn = document.getElementById('refreshFilesBtn');
+        if (refreshFilesBtn) refreshFilesBtn.addEventListener('click', () => this.fetchAvailableFiles());
 
-        // 发现外部集群按钮
-        document.getElementById('discoverClustersBtn').addEventListener('click', () => {
-            this.discoverExternalClusters();
-        });
+        const discoverClustersBtn = document.getElementById('discoverClustersBtn');
+        if (discoverClustersBtn) discoverClustersBtn.addEventListener('click', () => this.discoverExternalClusters());
 
-        // 生成自定义文件按钮
-        document.getElementById('generateFileBtn').addEventListener('click', () => {
-            this.generateCustomFile();
-        });
+        const generateFileBtn = document.getElementById('generateFileBtn');
+        if (generateFileBtn) generateFileBtn.addEventListener('click', () => this.generateCustomFile());
     }
 
     async connectToCastRay() {
         try {
             console.log('正在连接CastRay后端...');
             
-            // 更新状态为连接中
-            document.getElementById('castrayStatus').textContent = '连接中...';
-            document.getElementById('castrayStatus').className = 'status-connecting';
+            // 更新状态为连接中（防护性检查）
+            const statusEl = document.getElementById('castrayStatus');
+            if (statusEl) {
+                statusEl.textContent = '连接中...';
+                statusEl.className = 'status-connecting';
+            }
             
             // 测试API连接 - 添加更详细的错误处理
             const response = await fetch(`${this.castrayApiBase}/api/status`, {
@@ -94,13 +94,16 @@ class CastRayIntegration {
             console.log('CastRay状态:', status);
 
             this.isConnected = true;
-            document.getElementById('castrayStatus').textContent = '已连接';
-            document.getElementById('castrayStatus').className = 'status-connected';
+            if (statusEl) {
+                statusEl.textContent = '已连接';
+                statusEl.className = 'status-connected';
+            }
 
             // 更新统计信息
             if (status.total_nodes) {
                 document.getElementById('castrayNodeCount').textContent = status.total_nodes;
             }
+
 
             // 获取节点列表
             await this.fetchCastRayNodes();
@@ -117,8 +120,10 @@ class CastRayIntegration {
         } catch (error) {
             console.error('连接CastRay失败:', error);
             this.isConnected = false;
-            document.getElementById('castrayStatus').textContent = `连接失败: ${error.message}`;
-            document.getElementById('castrayStatus').className = 'status-disconnected';
+            if (statusEl) {
+                statusEl.textContent = `连接失败: ${error.message}`;
+                statusEl.className = 'status-disconnected';
+            }
             
             // 5秒后重试连接
             setTimeout(() => {
@@ -176,7 +181,8 @@ class CastRayIntegration {
                     this.updateNodeSelectors();
                     
                     // 更新节点计数
-                    document.getElementById('castrayNodeCount').textContent = status.total_nodes || this.castrayNodes.length;
+                    const countEl = document.getElementById('castrayNodeCount');
+                    if (countEl) countEl.textContent = status.total_nodes || this.castrayNodes.length;
                 }
             }
         } catch (error) {
@@ -220,17 +226,21 @@ class CastRayIntegration {
     async fetchAvailableFiles() {
         try {
             const response = await fetch(`${this.castrayApiBase}/api/files`);
+            if (!response.ok) {
+                console.warn(`fetch /api/files returned ${response.status}`);
+                return;
+            }
             const result = await response.json();
             
             const fileSelect = document.getElementById('fileName');
-            fileSelect.innerHTML = '<option value="">选择文件</option>';
+            if (fileSelect) fileSelect.innerHTML = '<option value="">选择文件</option>';
             
             if (result.files && result.files.length > 0) {
                 result.files.forEach(file => {
                     const option = document.createElement('option');
                     option.value = file.name;
                     option.textContent = `${file.name} (${this.formatFileSize(file.size)})`;
-                    fileSelect.appendChild(option);
+                    if (fileSelect) fileSelect.appendChild(option);
                 });
                 console.log(`加载了 ${result.files.length} 个可用文件`);
             } else {

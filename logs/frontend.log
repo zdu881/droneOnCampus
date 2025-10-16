@@ -1,10 +1,63 @@
-127.0.0.1 - - [11/Sep/2025 15:36:53] "GET /dashboard.html HTTP/1.1" 200 -
-127.0.0.1 - - [11/Sep/2025 15:36:56] "GET /dashboard.html HTTP/1.1" 200 -
-127.0.0.1 - - [11/Sep/2025 15:36:56] "GET /css/dashboard-styles.css HTTP/1.1" 200 -
-127.0.0.1 - - [11/Sep/2025 15:36:56] "GET /js/pixel-streaming.js HTTP/1.1" 200 -
-127.0.0.1 - - [11/Sep/2025 15:36:56] "GET /js/ray_monitor.js HTTP/1.1" 200 -
-127.0.0.1 - - [11/Sep/2025 15:36:56] "GET /js/castray_integration.js HTTP/1.1" 200 -
-127.0.0.1 - - [11/Sep/2025 15:36:56] "GET /js/dashboard-manager.js HTTP/1.1" 200 -
-127.0.0.1 - - [11/Sep/2025 15:36:56] "GET /js/api-manager.js HTTP/1.1" 200 -
-127.0.0.1 - - [11/Sep/2025 15:36:58] code 404, message File not found
-127.0.0.1 - - [11/Sep/2025 15:36:58] "GET /favicon.ico HTTP/1.1" 404 -
+10.4.167.188 - - [16/Oct/2025 15:16:18] "GET /dashboard.html HTTP/1.1" 304 -
+10.4.167.188 - - [16/Oct/2025 15:16:19] "GET /js/user-manager.js HTTP/1.1" 304 -
+10.4.167.188 - - [16/Oct/2025 15:16:19] "GET /js/ray_monitor.js HTTP/1.1" 304 -
+10.4.167.188 - - [16/Oct/2025 15:18:07] "GET /dashboard.html HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:18:07] "GET /css/dashboard-styles.css HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:18:07] "GET /js/ray_monitor.js HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:18:07] "GET /js/user-manager.js HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:18:07] code 404, message File not found
+10.4.167.188 - - [16/Oct/2025 15:18:07] "GET /favicon.ico HTTP/1.1" 404 -
+10.4.167.188 - - [16/Oct/2025 15:20:18] "GET /dashboard.html HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:20:18] "GET /css/dashboard-styles.css HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:20:18] "GET /js/user-manager.js HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:20:18] "GET /js/api-manager.js HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:20:18] "GET /js/pixel-streaming.js HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:20:18] "GET /js/ray_monitor.js HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:20:18] "GET /js/castray_integration.js HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:20:18] "GET /js/dashboard-manager.js HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:20:19] code 404, message File not found
+10.4.167.188 - - [16/Oct/2025 15:20:19] "GET /favicon.ico HTTP/1.1" 404 -
+10.4.167.188 - - [16/Oct/2025 15:20:36] "GET /dashboard.html HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:20:37] "GET /css/dashboard-styles.css HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:20:37] "GET /js/user-manager.js HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:20:37] "GET /js/api-manager.js HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:20:37] "GET /js/castray_integration.js HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:20:37] "GET /js/pixel-streaming.js HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:20:37] "GET /js/ray_monitor.js HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:20:37] "GET /js/dashboard-manager.js HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:20:37] code 404, message File not found
+10.4.167.188 - - [16/Oct/2025 15:20:37] "GET /favicon.ico HTTP/1.1" 404 -
+10.4.167.188 - - [16/Oct/2025 15:21:04] "GET /dashboard.html HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:21:04] "GET /js/user-manager.js HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:21:04] "GET /js/ray_monitor.js HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:21:04] "GET /js/castray_integration.js HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:21:38] "GET /dashboard.html HTTP/1.1" 304 -
+10.4.167.188 - - [16/Oct/2025 15:21:39] "GET /js/user-manager.js HTTP/1.1" 304 -
+10.4.167.188 - - [16/Oct/2025 15:21:39] "GET /js/castray_integration.js HTTP/1.1" 304 -
+10.4.167.188 - - [16/Oct/2025 15:21:39] "GET /js/ray_monitor.js HTTP/1.1" 304 -
+10.4.167.188 - - [16/Oct/2025 15:25:23] "GET /dashboard.html HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:25:23] "GET /css/dashboard-styles.css HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:25:23] "GET /js/castray_integration.js HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:25:23] "GET /js/user-manager.js HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:25:23] "GET /js/ray_monitor.js HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:25:33] "GET /dashboard.html HTTP/1.1" 304 -
+10.4.167.188 - - [16/Oct/2025 15:26:38] "GET /dashboard.html HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:26:39] "GET /css/dashboard-styles.css HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:26:39] "GET /js/user-manager.js HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:26:39] "GET /js/api-manager.js HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:26:39] "GET /js/pixel-streaming.js HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:26:39] "GET /js/ray_monitor.js HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:26:39] "GET /js/castray_integration.js HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:26:39] "GET /js/dashboard-manager.js HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:26:39] code 404, message File not found
+10.4.167.188 - - [16/Oct/2025 15:26:39] "GET /favicon.ico HTTP/1.1" 404 -
+10.4.167.188 - - [16/Oct/2025 15:29:10] "GET /dashboard.html HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:29:10] "GET /css/dashboard-styles.css HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:29:10] "GET /js/user-manager.js HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:29:10] "GET /js/api-manager.js HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:29:10] "GET /js/pixel-streaming.js HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:29:10] "GET /js/ray_monitor.js HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:29:10] "GET /js/castray_integration.js HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:29:10] "GET /js/dashboard-manager.js HTTP/1.1" 200 -
+10.4.167.188 - - [16/Oct/2025 15:29:12] code 404, message File not found
+10.4.167.188 - - [16/Oct/2025 15:29:12] "GET /favicon.ico HTTP/1.1" 404 -

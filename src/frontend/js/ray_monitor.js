@@ -1,6 +1,8 @@
-// Ray集群API配置
-const RAY_API_BASE = 'http://10.30.2.11:8000';  // 修改为CastRay后端地址
-const UNIFIED_NODES_API = `${RAY_API_BASE}/api/nodes/unified`;  // 新的统一API端点
+// Ray集群API配置 - 支持从 window.appConfig 注入
+const defaultRayBase = (window && window.appConfig && window.appConfig.rayApiBase) ? window.appConfig.rayApiBase : 'http://10.30.2.11:8000';
+const RAY_API_BASE = defaultRayBase;
+const UNIFIED_NODES_API = `${RAY_API_BASE}/api/nodes/unified`;
+const LEGACY_UNIFIED_API = `${RAY_API_BASE}/`; // 旧API回退点
 
 // 节点数据存储
 let nodeData = [];
@@ -39,7 +41,8 @@ class RayClusterMonitor {
     async fetchRayData() {
         try {
             console.log('正在获取统一节点数据...');
-            const response = await fetch(UNIFIED_NODES_API, {
+            // 先尝试新的统一API
+            let response = await fetch(UNIFIED_NODES_API, {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json',
@@ -48,22 +51,50 @@ class RayClusterMonitor {
             });
             
             if (!response.ok) {
+                console.warn(`UNIFIED_NODES_API returned ${response.status}, trying legacy endpoint`);
+                // 尝试legacy API
+                try {
+                    response = await fetch(LEGACY_UNIFIED_API, { method: 'GET', headers: { 'Accept': 'application/json' } });
+                } catch (e) {
+                    console.error('legacy fetch failed', e);
+                }
+            }
+
+            if (!response.ok) {
                 throw new Error(`HTTP错误: ${response.status}`);
             }
-            
+
             const data = await response.json();
             console.log('统一API响应:', data);
             
-            // 新的统一API返回格式
-            if (data && data.success && data.nodes) {
-                const unifiedNodes = data.nodes;
+            // 兼容多种统一API返回格式
+            // 可能的形态：
+            // { success: true, nodes: [...] }
+            // { result: true, data: { nodes: [...] } }
+            // { result: true, msg: "...", data: { ... , nodes: [...] } }
+            let unifiedNodes = null;
+            if (data) {
+                if (data.nodes && Array.isArray(data.nodes)) {
+                    unifiedNodes = data.nodes;
+                } else if (data.success && data.nodes && Array.isArray(data.nodes)) {
+                    unifiedNodes = data.nodes;
+                } else if (data.data && data.data.nodes && Array.isArray(data.data.nodes)) {
+                    unifiedNodes = data.data.nodes;
+                } else if (data.result && data.data && data.data.nodes && Array.isArray(data.data.nodes)) {
+                    unifiedNodes = data.data.nodes;
+                }
+            }
+
+            if (unifiedNodes && Array.isArray(unifiedNodes)) {
                 console.log('找到统一节点数量:', unifiedNodes.length);
-                
                 // 转换统一节点数据到旧格式，保持兼容性
                 nodeData = this.parseUnifiedNodes(unifiedNodes);
-                document.getElementById('dataSource').textContent = `✅ CastRay后端 (统一数据) - ${nodeData.length}个节点`;
+                const dsEl = document.getElementById('dataSource');
+                if (dsEl) dsEl.textContent = `✅ CastRay后端 (统一数据) - ${nodeData.length}个节点`;
                 return true;
             } else {
+                // 打印完整响应以便诊断
+                console.warn('统一API返回空或格式不匹配，响应为:', data);
                 throw new Error('统一API响应格式异常');
             }
             
@@ -104,12 +135,22 @@ class RayClusterMonitor {
     parseUnifiedNodes(unifiedNodes) {
         console.log('解析统一节点数据，节点数量:', unifiedNodes.length);
         const parsedNodes = [];
-        
+
+        // 第一次解析时输出示例对象的 keys，帮助诊断后端字段名差异
+        if (unifiedNodes.length > 0) {
+            const sample = unifiedNodes[0];
+            console.log('统一节点示例 keys:', Object.keys(sample));
+        }
+
         unifiedNodes.forEach((node, index) => {
-            console.log(`解析统一节点 ${index + 1}:`, node.ip_address, node.status);
-            
-            // 从统一节点数据中提取信息
-            const nodeIdentifier = node.node_name || node.labels?.name || `节点-${node.ip_address}`;
+            // 安全地尝试多种常见字段名
+            const ip = node.ip_address || node.nodeIp || node.node_ip || node.ip || node.address || null;
+            const statusRaw = node.status || node.state || node.node_state || null;
+
+            console.log(`解析统一节点 ${index + 1}:`, ip || '<no-ip>', statusRaw || '<no-status>');
+
+            // 从统一节点数据中提取信息（支持多种命名）
+            const nodeIdentifier = node.node_name || node.name || node.labels?.name || `节点-${ip || index}`;
             
             // CPU使用率计算
             const cpuUsage = node.cpu_usage || this.simulateUsage(20, 80);
@@ -133,19 +174,26 @@ class RayClusterMonitor {
             // 生成任务信息，结合物理资源和CastRay应用
             const tasks = this.generateUnifiedNodeTasks(node, cpuUsage, memoryUsage, gpuUsage, castrayNodes);
             
+            const physicalId = node.physical_node_id || node.node_id || node.nodeId || node.physicalNodeId || null;
+
             const parsedNode = {
-                id: node.physical_node_id?.slice(-8) || `node_${index}`,
+                id: physicalId ? String(physicalId).slice(-8) : `node_${index}`,
                 name: nodeIdentifier,
-                fullName: `${nodeIdentifier} (${node.ip_address})`,
-                nodeIp: node.ip_address,
-                nodeId: node.physical_node_id,
-                state: node.status.toUpperCase(),
-                isHeadNode: node.is_head || false,
+                fullName: `${nodeIdentifier} (${ip || 'unknown'})`,
+                nodeIp: ip,
+                nodeId: physicalId,
+                state: statusRaw ? String(statusRaw).toUpperCase() : 'UNKNOWN',
+                isHeadNode: node.is_head || node.isHead || node.is_head_node || false,
                 cpu: cpuUsage,
                 memory: memoryUsage,
                 gpu: gpuUsage,
                 tasks: tasks,
-                status: node.status === 'ALIVE' ? 'active' : 'dead',
+                // 宽松地判断在线状态：支持 'alive', 'active', 'running'（不区分大小写）
+                status: (function() {
+                    if (!statusRaw) return 'dead';
+                    const s = String(statusRaw).toLowerCase();
+                    return (s === 'alive' || s === 'active' || s === 'running' || s === 'up') ? 'active' : 'dead';
+                })(),
                 connectionType: 'Unified',
                 
                 // 新增的统一信息
@@ -158,7 +206,21 @@ class RayClusterMonitor {
                     mem_usage: memoryUsage,
                     gpu_usage: gpuUsage,
                     disk_usage: node.disk_usage
-                }
+                },
+                // 兼容前端 createNodeCards 使用的 resources 结构
+                resources: (function() {
+                    const r = node.resources || node.resources_total || node.physicalResources || {};
+                    const totalCpu = r.totalCpu || r.total_cpu || r.totalCPUs || r.total_cpus || 0;
+                    const totalMemory = r.totalMemory || r.total_memory || r.total_mem || r.totalMemoryGB || 0;
+                    const totalGpu = r.totalGpu || r.total_gpu || r.totalGpuCount || r.gpu || 0;
+                    const objectStore = r.objectStore || r.object_store || r.object_store_memory || 0;
+                    return {
+                        totalCpu: totalCpu,
+                        totalMemory: totalMemory,
+                        totalGpu: totalGpu,
+                        objectStore: objectStore
+                    };
+                })()
             };
             
             parsedNodes.push(parsedNode);
