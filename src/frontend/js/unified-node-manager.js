@@ -167,7 +167,30 @@ class UnifiedNodeManager {
 
             const data = await response.json();
             console.log('Ray 节点数据:', data);
-            return data.nodes || [];
+
+            // 兼容多种返回格式，并规范化每个节点对象以便 merge 使用
+            let rawNodes = [];
+            if (Array.isArray(data.nodes)) rawNodes = data.nodes;
+            else if (data.data && Array.isArray(data.data.nodes)) rawNodes = data.data.nodes;
+            else if (data.result && data.data && Array.isArray(data.data.nodes)) rawNodes = data.data.nodes;
+            else if (Array.isArray(data)) rawNodes = data;
+
+            const normalized = rawNodes.map(n => ({
+                // 支持多种字段名
+                nodeId: n.node_id || n.nodeId || n.id || n.node_id_full || null,
+                id: n.id || n.node_id || n.nodeId || null,
+                name: n.name || n.fullName || n.hostname || n.label || null,
+                fullName: n.fullName || n.name || null,
+                nodeIp: n.node_ip || n.ip || n.nodeIp || n.address || null,
+                state: n.state || n.node_state || n.status || null,
+                isHeadNode: n.is_head_node || n.isHead || n.is_head || false,
+                cpu: n.cpu || n.resources?.CPU || n.resources_total?.CPU || 0,
+                memory: n.memory || n.resources?.memory || n.resources_total?.memory || 0,
+                gpu: n.gpu || n.resources?.GPU || n.resources_total?.GPU || 0,
+                tasks: n.tasks || n.task_list || []
+            }));
+
+            return normalized;
 
         } catch (error) {
             console.warn('获取 Ray 节点数据失败:', error);
@@ -181,7 +204,8 @@ class UnifiedNodeManager {
      */
     async fetchCastRayNodes() {
         try {
-            const response = await fetch(`${this.castrayApiBase}/api/nodes`, {
+            // CastRay exposes node list in /api/status (GET). /api/nodes is POST for creating nodes.
+            const response = await fetch(`${this.castrayApiBase}/api/status`, {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json'
@@ -194,7 +218,29 @@ class UnifiedNodeManager {
 
             const data = await response.json();
             console.log('CastRay 节点数据:', data);
-            return data.nodes || [];
+
+            // CastRay /api/status 常见字段 node_statuses 或 nodes
+            let raw = [];
+            if (Array.isArray(data.node_statuses)) raw = data.node_statuses;
+            else if (Array.isArray(data.nodes)) raw = data.nodes;
+            else if (data.data && Array.isArray(data.data.node_statuses)) raw = data.data.node_statuses;
+            else if (data.data && Array.isArray(data.data.nodes)) raw = data.data.nodes;
+
+            // 规范化 CastRay 节点对象，尽量包含 rayNodeId 等字段以便 merge 使用
+            const normalized = raw.map(n => ({
+                rayNodeId: n.rayNodeId || n.ray_node_id || n.node_id || n.nodeId || n.ray_node || null,
+                agentId: n.agentId || n.agent_id || n.agent || null,
+                ip: n.ip || n.node_ip || null,
+                status: n.status || n.state || null,
+                bitrate: n.bitrate || n.stream_rate || null,
+                streamingState: n.streamingState || n.state || null,
+                connections: n.connections || n.conn || 0,
+                lastUpdate: n.lastUpdate || n.updated_at || null,
+                // keep original object for any downstream details
+                _raw: n
+            }));
+
+            return normalized;
 
         } catch (error) {
             console.warn('获取 CastRay 节点数据失败:', error);
@@ -212,70 +258,110 @@ class UnifiedNodeManager {
 
     const unmatchedRay = [];
     const unmatchedCastRay = [];
-    // 辅助映射：短 id -> full id 列表
-    const shortIdMap = new Map();
+    // 辅助映射：candidateKey -> canonicalFullId
+    const candidateMap = new Map();
 
-        // 首先处理 Ray 节点数据
+        // 首先处理 Ray 节点数据，建立 canonical id 与候选 key 映射
+        console.log('mergeNodeData: received', { rayCount: (rayNodes && rayNodes.length) || 0, castrayCount: (castrayNodes && castrayNodes.length) || 0 });
+        if (rayNodes && rayNodes.length > 0) console.log('mergeNodeData: sample ray node:', rayNodes[0]);
+        if (castrayNodes && castrayNodes.length > 0) console.log('mergeNodeData: sample castray node:', castrayNodes[0]);
+
         rayNodes.forEach(rayNode => {
-            const nodeId = rayNode.nodeId || rayNode.id;
-            if (nodeId) {
-                // 存储短 id 映射，便于后续模糊匹配（前 8 或前 12 字符）
-                const short8 = String(nodeId).substring(0, 8);
-                const short12 = String(nodeId).substring(0, 12);
-                if (!shortIdMap.has(short8)) shortIdMap.set(short8, []);
-                shortIdMap.get(short8).push(nodeId);
-                if (!shortIdMap.has(short12)) shortIdMap.set(short12, []);
-                shortIdMap.get(short12).push(nodeId);
-                this.unifiedNodes.set(nodeId, {
-                    rayNodeId: nodeId,
-                    hostname: rayNode.name || rayNode.fullName,
-                    ip: rayNode.nodeIp || rayNode.ip,
-                    rayData: {
-                        id: rayNode.id,
-                        name: rayNode.name,
-                        fullName: rayNode.fullName,
-                        state: rayNode.state,
-                        isHeadNode: rayNode.isHeadNode,
-                        cpu: rayNode.cpu,
-                        memory: rayNode.memory,
-                        gpu: rayNode.gpu,
-                        tasks: rayNode.tasks,
-                        status: rayNode.status,
-                        connectionType: rayNode.connectionType,
-                        resources: rayNode.resources
-                    },
-                    castrayData: null // 初始化为空，稍后填充
-                });
+            // canonicalFullId 优先取 nodeId（完整），否则取 id（短）作为 fallback
+            const canonical = rayNode.nodeId || rayNode.id || null;
+            if (!canonical) return;
+
+            // 生成候选 key 集合：full, prefix8/12, suffix8/12, id(short), ip+name
+            const s = String(canonical);
+            const candidates = new Set();
+            candidates.add(s);
+            if (s.length >= 12) candidates.add(s.substring(0,12));
+            if (s.length >= 8) candidates.add(s.substring(0,8));
+            if (s.length >= 12) candidates.add(s.substring(s.length-12));
+            candidates.add(s.substring(s.length-8));
+            if (rayNode.id) candidates.add(String(rayNode.id));
+            if (rayNode.nodeIp && rayNode.name) candidates.add(`${rayNode.nodeIp}_${rayNode.name}`);
+
+            // 将候选映射到 canonical id
+            for (const c of candidates) {
+                candidateMap.set(c, s);
             }
+
+            // 将 canonical id 作为 unified key，保存 ray 数据
+            this.unifiedNodes.set(s, {
+                rayNodeId: s,
+                hostname: rayNode.name || rayNode.fullName,
+                ip: rayNode.nodeIp || rayNode.ip,
+                rayData: {
+                    id: rayNode.id,
+                    name: rayNode.name,
+                    fullName: rayNode.fullName,
+                    state: rayNode.state,
+                    isHeadNode: rayNode.isHeadNode,
+                    cpu: rayNode.cpu,
+                    memory: rayNode.memory,
+                    gpu: rayNode.gpu,
+                    tasks: rayNode.tasks,
+                    status: rayNode.status,
+                    connectionType: rayNode.connectionType,
+                    resources: rayNode.resources
+                },
+                castrayData: null // 初始化为空，稍后填充
+            });
         });
 
         // 然后处理 CastRay 节点数据，通过 rayNodeId 进行关联
         castrayNodes.forEach(castrayNode => {
-            let rayNodeId = castrayNode.rayNodeId;
-            
-            // 如果没有直接匹配，尝试根据短ID/前缀进行模糊匹配
-            let matchedFullId = null;
-            if (rayNodeId && this.unifiedNodes.has(rayNodeId)) {
-                matchedFullId = rayNodeId;
-            } else if (rayNodeId) {
-                const maybe = String(rayNodeId).substring(0, 12);
-                const candidates = shortIdMap.get(maybe) || shortIdMap.get(maybe.substring(0,8));
-                if (candidates && candidates.length === 1) {
-                    matchedFullId = candidates[0];
-                } else if (candidates && candidates.length > 1) {
-                    // 多重候选，不自动选，记录为未匹配以供人工诊断
-                    matchedFullId = null;
+            let rayNodeIdRaw = castrayNode.rayNodeId || castrayNode.ray_node_id || castrayNode._raw?.rayNodeId || null;
+            if (!rayNodeIdRaw) {
+                // 如果没有 rayNodeId，尝试通过 ip+name 进行匹配
+                const candidateIpName = castrayNode.ip && castrayNode._raw && castrayNode._raw.name ? `${castrayNode.ip}_${castrayNode._raw.name}` : null;
+                if (candidateIpName && candidateMap.has(candidateIpName)) rayNodeIdRaw = candidateMap.get(candidateIpName);
+            }
+
+            let matchedCanonical = null;
+            if (rayNodeIdRaw) {
+                // 直接 exact 匹配候选映射
+                if (this.unifiedNodes.has(rayNodeIdRaw)) matchedCanonical = rayNodeIdRaw;
+                else if (candidateMap.has(rayNodeIdRaw)) matchedCanonical = candidateMap.get(rayNodeIdRaw);
+                else {
+                    // 试试前/后缀匹配
+                    const r = String(rayNodeIdRaw);
+                    const pref12 = r.substring(0,12);
+                    const pref8 = r.substring(0,8);
+                    const suf12 = r.length>=12 ? r.substring(r.length-12) : null;
+                    const suf8 = r.substring(r.length-8);
+                    if (candidateMap.has(pref12)) matchedCanonical = candidateMap.get(pref12);
+                    else if (candidateMap.has(pref8)) matchedCanonical = candidateMap.get(pref8);
+                    else if (suf12 && candidateMap.has(suf12)) matchedCanonical = candidateMap.get(suf12);
+                    else if (candidateMap.has(suf8)) matchedCanonical = candidateMap.get(suf8);
                 }
             }
 
-            if (matchedFullId) {
-                rayNodeId = matchedFullId;
-            }
-
-            if (rayNodeId && this.unifiedNodes.has(rayNodeId)) {
-                // 找到对应的 Ray 节点，合并 CastRay 数据
-                const existingNode = this.unifiedNodes.get(rayNodeId);
-                existingNode.castrayData = {
+            if (!matchedCanonical) {
+                // 仍未匹配，将其作为 unmatchedCastRay 并保留原始 ray id（可能为短 id）
+                unmatchedCastRay.push(castrayNode);
+                const key = rayNodeIdRaw || (`castray-${Math.random().toString(36).slice(2,8)}`);
+                if (!this.unifiedNodes.has(key)) {
+                    this.unifiedNodes.set(key, {
+                        rayNodeId: key,
+                        hostname: castrayNode.hostname || 'Unknown',
+                        ip: castrayNode.ip,
+                        rayData: null,
+                        castrayData: {
+                            agentId: castrayNode.agentId,
+                            status: castrayNode.status,
+                            bitrate: castrayNode.bitrate,
+                            streamingState: castrayNode.streamingState,
+                            connections: castrayNode.connections,
+                            lastUpdate: castrayNode.lastUpdate
+                        }
+                    });
+                }
+            } else {
+                // 找到对应的 Ray canonical id，将 CastRay 数据合并
+                const existing = this.unifiedNodes.get(matchedCanonical) || { rayNodeId: matchedCanonical, hostname: null, ip: null, rayData: null, castrayData: null };
+                existing.castrayData = {
                     agentId: castrayNode.agentId,
                     status: castrayNode.status,
                     bitrate: castrayNode.bitrate,
@@ -283,25 +369,7 @@ class UnifiedNodeManager {
                     connections: castrayNode.connections,
                     lastUpdate: castrayNode.lastUpdate
                 };
-                this.unifiedNodes.set(rayNodeId, existingNode);
-            } else if (rayNodeId) {
-                // CastRay 节点没有对应的 Ray 节点（边缘情况）
-                // 记录为 unmatchedCastRay，继续保留在显示列表中
-                unmatchedCastRay.push(castrayNode);
-                this.unifiedNodes.set(rayNodeId, {
-                    rayNodeId: rayNodeId,
-                    hostname: castrayNode.hostname || 'Unknown',
-                    ip: castrayNode.ip,
-                    rayData: null,
-                    castrayData: {
-                        agentId: castrayNode.agentId,
-                        status: castrayNode.status,
-                        bitrate: castrayNode.bitrate,
-                        streamingState: castrayNode.streamingState,
-                        connections: castrayNode.connections,
-                        lastUpdate: castrayNode.lastUpdate
-                    }
-                });
+                this.unifiedNodes.set(matchedCanonical, existing);
             }
         });
         // 查找 Ray 中未被 CastRay 匹配的节点
@@ -311,6 +379,10 @@ class UnifiedNodeManager {
                 unmatchedRay.push(node);
             }
         });
+
+        // 打印部分 unified keys 以便调试
+        const keysSample = Array.from(this.unifiedNodes.keys()).slice(0, 12);
+        console.log('unifiedNodes keys sample:', keysSample);
 
         console.log(`合并完成，统一节点数量: ${this.unifiedNodes.size}`);
         console.log(`未匹配的 Ray 节点: ${unmatchedRay.length}, 未匹配的 CastRay 节点: ${unmatchedCastRay.length}`);
@@ -412,7 +484,10 @@ class UnifiedNodeManager {
         this.unifiedNodes.forEach((node, nodeId) => {
             const nodeCard = this.createNodeCard(node);
             // set DOM id for easier lookup by user manager
-            nodeCard.id = `node-card-${nodeId.substring(0,8)}`;
+            const safeId = (nodeId && String(nodeId).length > 0) ? String(nodeId).substring(0,8) : `unknown-${Math.random().toString(36).slice(2,8)}`;
+            nodeCard.id = `node-card-${safeId}`;
+            // 存储完整 id 以便精确查找
+            if (nodeId) nodeCard.dataset.fullId = nodeId;
             container.appendChild(nodeCard);
             // allow user manager to augment the node card (assign buttons/owner badges)
             if (window.userManager && typeof window.userManager.attachNodeCard === 'function') {

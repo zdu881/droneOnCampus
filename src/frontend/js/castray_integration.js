@@ -309,7 +309,21 @@ class CastRayIntegration {
     }
 
     updateCastRayNodesDisplay() {
-        const container = document.getElementById('castrayNodesContainer');
+        let container = document.getElementById('castrayNodesContainer');
+        if (!container) {
+            console.warn('castrayNodesContainer not found in DOM, attempting to recreate it');
+            const nodesSection = document.querySelector('.nodes-section');
+            if (nodesSection) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'node-category';
+                wrapper.innerHTML = `\n                  <h3><i class="fas fa-network-wired"></i> CastRay传输节点</h3>\n                  <div id="castrayNodesContainer" class="castray-nodes-container"></div>\n                `;
+                nodesSection.appendChild(wrapper);
+                container = document.getElementById('castrayNodesContainer');
+            } else {
+                console.error('nodes-section not found in DOM; cannot render CastRay node cards');
+                return;
+            }
+        }
         container.innerHTML = '';
 
         this.castrayNodes.forEach(node => {

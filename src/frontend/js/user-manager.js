@@ -173,6 +173,8 @@ class UserManager {
             nodeCardEl.appendChild(badge);
         }
 
+        
+
         const ownerId = this.getUserForNode(nodeId);
         if (ownerId) {
             const u = this.users.get(ownerId);
@@ -198,6 +200,43 @@ class UserManager {
         }
     }
 
+    // 辅助：更稳健地查找节点卡片元素，兼容 full id / short8 / short12
+    findNodeCardElement(nodeId) {
+        if (!nodeId) return null;
+        // 尝试几种常见的 id 形式
+        // 先尝试按 data-full-id 精确匹配
+        try {
+            const byData = document.querySelector(`[data-full-id="${nodeId}"]`);
+            if (byData) return byData;
+        } catch (e) { /* ignore selector errors */ }
+        const candidates = [];
+        const s = String(nodeId);
+        candidates.push(`node-card-${s}`);
+        if (s.length >= 12) candidates.push(`node-card-${s.substring(0,12)}`);
+        if (s.length >= 8) candidates.push(`node-card-${s.substring(0,8)}`);
+
+        for (const cid of candidates) {
+            const el = document.getElementById(cid);
+            if (el) return el;
+        }
+
+        // 最后尝试在页面中查找 id 包含短片段的元素
+        const short8 = s.substring(0,8);
+        const all = document.querySelectorAll('[id^="node-card-"]');
+        for (const el of all) {
+            if (el.id && el.id.includes(short8)) return el;
+        }
+
+        // 尝试通过卡片文本中查找节点 id (宽松匹配)
+        for (const el of all) {
+            try {
+                if (el.innerText && el.innerText.indexOf(short8) !== -1) return el;
+            } catch (e) { /* ignore */ }
+        }
+
+        return null;
+    }
+
     showAssignMenu(nodeId, nodeCardEl, anchorEl) {
         // simple prompt-based assign for now
         const userIds = Array.from(this.users.keys());
@@ -208,8 +247,8 @@ class UserManager {
     }
 
     updateNodeOwnerBadge(nodeId) {
-        const short = nodeId.substring(0,8);
-        const el = document.getElementById(`node-card-${short}`);
+        if (!nodeId) return;
+        const el = this.findNodeCardElement(nodeId);
         if (!el) return;
         const badge = el.querySelector('.owner-badge');
         const ownerId = this.getUserForNode(nodeId);
@@ -235,9 +274,73 @@ class UserManager {
         const tgtNode = tu.nodes.size>0 ? Array.from(tu.nodes)[0] : null;
 
         // build visual animation between srcNode card and tgtNode card (or a generic area)
-        const srcEl = document.getElementById(`node-card-${srcNode.substring(0,8)}`);
-        const tgtEl = tgtNode ? document.getElementById(`node-card-${tgtNode.substring(0,8)}`) : null;
-        if (!srcEl) { alert('找不到源节点卡片'); return; }
+        // 更稳健地查找卡片（支持多种 id 形式）
+        const srcEl = this.findNodeCardElement(srcNode);
+        const tgtEl = tgtNode ? this.findNodeCardElement(tgtNode) : null;
+        if (!srcEl) {
+            // 诊断信息：在控制台打印 nodeId 与当前页面存在的 node-card id 列表，帮助调试
+            console.warn('startUserTransfer: source node card not found', { srcNode });
+            const existing = Array.from(document.querySelectorAll('[id^="node-card-"]')).map(e=>e.id);
+            console.warn('Existing node-card ids:', existing.slice(0,50));
+            alert('找不到源节点卡片 (已在Console打印详细信息)');
+            // 额外尝试：基于 unifiedNodeManager 的 keys 做后缀模糊匹配
+            try {
+                const unified = window.unifiedNodeManager && window.unifiedNodeManager.unifiedNodes ? Array.from(window.unifiedNodeManager.unifiedNodes.keys()) : [];
+                const s = String(srcNode);
+                const last12 = s.length>=12 ? s.substring(s.length-12) : s;
+                const last8 = s.substring(s.length-8);
+                const cand12 = unified.filter(k=>k.endsWith(last12));
+                const cand8 = unified.filter(k=>k.endsWith(last8));
+                const candidates = cand12.length>0 ? cand12 : (cand8.length>0 ? cand8 : []);
+                if (candidates.length === 1) {
+                    const chosen = candidates[0];
+                    console.log('Auto-matched source node to canonical id:', chosen);
+                    // update srcNode to canonical id and find element
+                    srcNode = chosen;
+                    const newEl = this.findNodeCardElement(chosen);
+                    if (newEl) {
+                        // optionally reassign stored mapping to canonical id
+                        if (confirm('检测到本地保存的节点ID与当前节点不一致，是否将该节点归属更新为新的 canonical id？')) {
+                            const prevOwner = src; // source user id
+                            // reassign in storage: remove old key, add canonical
+                            if (this.nodeToUser.has(srcNode) && this.nodeToUser.get(srcNode) === src) {
+                                // nothing
+                            }
+                            // ensure the source user's nodes include canonical id
+                            const u = this.users.get(src);
+                            if (u) {
+                                u.nodes.delete(srcNode); // remove any stale
+                                u.nodes.add(chosen);
+                                this.nodeToUser.set(chosen, src);
+                                this.save();
+                            }
+                        }
+                        // continue with newEl
+                        srcEl = newEl;
+                    }
+                } else if (candidates.length > 1) {
+                    // ask user to choose among candidates
+                    const listStr = candidates.map((c,i)=>`${i}: ${c}`).join('\n');
+                    const pick = prompt(`找到多个可能匹配的节点，请输入序号选择:\n${listStr}`);
+                    const idx = parseInt(pick);
+                    if (!isNaN(idx) && candidates[idx]) {
+                        srcNode = candidates[idx];
+                        const newEl = this.findNodeCardElement(srcNode);
+                        if (newEl) srcEl = newEl;
+                    } else {
+                        alert('未选择有效候选，取消传输');
+                        return;
+                    }
+                } else {
+                    // 无候选，放弃
+                    return;
+                }
+            } catch (e) {
+                console.error('fuzzy match failed', e);
+                return;
+            }
+        }
+    // (diagnostic handled above) continue
 
         const statusEl = document.getElementById('ui_transferStatus');
         statusEl.textContent = `正在从 ${su.name} 发往 ${tu.name} ...`;

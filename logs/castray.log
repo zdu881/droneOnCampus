@@ -14,14 +14,14 @@ INFO:__main__:已加载配置文件: config_linux.json
         
   @app.on_event("shutdown")
 INFO:__main__:启动Web服务器: 0.0.0.0:8000
-INFO:     Started server process [3228249]
+INFO:     Started server process [3234917]
 INFO:     Waiting for application startup.
 INFO:__main__:正在启动分布式消息传输系统...
 INFO:__main__:第 1/3 次尝试初始化Ray集群...
 INFO:ray_casting:🔍 尝试发现外部Ray集群...
 INFO:ray_cluster_discovery:🔍 开始扫描本地Ray集群...
 INFO:ray_cluster_discovery:发现Ray状态输出:
-INFO:ray_cluster_discovery:======== Autoscaler status: 2025-10-16 15:16:07.464271 ========
+INFO:ray_cluster_discovery:======== Autoscaler status: 2025-10-16 16:30:25.822270 ========
 Node status
 ---------------------------------------------------------------
 Active:
@@ -94,11 +94,11 @@ INFO:ray_cluster_discovery:发现Ray Dashboard: http://127.0.0.1:8265
 INFO:ray_cluster_discovery:发现 30 个Ray集群
 INFO:ray_cluster_discovery:尝试连接到集群: {'source': 'dashboard_scan', 'dashboard_url': 'http://127.0.0.1:8265', 'dashboard_port': 8265, 'nodes': 0, 'resources': {}, 'status': 'active'}
 INFO:ray_cluster_discovery:尝试连接到外部Ray集群: {'source': 'dashboard_scan', 'dashboard_url': 'http://127.0.0.1:8265', 'dashboard_port': 8265, 'nodes': 0, 'resources': {}, 'status': 'active'}
-2025-10-16 15:16:10,724	INFO client_builder.py:244 -- Passing the following kwargs to ray.init() on the server: ignore_reinit_error, log_to_driver
+2025-10-16 16:30:31,359	INFO client_builder.py:244 -- Passing the following kwargs to ray.init() on the server: ignore_reinit_error, log_to_driver
 SIGTERM handler is not set because current thread is not the main thread.
 INFO:ray_cluster_discovery:成功连接到Ray集群 (端口 10001)
 INFO:ray_cluster_discovery:发现Ray集群: 23 个节点
-INFO:ray_cluster_discovery:集群资源: {'J1': 1.0, 'M3': 1.0, 'M6': 1.0, 'Wireless': 1.0, 'G5': 1.0, 'memory': 19274146017280.0, 'M7': 1.0, 'node:__internal_head__': 1.0, 'M13': 1.0, 'G2': 1.0, 'G8': 1.0, 'node:10.30.2.11': 23.0, 'G4': 1.0, 'M10': 1.0, 'M8': 1.0, 'G3': 1.0, 'M9': 1.0, 'M2': 1.0, 'object_store_memory': 4600000000000.0, 'G1': 1.0, 'M4': 1.0, 'CPU': 3664.0, 'G6': 1.0, 'M5': 1.0, 'M11': 1.0, 'Wired': 21.0, 'M1': 1.0, 'M12': 1.0, 'accelerator_type:G': 22.0, 'GPU': 120.0, 'G7': 1.0}
+INFO:ray_cluster_discovery:集群资源: {'GPU': 120.0, 'M6': 1.0, 'node:__internal_head__': 1.0, 'M10': 1.0, 'M13': 1.0, 'M2': 1.0, 'M4': 1.0, 'object_store_memory': 4600000000000.0, 'M1': 1.0, 'G2': 1.0, 'G7': 1.0, 'memory': 19274146017280.0, 'M8': 1.0, 'accelerator_type:G': 22.0, 'CPU': 3664.0, 'G4': 1.0, 'Wireless': 1.0, 'node:10.30.2.11': 23.0, 'M12': 1.0, 'G5': 1.0, 'M5': 1.0, 'J1': 1.0, 'M7': 1.0, 'G6': 1.0, 'M3': 1.0, 'Wired': 21.0, 'M11': 1.0, 'G1': 1.0, 'G3': 1.0, 'M9': 1.0, 'G8': 1.0}
 INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_1
 INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_2
 INFO:ray_cluster_discovery:映射外部Ray节点: external_ray_node_3
@@ -129,10 +129,121 @@ INFO:ray_casting:发现 23 个外部节点
 INFO:__main__:Ray集群初始化成功
 INFO:__main__:系统启动完成
 INFO:     Application startup complete.
-ERROR:    [Errno 98] error while attempting to bind on address ('0.0.0.0', 8000): address already in use
-INFO:     Waiting for application shutdown.
-INFO:__main__:正在关闭系统...
-INFO:ray_casting:停止演示传输
-INFO:ray_casting:集群已关闭
-INFO:__main__:系统关闭完成
-INFO:     Application shutdown complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     10.4.167.188:49180 - "WebSocket /ws" [accepted]
+INFO:     connection open
+INFO:     10.4.167.188:49182 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49182 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49181 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49182 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49182 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49188 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+ERROR:ray_casting:从Ray Dashboard获取物理节点状态失败: 未知的响应结构
+INFO:ray_casting:发现 0 个物理Ray节点
+INFO:ray_casting:统一节点状态: 0 个节点，其中 0 个有CastRay节点
+INFO:     127.0.0.1:40992 - "GET /api/nodes/unified HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49182 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49182 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49191 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49182 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49182 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49203 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49182 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49214 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49215 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49214 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49214 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49218 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49214 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49214 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49225 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49214 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49214 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49229 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49214 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49238 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49237 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49237 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49237 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49241 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49237 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49237 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49244 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49237 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49237 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49251 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49237 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49256 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49257 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49256 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49256 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49261 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49256 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49256 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49264 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49256 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49256 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49264 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49256 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49256 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49272 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49276 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49278 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49277 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49283 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49281 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49282 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49287 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49289 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49288 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49292 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49294 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49293 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49299 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49300 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49301 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49304 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49306 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49305 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49316 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49314 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49315 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49320 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49321 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49322 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49334 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49335 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49336 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49339 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49340 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49341 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49345 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49346 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49347 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49351 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49352 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49353 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49362 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49361 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49363 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     connection closed
+ERROR:__main__:WebSocket错误: 
+INFO:     10.4.167.188:49387 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49387 - "OPTIONS /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49387 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49387 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49387 - "GET /api/files HTTP/1.1" 404 Not Found
+INFO:     10.4.167.188:49392 - "WebSocket /ws" [accepted]
+INFO:     connection open
+INFO:     10.4.167.188:49387 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49387 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49406 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49387 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49387 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49406 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49387 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49387 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49406 - "GET /api/file-transfers/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49387 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49387 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     10.4.167.188:49708 - "GET /api/file-transfers/status HTTP/1.1" 200 OK

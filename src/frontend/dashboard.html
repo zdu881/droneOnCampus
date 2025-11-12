@@ -767,8 +767,20 @@
     <script src="js/user-manager.js"></script>
     <script src="js/api-manager.js"></script>
     <script src="js/pixel-streaming.js"></script>
+  <script src="js/unified-node-manager.js"></script>
     <script src="js/ray_monitor.js"></script>
     <script src="js/castray_integration.js"></script>
     <script src="js/dashboard-manager.js"></script>
+    <script>
+      // 确保 unifiedNodeManager 在页面就绪后自动初始化（渲染统一节点并触发 userManager.attachNodeCard）
+      document.addEventListener('DOMContentLoaded', function() {
+        try {
+          if (window.unifiedNodeManager && !window.unifiedNodeManager.isInitialized) {
+            window.unifiedNodeManager.init();
+            console.log('自动初始化 unifiedNodeManager');
+          }
+        } catch (e) { console.warn('初始化 unifiedNodeManager 失败', e); }
+      });
+    </script>
   </body>
 </html>

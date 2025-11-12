@@ -650,7 +650,24 @@ class RayClusterMonitor {
     }
 
     createNodeCards() {
-        const container = document.getElementById('nodeListContainer');
+        let container = document.getElementById('nodeListContainer');
+        // 容错：如果容器不存在（可能被其它脚本替换或移除），尝试在 nodes-section 中重建
+        if (!container) {
+            console.warn('nodeListContainer not found in DOM, attempting to recreate it');
+            const nodesSection = document.querySelector('.nodes-section');
+            if (nodesSection) {
+                // 仅在确实不存在时创建一个最小的容器，保持原有页面结构
+                const wrapper = document.createElement('div');
+                wrapper.className = 'node-category';
+                wrapper.innerHTML = `\n                  <h3><i class="fas fa-server"></i> Ray计算节点</h3>\n                  <div id="nodeListContainer" class="node-container"></div>\n                `;
+                // 将新容器放到 nodes-section 的最前面，避免覆盖其它重要区域
+                nodesSection.prepend(wrapper);
+                container = document.getElementById('nodeListContainer');
+            } else {
+                console.error('nodes-section not found in DOM; cannot render node cards');
+                return;
+            }
+        }
         container.innerHTML = '';
 
         // 按状态和类型排序：头节点优先，然后活跃节点，最后离线节点
