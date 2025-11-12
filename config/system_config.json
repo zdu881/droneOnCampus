@@ -1,0 +1,68 @@
+{
+  "system": {
+    "name": "CastRay + DroneOnCampus Integrated System",
+    "version": "1.0.0",
+    "description": "Ray集群监控 + CastRay分布式消息系统 + 无人机校园配送仿真"
+  },
+  "services": {
+    "rayoutput": {
+      "port": 9999,
+      "path": "/data/home/sim6g/rayCode/droneOnCampus",
+      "conda_env": "ray",
+      "startup_script": "python rayoutput.py",
+      "health_check": "/",
+      "description": "Ray集群数据API服务"
+    },
+    "castray": {
+      "port": 8000,
+      "path": "/data/home/sim6g/rayCode/CastRay",
+      "conda_env": "ray",
+      "startup_script": "python main.py",
+      "config_file": "config_linux.json",
+      "health_check": "/api/status"
+    },
+    "frontend": {
+      "port": 8080,
+      "path": "/data/home/sim6g/rayCode/droneOnCampus",
+      "startup_script": "python -m http.server 8080",
+      "main_file": "dashboard.html",
+      "health_check": "/"
+    }
+  },
+  "ray_cluster": {
+    "address": "10.30.2.11:6379",
+    "dashboard": "http://10.30.2.11:8265",
+    "expected_nodes": 23,
+    "expected_gpus": 120
+  },
+  "features": {
+    "ray_monitoring": {
+      "enabled": true,
+      "refresh_interval": 5000,
+      "show_mock_data": true
+    },
+    "castray_integration": {
+      "enabled": true,
+      "auto_connect": true,
+      "websocket_enabled": true,
+      "file_transfer": true
+    },
+    "drone_simulation": {
+      "enabled": true,
+      "pixel_streaming": "http://10.30.2.11:80",
+      "scenarios": ["drone", "vehicle"]
+    }
+  },
+  "ui": {
+    "theme": "dark",
+    "animations": true,
+    "auto_refresh": true,
+    "default_tab": "viewport"
+  },
+  "logging": {
+    "level": "info",
+    "directory": "./logs",
+    "max_file_size": "10MB",
+    "retention_days": 7
+  }
+}

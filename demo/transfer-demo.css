@@ -1,0 +1,27 @@
+:root{
+  --card-bg:#121212;
+  --card-border:#2b2b2b;
+  --accent:#3b82f6;
+}
+body{font-family:Inter,system-ui,Arial,Helvetica,sans-serif;background:#0f1724;color:#e6eef8;padding:24px}
+.container{max-width:980px;margin:0 auto}
+.cards{display:flex;flex-wrap:wrap;gap:12px;margin:12px 0}
+.card{width:220px;height:120px;background:linear-gradient(180deg,#111827,#0b1220);border:1px solid var(--card-border);border-radius:8px;padding:12px;position:relative;color:#dbeafe}
+.card h5{margin:0 0 6px 0;font-size:14px}
+.card .id{font-size:12px;color:#9ca3af}
+.owner-badge{position:absolute;right:8px;top:8px;padding:4px 8px;border-radius:12px;background:#444;color:#fff;font-size:12px}
+.assign-btn{position:absolute;left:8px;bottom:8px;padding:4px 6px;font-size:12px;border-radius:6px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.04);color:#dbeafe}
+.transfer-btn{position:absolute;right:8px;bottom:8px;padding:6px 8px;font-size:13px;border-radius:6px;background:var(--accent);border:none;color:#fff;cursor:pointer}
+.controls{margin-top:14px;display:flex;align-items:center;gap:8px}
+.status{color:#9ca3af;margin-left:8px}
+.log{margin-top:8px;background:#071023;color:#9cc3ff;padding:8px;border-radius:6px;max-height:160px;overflow:auto}
+.transfer-dot{position:fixed;width:12px;height:12px;border-radius:50%;background:#fff;z-index:9999;box-shadow:0 0 10px rgba(59,130,246,0.9)}
+
+/* simple responsive */
+@media (max-width:600px){.card{width:100%}}
+
+/* progress bar */
+.progress-bar{position:relative;height:18px;background:#0b1220;border:1px solid rgba(255,255,255,0.04);border-radius:10px;overflow:hidden}
+.progress-fill{position:absolute;left:0;top:0;height:100%;width:0;background:linear-gradient(90deg,var(--accent),#60a5fa)}
+.progress-text{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:12px;color:#e6eef8}
+

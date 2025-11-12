@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>卡片间传输动画示例</title>
+  <link rel="stylesheet" href="transfer-demo.css">
+</head>
+<body>
+  <div class="container">
+    <h2>卡片间传输动画示例</h2>
+    <p>点击任意卡片上的「传输到...」按钮可发起示例动画。</p>
+
+    <div id="cards" class="cards">
+      <!-- cards will be populated by JS -->
+    </div>
+
+    <div class="controls">
+      <label>源卡片</label>
+      <select id="demo_src"></select>
+      <label>目标卡片</label>
+      <select id="demo_tgt"></select>
+      <button id="demo_start">开始传输</button>
+      <span id="demo_status" class="status"></span>
+    </div>
+
+    <div class="progress-wrap" style="margin-top:12px">
+      <div class="progress-bar" id="demo_progress">
+        <div class="progress-fill" id="demo_progress_fill" style="width:0%"></div>
+        <div class="progress-text" id="demo_progress_text">0%</div>
+      </div>
+    </div>
+
+    <h4>日志</h4>
+    <div id="demo_log" class="log"></div>
+  </div>
+
+  <script src="transfer-demo.js"></script>
+</body>
+</html>

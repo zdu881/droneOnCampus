@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ray集群 & CastRay 监控系统（集成版）</title>
+    <link rel="stylesheet" href="css/cluster-styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Ray集群 & CastRay 监控系统</h1>
+        <div class="cluster-info">
+          <small id="cluster-info-text">数据源初始化中…</small>
+        </div>
+        <div class="controls">
+          <button id="pauseBtn">暂停动画</button>
+          <button id="resetBtn">刷新数据</button>
+          <button id="castrayConnectBtn">连接CastRay</button>
+          <label>
+            动画速度:
+            <input type="range" id="speedSlider" min="0.5" max="3" step="0.1" value="1" />
+          </label>
+        </div>
+      </header>
+
+      <!-- Tab Navigation -->
+      <div class="tab-navigation">
+        <button class="tab-btn active" data-tab="ray-cluster">Ray集群监控</button>
+        <button class="tab-btn" data-tab="castray-nodes">CastRay节点</button>
+        <button class="tab-btn" data-tab="file-transfer">文件传输</button>
+      </div>
+
+      <!-- Ray Cluster Tab -->
+      <div class="tab-content active" id="ray-cluster">
+        <div class="dashboard">
+          <div class="stats-panel">
+            <h3>集群统计</h3>
+            <div class="stat-item">
+              <span>活跃节点:</span>
+              <span id="activeNodes">0</span>
+            </div>
+            <div class="stat-item">
+              <span>平均CPU使用率:</span>
+              <span id="avgCpu">0%</span>
+            </div>
+            <div class="stat-item">
+              <span>平均内存使用率:</span>
+              <span id="avgMemory">0%</span>
+            </div>
+            <div class="stat-item">
+              <span>有线连接节点:</span>
+              <span id="wiredNodes">0</span>
+            </div>
+            <div class="stat-item">
+              <span>无线连接节点:</span>
+              <span id="wirelessNodes">0</span>
+            </div>
+            <div class="stat-item">
+              <span>总任务数:</span>
+              <span id="totalTasks">0</span>
+            </div>
+            <div class="stat-item">
+              <span>数据源:</span>
+              <span id="dataSource">连接中...</span>
+            </div>
+          </div>
+
+          <div class="legend">
+            <h3>状态说明</h3>
+            <div class="legend-item">
+              <div class="legend-color low"></div>
+              <span>低负载 (0-30%)</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color medium"></div>
+              <span>中等负载 (31-70%)</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color high"></div>
+              <span>高负载 (71-100%)</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color dead"></div>
+              <span>节点离线</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="node-list">
+          <h3>Ray节点列表</h3>
+          <div id="nodeListContainer"></div>
+        </div>
+      </div>
+
+      <!-- CastRay Nodes Tab -->
+      <div class="tab-content" id="castray-nodes">
+        <div class="castray-dashboard">
+          <div class="castray-stats">
+            <h3>CastRay 状态</h3>
+            <div class="stat-item">
+              <span>连接状态:</span>
+              <span id="castrayStatus">断开</span>
+            </div>
+            <div class="stat-item">
+              <span>CastRay节点数:</span>
+              <span id="castrayNodeCount">0</span>
+            </div>
+            <div class="stat-item">
+              <span>活跃传输:</span>
+              <span id="activeTransfers">0</span>
+            </div>
+          </div>
+
+          <div class="castray-controls">
+            <h3>节点控制</h3>
+            <div class="control-group">
+              <input type="text" id="newNodeId" placeholder="节点ID (如: node_4)" />
+              <button id="createNodeBtn">创建节点</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="castray-nodes-list">
+          <h3>CastRay 节点列表</h3>
+          <div id="castrayNodesContainer"></div>
+        </div>
+      </div>
+
+      <!-- File Transfer Tab -->
+      <div class="tab-content" id="file-transfer">
+        <div class="file-transfer-dashboard">
+          <div class="transfer-stats">
+            <h3>文件传输统计</h3>
+            <div class="stat-item">
+              <span>总传输次数:</span>
+              <span id="totalTransfers">0</span>
+            </div>
+            <div class="stat-item">
+              <span>成功传输:</span>
+              <span id="successfulTransfers">0</span>
+            </div>
+            <div class="stat-item">
+              <span>传输中:</span>
+              <span id="ongoingTransfers">0</span>
+            </div>
+          </div>
+
+          <div class="transfer-controls">
+            <h3>手动文件传输</h3>
+            <div class="control-group">
+              <select id="sourceNode">
+                <option value="">选择源节点</option>
+              </select>
+              <select id="targetNode">
+                <option value="">选择目标节点</option>
+              </select>
+              <select id="fileName">
+                <option value="">选择文件</option>
+              </select>
+              <button id="startTransferBtn">开始传输</button>
+              <button id="refreshFilesBtn">刷新文件列表</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="transfer-log">
+          <h3>传输日志</h3>
+          <div id="transferLogContainer"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 运行时配置：默认将前端指向本服务（可部署时覆盖） -->
+    <script>
+      window.appConfig = window.appConfig || {
+        rayApiBase: window.location.origin, // 后端统一节点API在同源 /api/nodes/unified
+        castrayApiBase: window.location.origin,
+        frontendBase: window.location.origin
+      };
+      // 页面展示的提示
+      const info = document.getElementById('cluster-info-text');
+      if (info) info.textContent = `Ray API: ${window.appConfig.rayApiBase} | CastRay API: ${window.appConfig.castrayApiBase}`;
+    </script>
+
+    <!-- 复用 droneOnCampus 的通用前端逻辑 -->
+    <script src="js/unified-node-manager.js"></script>
+    <script src="js/ray_monitor.js"></script>
+    <script src="js/castray_integration.js"></script>
+  </body>
+  </html>

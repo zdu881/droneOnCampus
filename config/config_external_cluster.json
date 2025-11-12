@@ -1,0 +1,24 @@
+{
+    "ray_cluster": {
+        "address": "local",
+        "namespace": "castray",
+        "create_demo_nodes": true,
+        "max_retries": 3,
+        "retry_delay": 2,
+        "external_cluster": false
+    },
+    "web_server": {
+        "host": "127.0.0.1", 
+        "port": 28823,
+        "log_level": "info"
+    },
+    "file_transfer": {
+        "download_dir": "downloads",
+        "chunk_size": 8192,
+        "max_file_size": 104857600
+    },
+    "logging": {
+        "level": "INFO",
+        "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    }
+}

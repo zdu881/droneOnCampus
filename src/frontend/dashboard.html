@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Campus Drone Management System - Digital Twin</title>
+    <link rel="stylesheet" href="css/dashboard-styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <!-- 主应用容器 -->
+    <div class="app-container">
+      <!-- 顶部工具栏 -->
+      <header class="app-header">
+        <div class="header-left">
+          <div class="app-logo">
+            <i class="fas fa-drone"></i>
+            <span class="app-title">Campus Drone Digital Twin</span>
+          </div>
+          <div class="connection-status">
+            <div class="status-indicator" id="connection-indicator">
+              <div class="status-dot" data-status="connected"></div>
+              <span>UE Connected</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="header-center">
+          <!-- 场景切换 -->
+          <div class="scenario-switcher">
+            <button class="scenario-btn active" data-scenario="drone">
+              <i class="fas fa-drone"></i>
+              <span>无人机配送</span>
+            </button>
+            <button class="scenario-btn" data-scenario="vehicle">
+              <i class="fas fa-car"></i>
+              <span>自动驾驶</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <div class="system-time" id="system-time">--:--:--</div>
+          <div class="simulation-controls">
+            <button
+              class="tool-btn"
+              id="attach-worker-btn"
+              title="连接工作节点"
+            >
+              <i class="fas fa-plug"></i>
+            </button>
+            <button class="tool-btn" id="start-simulation-btn" title="开始仿真">
+              <i class="fas fa-play"></i>
+            </button>
+            <button class="tool-btn" id="pause-simulation-btn" title="暂停仿真">
+              <i class="fas fa-pause"></i>
+            </button>
+            <button class="tool-btn" id="stop-simulation-btn" title="停止仿真">
+              <i class="fas fa-stop"></i>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- 主内容区域 -->
+      <div class="app-main">
+        <!-- 侧边栏标签 -->
+        <div class="sidebar-tabs">
+          <button class="tab-btn active" data-tab="viewport">
+            <i class="fas fa-eye"></i>
+            <span>视口</span>
+          </button>
+          <button class="tab-btn" data-tab="configuration">
+            <i class="fas fa-cog"></i>
+            <span>配置</span>
+          </button>
+          <button class="tab-btn" data-tab="console">
+            <i class="fas fa-terminal"></i>
+            <span>控制台</span>
+          </button>
+          <button class="tab-btn" data-tab="assets">
+            <i class="fas fa-box"></i>
+            <span>资源</span>
+          </button>
+          <button class="tab-btn" data-tab="telemetry">
+            <i class="fas fa-chart-line"></i>
+            <span>遥测</span>
+          </button>
+          <button class="tab-btn" data-tab="node-monitoring">
+            <i class="fas fa-server"></i>
+            <span>节点监控</span>
+          </button>
+        </div>
+
+        <!-- 主内容面板 -->
+        <div class="main-content-panel">
+          <!-- 中央视口区域 -->
+          <div class="main-content active" id="viewport-content-page">
+            <!-- 视频流/3D视口 -->
+            <div class="viewport-content">
+              <video
+                id="main-viewport"
+                autoplay
+                muted
+                playsinline
+                style="display: none"
+              ></video>
+              <iframe
+                id="pixel-streaming-viewport"
+                src="http://10.30.2.11:80"
+                style="width: 100%; height: 100%; border: none"
+              ></iframe>
+
+              <!-- 视口工具栏 -->
+              <div class="viewport-toolbar">
+                <div class="view-controls">
+                  <label>视角:</label>
+                  <select id="view-type-select">
+                    <option value="top">俯视图</option>
+                    <option value="perspective">透视图</option>
+                    <option value="follow">跟随视角</option>
+                  </select>
+                </div>
+                <div class="viewport-settings">
+                  <button class="viewport-btn" id="toggle-grid">
+                    <i class="fas fa-th"></i>
+                  </button>
+                  <button class="viewport-btn" id="toggle-compass">
+                    <i class="fas fa-compass"></i>
+                  </button>
+                  <button class="viewport-btn" id="fullscreen-btn">
+                    <i class="fas fa-expand"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- 实时数据覆盖层 -->
+              <div class="data-overlays">
+                <!-- 左上角 - 无人机遥测 -->
+                <div class="data-panel drone-telemetry">
+                  <div class="panel-header">
+                    <i class="fas fa-drone"></i>
+                    <span>无人机遥测</span>
+                  </div>
+                  <div class="data-grid">
+                    <div class="data-item">
+                      <span class="label">位置 X:</span>
+                      <span class="value" id="drone-x">--</span>
+                    </div>
+                    <div class="data-item">
+                      <span class="label">位置 Y:</span>
+                      <span class="value" id="drone-y">--</span>
+                    </div>
+                    <div class="data-item">
+                      <span class="label">高度:</span>
+                      <span class="value" id="drone-z">--</span>
+                    </div>
+                    <div class="data-item">
+                      <span class="label">电池:</span>
+                      <span class="value" id="drone-battery">--</span>
+                    </div>
+                    <div class="data-item">
+                      <span class="label">速度:</span>
+                      <span class="value" id="drone-speed">--</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 右上角 - 任务状态 -->
+                <div class="data-panel mission-status">
+                  <div class="panel-header">
+                    <i class="fas fa-tasks"></i>
+                    <span>任务状态</span>
+                  </div>
+                  <div class="data-grid">
+                    <div class="data-item">
+                      <span class="label">状态:</span>
+                      <span class="value" id="mission-status">--</span>
+                    </div>
+                    <div class="data-item">
+                      <span class="label">目标:</span>
+                      <span class="value" id="mission-target">--</span>
+                    </div>
+                    <div class="data-item">
+                      <span class="label">距离:</span>
+                      <span class="value" id="target-distance">--</span>
+                    </div>
+                    <div class="data-item">
+                      <span class="label">风速:</span>
+                      <span class="value" id="wind-speed">--</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 底部中央 - 网络质量 -->
+                <div class="data-panel network-quality">
+                  <div class="panel-header">
+                    <i class="fas fa-wifi"></i>
+                    <span>网络质量</span>
+                  </div>
+                  <div class="quality-meters">
+                    <div class="meter">
+                      <span class="meter-label">带宽</span>
+                      <div class="meter-bar">
+                        <div class="meter-fill" id="bandwidth-meter"></div>
+                      </div>
+                      <span class="meter-value" id="bandwidth-value"
+                        >-- Mbps</span
+                      >
+                    </div>
+                    <div class="meter">
+                      <span class="meter-label">延迟</span>
+                      <div class="meter-bar">
+                        <div class="meter-fill" id="latency-meter"></div>
+                      </div>
+                      <span class="meter-value" id="latency-value">-- ms</span>
+                    </div>
+                    <div class="meter">
+                      <span class="meter-label">信号</span>
+                      <div class="meter-bar">
+                        <div class="meter-fill" id="signal-meter"></div>
+                      </div>
+                      <span class="meter-value" id="signal-value">--</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 配置页面 -->
+          <div class="main-content" id="configuration-content-page">
+            <div class="page-header">
+              <h1>系统配置</h1>
+              <p>管理系统连接和全局参数</p>
+            </div>
+            <div class="page-content">
+              <div class="config-section">
+                <h4>数据库配置</h4>
+                <div class="config-grid">
+                  <div class="config-item">
+                    <label>DB主机:</label>
+                    <input
+                      type="text"
+                      id="db-host"
+                      value="10.30.2.11"
+                      placeholder="数据库主机地址"
+                    />
+                  </div>
+                  <div class="config-item">
+                    <label>DB端口:</label>
+                    <input
+                      type="number"
+                      id="db-port"
+                      value="9000"
+                      placeholder="9000"
+                    />
+                  </div>
+                  <div class="config-item">
+                    <label>数据库名:</label>
+                    <input
+                      type="text"
+                      id="db-name"
+                      placeholder="drone_telemetry"
+                    />
+                  </div>
+                  <div class="config-item">
+                    <button class="action-btn connect-btn" id="connect-db-btn">
+                      <i class="fas fa-plug"></i>
+                      连接数据库
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="config-section">
+                <h4>UE连接配置</h4>
+                <div class="config-grid">
+                  <div class="config-item">
+                    <label>流服务器:</label>
+                    <input
+                      type="text"
+                      id="streaming-url"
+                      value="http://10.30.2.11:80"
+                      placeholder="流地址"
+                    />
+                  </div>
+                  <div class="config-item">
+                    <label>API端点:</label>
+                    <input
+                      type="text"
+                      id="api-endpoint"
+                      value="http://10.30.2.11:7777"
+                      placeholder="API地址"
+                    />
+                  </div>
+                  <div class="config-item">
+                    <button class="action-btn primary-btn" id="connect-ue-btn">
+                      <i class="fas fa-link"></i>
+                      连接UE
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 控制台页面 -->
+          <div class="main-content" id="console-content-page">
+            <div class="page-header">
+              <h1>系统控制台</h1>
+              <p>查看实时系统日志和事件</p>
+            </div>
+            <div class="page-content">
+              <div class="console-section full-height">
+                <div class="console-header">
+                  <h4>实时日志</h4>
+                  <button class="clear-btn" id="clear-console">
+                    <i class="fas fa-trash"></i>
+                    清空
+                  </button>
+                </div>
+                <div class="console-output" id="console-output">
+                  <!-- 控制台输出 -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 占位符页面 -->
+          <div class="main-content" id="assets-content-page">
+            <div class="placeholder-page">
+              <i class="fas fa-box-open"></i>
+              <h1>资源管理</h1>
+              <p>此功能正在开发中</p>
+            </div>
+          </div>
+          <div class="main-content" id="telemetry-content-page">
+            <div class="placeholder-page">
+              <i class="fas fa-chart-pie"></i>
+              <h1>遥测数据分析</h1>
+              <p>此功能正在开发中</p>
+            </div>
+          </div>
+
+          <!-- 节点监控页面 -->
+          <div class="main-content" id="node-monitoring-content-page">
+            <div class="node-monitoring-dashboard">
+              <div class="dashboard-header">
+                <h2><i class="fas fa-server"></i> 节点监控与管理</h2>
+                <div class="cluster-controls">
+                  <button id="pauseBtn" class="control-btn">
+                    <i class="fas fa-pause"></i> 暂停动画
+                  </button>
+                  <button id="resetBtn" class="control-btn">
+                    <i class="fas fa-refresh"></i> 刷新数据
+                  </button>
+                  <button id="castrayConnectBtn" class="control-btn primary">
+                    <i class="fas fa-plug"></i> 连接CastRay
+                  </button>
+                  <label class="speed-control">
+                    动画速度: 
+                    <input type="range" id="speedSlider" min="0.5" max="3" step="0.1" value="1">
+                  </label>
+                </div>
+              </div>
+
+              <!-- 统计信息面板 -->
+              <div class="unified-stats-section">
+                <div class="stats-panel ray-stats">
+                  <h3><i class="fas fa-server"></i> Ray集群统计</h3>
+                  <div class="stats-grid">
+                    <div class="stat-item">
+                      <span>活跃节点:</span>
+                      <span id="activeNodes">0</span>
+                    </div>
+                    <div class="stat-item">
+                      <span>平均CPU使用率:</span>
+                      <span id="avgCpu">0%</span>
+                    </div>
+                    <div class="stat-item">
+                      <span>平均内存使用率:</span>
+                      <span id="avgMemory">0%</span>
+                    </div>
+                    <div class="stat-item">
+                      <span>有线连接节点:</span>
+                      <span id="wiredNodes">0</span>
+                    </div>
+                    <div class="stat-item">
+                      <span>无线连接节点:</span>
+                      <span id="wirelessNodes">0</span>
+                    </div>
+                    <div class="stat-item">
+                      <span>总任务数:</span>
+                      <span id="totalTasks">0</span>
+                    </div>
+                    <div class="stat-item">
+                      <span>数据源:</span>
+                      <span id="dataSource">连接中...</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="stats-panel castray-stats">
+                  <h3><i class="fas fa-network-wired"></i> CastRay 状态</h3>
+                  <div class="stats-grid">
+                    <div class="stat-item">
+                      <span>连接状态:</span>
+                      <span id="castrayStatus" class="status-disconnected">断开</span>
+                    </div>
+                    <div class="stat-item">
+                      <span>CastRay节点数:</span>
+                      <span id="castrayNodeCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                      <span>活跃传输:</span>
+                      <span id="activeTransfers">0</span>
+                    </div>
+                    <div class="stat-item">
+                      <span>总传输次数:</span>
+                      <span id="totalTransfers">0</span>
+                    </div>
+                    <div class="stat-item">
+                      <span>成功传输:</span>
+                      <span id="successfulTransfers">0</span>
+                    </div>
+                    <div class="stat-item">
+                      <span>传输中:</span>
+                      <span id="ongoingTransfers">0</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="legend-panel">
+                  <h3>状态说明</h3>
+                  <div class="legend-grid">
+                    <div class="legend-item">
+                      <div class="legend-color low"></div>
+                      <span>低负载 (0-30%)</span>
+                    </div>
+                    <div class="legend-item">
+                      <div class="legend-color medium"></div>
+                      <span>中等负载 (31-70%)</span>
+                    </div>
+                    <div class="legend-item">
+                      <div class="legend-color high"></div>
+                      <span>高负载 (71-100%)</span>
+                    </div>
+                    <div class="legend-item">
+                      <div class="legend-color dead"></div>
+                      <span>节点离线</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 节点列表区域 -->
+              <div class="nodes-section">
+                <!-- Ray节点列表 -->
+                <div class="node-category">
+                  <h3><i class="fas fa-server"></i> Ray计算节点</h3>
+                  <div id="nodeListContainer" class="node-container"></div>
+                </div>
+
+                <!-- CastRay节点列表 -->
+                <div class="node-category">
+                  <h3><i class="fas fa-network-wired"></i> CastRay传输节点</h3>
+                  <div class="castray-node-controls">
+                    <div class="control-group">
+                      <input type="text" id="newNodeId" placeholder="节点ID (如: node_4)" class="control-input">
+                      <button id="createNodeBtn" class="control-btn">
+                        <i class="fas fa-plus"></i> 创建节点
+                      </button>
+                    </div>
+                  </div>
+                  <div id="castrayNodesContainer" class="castray-nodes-container"></div>
+                </div>
+              </div>
+
+              <!-- 文件传输控制 -->
+              <div class="file-transfer-section">
+                <div class="transfer-header">
+                  <h3><i class="fas fa-exchange-alt"></i> 文件传输控制</h3>
+                </div>
+                <!-- 用户面板：由 user-manager.js 渲染 -->
+                <div id="userPanel" class="user-panel" style="margin:8px 0;">
+                  <!-- 用户选择、已分配节点等会在此处渲染 -->
+                </div>
+
+                <div class="transfer-controls">
+                  <h4>手动文件传输</h4>
+                  <div class="transfer-control-group">
+                    <select id="sourceNode" class="control-select">
+                      <option value="">选择源节点</option>
+                    </select>
+                    <select id="targetNode" class="control-select">
+                      <option value="">选择目标节点</option>
+                    </select>
+                    <select id="fileName" class="control-select">
+                      <option value="">选择文件</option>
+                    </select>
+                    <button id="startTransferBtn" class="control-btn primary">
+                      <i class="fas fa-play"></i> 开始传输
+                    </button>
+                    <button id="refreshFilesBtn" class="control-btn">
+                      <i class="fas fa-refresh"></i> 刷新文件列表
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="transfer-log">
+                  <h4>传输日志</h4>
+                  <div id="transferLogContainer" class="log-container"></div>
+                </div>
+              </div>
+
+              <!-- Ray集群发现功能 -->
+              <div class="cluster-discovery-section">
+                <div class="discovery-header">
+                  <h3><i class="fas fa-search"></i> Ray集群发现</h3>
+                </div>
+                
+                <div class="discovery-controls">
+                  <button id="discoverClustersBtn" class="control-btn primary">
+                    <i class="fas fa-radar"></i> 发现外部集群
+                  </button>
+                  <div class="discovery-status">
+                    <span>状态: </span>
+                    <span id="clusterDiscoveryStatus">未开始</span>
+                  </div>
+                </div>
+                
+                <div class="discovered-clusters">
+                  <h4>发现的集群</h4>
+                  <div id="discoveredClusters" class="clusters-container">
+                    <div class="no-data">点击"发现外部集群"开始扫描</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 自定义文件生成功能 -->
+              <div class="file-generation-section">
+                <div class="generation-header">
+                  <h3><i class="fas fa-file-plus"></i> 自定义文件生成</h3>
+                </div>
+                
+                <div class="generation-controls">
+                  <div class="control-group">
+                    <label for="customFileName">文件名:</label>
+                    <input type="text" id="customFileName" placeholder="例: test_file.txt" class="control-input">
+                  </div>
+                  
+                  <div class="control-group">
+                    <label for="customFileSize">文件大小:</label>
+                    <input type="text" id="customFileSize" placeholder="例: 1MB, 500KB, 10B" class="control-input">
+                  </div>
+                  
+                  <div class="control-group">
+                    <label for="customContentType">内容类型:</label>
+                    <select id="customContentType" class="control-select">
+                      <option value="text">文本内容</option>
+                      <option value="random">随机内容</option>
+                      <option value="pattern">模式内容</option>
+                    </select>
+                  </div>
+                  
+                  <button id="generateFileBtn" class="control-btn primary">
+                    <i class="fas fa-cog"></i> 生成文件
+                  </button>
+                  
+                  <div class="generation-status">
+                    <span>状态: </span>
+                    <span id="fileGenerationStatus">等待操作</span>
+                  </div>
+                </div>
+                
+                <!-- 预设大小快速生成 -->
+                <div class="preset-generation">
+                  <h4>快速生成</h4>
+                  <div class="preset-buttons">
+                    <button class="preset-btn" onclick="castrayIntegration.generatePresetFile('tiny')">
+                      1KB
+                    </button>
+                    <button class="preset-btn" onclick="castrayIntegration.generatePresetFile('small')">
+                      10KB
+                    </button>
+                    <button class="preset-btn" onclick="castrayIntegration.generatePresetFile('medium')">
+                      100KB
+                    </button>
+                    <button class="preset-btn" onclick="castrayIntegration.generatePresetFile('large')">
+                      1MB
+                    </button>
+                    <button class="preset-btn" onclick="castrayIntegration.generatePresetFile('huge')">
+                      10MB
+                    </button>
+                    <button class="preset-btn" onclick="castrayIntegration.generatePresetFile('massive')">
+                      100MB
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 右侧属性面板 -->
+        <div class="properties-panel">
+          <div class="properties-header">
+            <h3>属性与控制</h3>
+            <button class="collapse-btn" id="collapse-properties">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+
+          <div class="panel-content-wrapper">
+            <!-- 场景树 -->
+            <div class="scene-tree">
+              <div class="tree-header">
+                <i class="fas fa-sitemap"></i>
+                <span>场景对象</span>
+              </div>
+              <div class="tree-content" id="scene-tree-content">
+                <!-- 场景对象将由JavaScript动态生成 -->
+              </div>
+            </div>
+
+            <!-- 对象属性与控制 -->
+            <div class="object-properties">
+              <div class="properties-header-alt">
+                <i class="fas fa-sliders-h"></i>
+                <span>属性与控制</span>
+              </div>
+              <div class="properties-content" id="properties-content">
+                <!-- 默认显示 -->
+                <div class="control-section active" id="default-controls">
+                  <p class="placeholder-text">
+                    在场景对象中选择一个项目以查看其属性和可用操作。
+                  </p>
+                </div>
+
+                <!-- 配送控制 -->
+                <div class="control-section" id="delivery-controls">
+                  <h4>配送任务</h4>
+                  <div class="delivery-routes">
+                    <div class="route-item">
+                      <button
+                        class="delivery-btn"
+                        data-from="Campus_Gate"
+                        data-to="Library"
+                      >
+                        <i class="fas fa-route"></i>
+                        <div class="route-info">
+                          <span class="route-name">校门 → 图书馆</span>
+                          <span class="route-distance">~850m</span>
+                        </div>
+                      </button>
+                    </div>
+                    <div class="route-item">
+                      <button
+                        class="delivery-btn"
+                        data-from="Library"
+                        data-to="Cafeteria"
+                      >
+                        <i class="fas fa-route"></i>
+                        <div class="route-info">
+                          <span class="route-name">图书馆 → 食堂</span>
+                          <span class="route-distance">~620m</span>
+                        </div>
+                      </button>
+                    </div>
+                    <div class="route-item">
+                      <button
+                        class="delivery-btn"
+                        data-from="Cafeteria"
+                        data-to="Dormitory"
+                      >
+                        <i class="fas fa-route"></i>
+                        <div class="route-info">
+                          <span class="route-name">食堂 → 宿舍</span>
+                          <span class="route-distance">~440m</span>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 摄像头控制 -->
+                <div class="control-section" id="camera-controls">
+                  <h4>摄像头预设</h4>
+                  <div class="camera-presets">
+                    <button class="camera-btn" data-view="overview">
+                      <i class="fas fa-eye"></i>
+                      <span>全景视角</span>
+                    </button>
+                    <button class="camera-btn" data-view="tracking">
+                      <i class="fas fa-crosshairs"></i>
+                      <span>跟踪视角</span>
+                    </button>
+                    <button class="camera-btn" data-view="close-up">
+                      <i class="fas fa-search-plus"></i>
+                      <span>近距离视角</span>
+                    </button>
+                    <button class="camera-btn" data-view="fpv">
+                      <i class="fas fa-eye-slash"></i>
+                      <span>第一人称视角</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- 基站管理 -->
+                <div class="control-section" id="station-controls">
+                  <h4>基站部署</h4>
+                  <div class="station-controls">
+                    <div class="station-type-selector">
+                      <label>基站类型:</label>
+                      <select id="station-type">
+                        <option value="charging">🔋 充电基站</option>
+                        <option value="communication">📡 通信基站</option>
+                        <option value="weather">🌡️ 气象站</option>
+                        <option value="security">🛡️ 安全基站</option>
+                      </select>
+                    </div>
+                    <div class="position-inputs">
+                      <input type="number" id="station-x" placeholder="X坐标" />
+                      <input type="number" id="station-y" placeholder="Y坐标" />
+                      <input type="number" id="station-z" placeholder="Z坐标" />
+                      <input
+                        type="text"
+                        id="station-name"
+                        placeholder="基站名称"
+                      />
+                    </div>
+                    <button
+                      class="action-btn primary-btn"
+                      id="deploy-station-btn"
+                    >
+                      <i class="fas fa-plus"></i>
+                      部署基站
+                    </button>
+                  </div>
+                  <div class="stations-list" id="stations-list">
+                    <!-- 基站列表将动态生成 -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JavaScript 模块 -->
+    <!-- 默认运行时配置（可被 app.js 或部署时覆盖） -->
+    <script>
+      window.appConfig = window.appConfig || {
+        // 与 quick_start.sh 输出保持一致的默认值
+        rayApiBase: 'http://10.30.2.11:9999',
+        castrayApiBase: 'http://10.30.2.11:8000',
+        frontendBase: 'http://10.30.2.11:8080'
+      };
+    </script>
+    <script src="js/user-manager.js"></script>
+    <script src="js/api-manager.js"></script>
+    <script src="js/pixel-streaming.js"></script>
+  <script src="js/unified-node-manager.js"></script>
+    <script src="js/ray_monitor.js"></script>
+    <script src="js/castray_integration.js"></script>
+    <script src="js/dashboard-manager.js"></script>
+    <script>
+      // 确保 unifiedNodeManager 在页面就绪后自动初始化（渲染统一节点并触发 userManager.attachNodeCard）
+      document.addEventListener('DOMContentLoaded', function() {
+        try {
+          if (window.unifiedNodeManager && !window.unifiedNodeManager.isInitialized) {
+            window.unifiedNodeManager.init();
+            console.log('自动初始化 unifiedNodeManager');
+          }
+        } catch (e) { console.warn('初始化 unifiedNodeManager 失败', e); }
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Layout Test</title>
+    <style>
+      /* 简化的CSS测试样式 */
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        background: #f0f0f0;
+      }
+
+      .video-container {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        background: #333;
+      }
+
+      /* 场景选择器 */
+      .scenario-selector {
+        position: absolute;
+        top: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 30;
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 12px 16px;
+        backdrop-filter: blur(8px);
+      }
+
+      /* 面板区域 */
+      .left-panel-zone {
+        position: absolute;
+        top: 70px;
+        left: 15px;
+        width: 280px;
+        max-height: calc(100vh - 450px);
+        z-index: 15;
+        background: rgba(255, 0, 0, 0.2); /* 红色背景用于测试 */
+        border: 2px solid red;
+        overflow-y: auto;
+      }
+
+      .right-panel-zone {
+        position: absolute;
+        top: 70px;
+        right: 15px;
+        width: 280px;
+        max-height: calc(100vh - 450px);
+        z-index: 15;
+        background: rgba(0, 255, 0, 0.2); /* 绿色背景用于测试 */
+        border: 2px solid green;
+        overflow-y: auto;
+      }
+
+      .bottom-left-zone {
+        position: absolute;
+        bottom: 380px;
+        left: 15px;
+        width: 320px;
+        max-height: 250px;
+        z-index: 15;
+        background: rgba(0, 0, 255, 0.2); /* 蓝色背景用于测试 */
+        border: 2px solid blue;
+        overflow-y: auto;
+      }
+
+      .bottom-right-zone {
+        position: absolute;
+        bottom: 380px;
+        right: 15px;
+        width: 350px;
+        max-height: 250px;
+        z-index: 15;
+        background: rgba(255, 255, 0, 0.2); /* 黄色背景用于测试 */
+        border: 2px solid yellow;
+        overflow-y: auto;
+      }
+
+      .controls {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: 0;
+        padding: 20px 30px;
+        background: rgba(255, 255, 255, 0.95);
+        border-top: 1px solid #ddd;
+        z-index: 20;
+        max-height: 30vh;
+        overflow-y: auto;
+      }
+
+      .panel-base {
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 15px;
+      }
+
+      .test-panel {
+        height: 150px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="video-container">
+      <!-- 场景选择器 -->
+      <div class="scenario-selector">
+        <span>Scenario Selector</span>
+      </div>
+
+      <!-- 左侧面板区域 -->
+      <div class="left-panel-zone">
+        <div class="panel-base test-panel">
+          左上面板区域<br />
+          (Red Zone)
+        </div>
+      </div>
+
+      <!-- 右侧面板区域 -->
+      <div class="right-panel-zone">
+        <div class="panel-base test-panel">
+          右上面板区域<br />
+          (Green Zone)
+        </div>
+      </div>
+
+      <!-- 左下角面板区域 -->
+      <div class="bottom-left-zone">
+        <div class="panel-base test-panel">
+          左下面板区域<br />
+          (Blue Zone)
+        </div>
+      </div>
+
+      <!-- 右下角面板区域 -->
+      <div class="bottom-right-zone">
+        <div class="panel-base test-panel">
+          右下面板区域<br />
+          (Yellow Zone)
+        </div>
+      </div>
+
+      <!-- 控制面板 -->
+      <div class="controls">
+        <h2>控制面板 (Control Panel)</h2>
+        <p>这个控制面板位于底部，应该不与其他面板重叠。</p>
+        <p>高度限制为视口高度的30%，有滚动条。</p>
+      </div>
+    </div>
+  </body>
+</html>
