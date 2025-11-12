@@ -8,8 +8,11 @@ import time
 import json
 import os
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 import logging
+from datetime import datetime
+
+import requests
 
 # Import models and ray_casting from the local package
 from .ray_casting import cluster
@@ -65,6 +68,198 @@ async def get_status():
             history = []
         status["connect_history"] = history
         return status
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+def _simulate_usage(min_val: float = 10, max_val: float = 80) -> float:
+    import random
+    return round(random.uniform(min_val, max_val), 1)
+
+
+def _extract_node_identifier(resources_total: dict) -> Optional[str]:
+    standard_keys = {
+        'CPU', 'memory', 'GPU', 'object_store_memory',
+        'accelerator_type:G', 'Wired', 'Wireless', 'node:10.30.2.11', 'node:__internal_head__'
+    }
+    for key in resources_total or {}:
+        if key not in standard_keys:
+            return key
+    return None
+
+
+def _get_connection_type(resources_total: dict) -> str:
+    if (resources_total or {}).get('Wired') == 1.0:
+        return 'wired'
+    if (resources_total or {}).get('Wireless') == 1.0:
+        return 'wireless'
+    return 'unknown'
+
+
+def _generate_node_tasks(node: dict, cpu_usage: float, memory_usage: float, gpu_usage: float):
+    tasks = []
+    if cpu_usage > 50:
+        tasks.append("CPU密集任务")
+    if memory_usage > 60:
+        tasks.append("内存密集任务")
+    if gpu_usage > 40:
+        tasks.append("GPU计算任务")
+    if node.get('is_head_node', False):
+        tasks.append("集群管理")
+    if not tasks:
+        tasks.append("空闲")
+    return tasks
+
+
+def _parse_ray_nodes_to_frontend_format(ray_nodes: list, cluster_resources: dict, available_resources: dict):
+    parsed_nodes = []
+    for node in ray_nodes:
+        node_identifier = _extract_node_identifier(node.get('resources_total', {}))
+        connection_type = _get_connection_type(node.get('resources_total', {}))
+        cpu_usage = _simulate_usage(20, 80)
+        memory_usage = _simulate_usage(15, 75)
+        gpu_usage = _simulate_usage(10, 90) if node.get('resources_total', {}).get('GPU', 0) > 0 else 0
+        tasks = _generate_node_tasks(node, cpu_usage, memory_usage, gpu_usage)
+        parsed_node = {
+            "id": (node.get('node_id', '') or '')[-8:],
+            "name": node_identifier or f"节点-{node.get('node_ip', 'Unknown')}",
+            "fullName": f"{node_identifier or '未知'} ({node.get('node_ip', 'Unknown')})",
+            "nodeIp": node.get('node_ip', 'Unknown'),
+            "nodeId": node.get('node_id', ''),
+            "state": node.get('state', 'UNKNOWN'),
+            "isHeadNode": node.get('is_head_node', False),
+            "cpu": cpu_usage,
+            "memory": memory_usage,
+            "gpu": gpu_usage,
+            "tasks": tasks,
+            "status": "active" if node.get('state') == 'ALIVE' else "dead",
+            "stateMessage": node.get('state_message'),
+            "connectionType": connection_type,
+            "resources": {
+                "totalCpu": node.get('resources_total', {}).get('CPU', 0),
+                "totalMemory": round((node.get('resources_total', {}).get('memory', 0)) / (1024**3)),
+                "totalGpu": node.get('resources_total', {}).get('GPU', 0),
+                "objectStore": round((node.get('resources_total', {}).get('object_store_memory', 0)) / (1024**3))
+            }
+        }
+        parsed_nodes.append(parsed_node)
+    return parsed_nodes
+
+
+def _create_cluster_summary(cluster_resources: dict, available_resources: dict, nodes_data: list):
+    total_cpus = cluster_resources.get('CPU', 0)
+    available_cpus = available_resources.get('CPU', 0)
+    used_cpus = total_cpus - available_cpus
+
+    total_memory = cluster_resources.get('memory', 0)
+    available_memory = available_resources.get('memory', 0)
+    used_memory = total_memory - available_memory
+
+    total_gpus = cluster_resources.get('GPU', 0)
+    available_gpus = available_resources.get('GPU', 0)
+    used_gpus = total_gpus - available_gpus
+
+    total_object_store = cluster_resources.get('object_store_memory', 0)
+    available_object_store = available_resources.get('object_store_memory', 0)
+    used_object_store = total_object_store - available_object_store
+
+    alive_nodes = sum(1 for n in nodes_data if n.get('status') == 'active')
+    dead_nodes = sum(1 for n in nodes_data if n.get('status') == 'dead')
+    head_nodes = sum(1 for n in nodes_data if n.get('isHeadNode'))
+
+    return {
+        "totalNodes": len(nodes_data),
+        "aliveNodes": alive_nodes,
+        "deadNodes": dead_nodes,
+        "headNodes": head_nodes,
+        "resources": {
+            "cpu": {
+                "total": total_cpus,
+                "used": used_cpus,
+                "available": available_cpus,
+                "usagePercent": round((used_cpus / total_cpus * 100) if total_cpus > 0 else 0, 1)
+            },
+            "memory": {
+                "total": total_memory,
+                "used": used_memory,
+                "available": available_memory,
+                "usagePercent": round((used_memory / total_memory * 100) if total_memory > 0 else 0, 1),
+                "totalGB": round(total_memory / (1024**3), 2),
+                "usedGB": round(used_memory / (1024**3), 2)
+            },
+            "gpu": {
+                "total": total_gpus,
+                "used": used_gpus,
+                "available": available_gpus,
+                "usagePercent": round((used_gpus / total_gpus * 100) if total_gpus > 0 else 0, 1)
+            },
+            "objectStore": {
+                "total": total_object_store,
+                "used": used_object_store,
+                "available": available_object_store,
+                "usagePercent": round((used_object_store / total_object_store * 100) if total_object_store > 0 else 0, 1),
+                "totalGB": round(total_object_store / (1024**3), 2),
+                "usedGB": round(used_object_store / (1024**3), 2)
+            }
+        }
+    }
+
+
+@app.get("/")
+async def root_info():
+    return {"result": True, "msg": "CastRay service running", "ts": datetime.now().isoformat()}
+
+
+@app.get("/api/ray-dashboard")
+async def get_ray_dashboard(dashboard_url: Optional[str] = None):
+    """返回与原 rayoutput.py 兼容的结构，供前端消费。
+    优先使用 Ray 原生 API（cluster + available + nodes via Dashboard /api/v0）。
+    """
+    try:
+        # 确保已连接 Ray；不在此处强制启动本地集群
+        if not await cluster.ensure_initialized():
+            # 降级：仍尝试使用 Dashboard API 获取原始节点信息
+            pass
+
+        # 1) 从 Ray 获取全局资源（若不可用则用空）
+        try:
+            cluster_resources = await cluster.get_cluster_resources()
+            available_resources = await cluster.get_available_resources()
+        except Exception:
+            cluster_resources, available_resources = {}, {}
+
+        # 2) 通过 Ray Dashboard API 获取节点原始信息
+        dash = dashboard_url or os.environ.get('RAY_DASHBOARD', 'http://10.30.2.11:8265')
+        ray_nodes = []
+        try:
+            resp = requests.get(f"{dash}/api/v0/nodes", timeout=5)
+            if resp.ok:
+                payload = resp.json() or {}
+                data = payload.get('data') or {}
+                result = data.get('result') or {}
+                ray_nodes = result.get('result') or []
+        except Exception:
+            ray_nodes = []
+
+        frontend_nodes = _parse_ray_nodes_to_frontend_format(ray_nodes, cluster_resources, available_resources)
+        summary = _create_cluster_summary(cluster_resources, available_resources, frontend_nodes)
+
+        return {
+            "result": True,
+            "msg": "成功获取Ray集群信息",
+            "timestamp": datetime.now().isoformat(),
+            "data": {
+                "result": {
+                    "total": len(frontend_nodes),
+                    "num_after_truncation": len(frontend_nodes),
+                    "num_filtered": len(frontend_nodes),
+                    "result": ray_nodes
+                },
+                "summary": summary,
+                "nodes": frontend_nodes,
+                "dashboardUrl": dash
+            }
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

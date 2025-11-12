@@ -55,6 +55,37 @@
   - 自动创建演示节点 `demo_node_1`、`demo_node_2`，端口就绪。
   - 应用稳定运行，`/api/status` 可用（服务非降级）。
 
+## 前端监控整合（cluster.html）
+为统一展示 Ray 计算节点与 CastRay 传输节点，引入新的集成页面：`src/frontend/cluster.html`
+
+### 页面作用
+- 汇总原 `diaplayRayCluster/index.html` 的集群统计、节点列表与文件传输面板。
+- 复用现有脚本：`ray_monitor.js`（Ray节点解析与展示）、`castray_integration.js`（文件传输 & CastRay 节点）、`unified-node-manager.js`（统一节点合并与高级卡片）。
+- 通过内联 `window.appConfig` 自动指向当前服务域名，减少硬编码外部地址。
+
+### 新增后端路由
+- `/api/ray-dashboard`：在 `main.py` 中加入，与原独立脚本 `rayoutput.py` 输出结构兼容（`data.result.result`, `data.nodes`, `summary` 等字段）。前端保持向后兼容，不再需要独立的 `rayoutput.py` HTTPServer 启动脚本。
+
+### 与旧脚本的差异
+| 项目 | 旧实现 | 集成后 |
+|------|--------|--------|
+| Ray 数据聚合 | 独立脚本 `rayoutput.py` 起 HTTPServer (端口扫描) | FastAPI 路由 `/api/ray-dashboard` |
+| 前端入口 | `diaplayRayCluster/index.html` | `src/frontend/cluster.html` |
+| 样式文件 | `diaplayRayCluster/styles.css` | `src/frontend/css/cluster-styles.css`（精简版） |
+| 节点合并 | 分散逻辑 | 统一在 `unified-node-manager.js` + `core/node-merger.js` |
+| 配置 | 硬编码地址 | `window.appConfig` 注入动态源 |
+
+### 访问方式
+部署后访问：`http://<host>:<port>/static/../frontend/cluster.html`（视部署的静态资源映射方式而定；当前可直接在前端构建目录打开）。若需要通过 FastAPI 提供静态托管，可在后续将 `src/frontend` 挂载到 `/frontend` 路径。
+
+### 后续可改进
+1. 将 `/api/ray-dashboard` 输出的模拟使用率替换为真实指标（可通过 Ray Metrics 或 node health API 收集）。
+2. 在统一视图中合并文件传输状态（对每个节点显示近期传输吞吐量）。
+3. 增加 WebSocket 推送（集群节点变化与传输进度）。
+4. 支持多集群切换：通过查询参数或配置列出可用集群地址列表。
+
+标记：旧仓库 `diaplayRayCluster` 中的 `index.html` / `styles.css` / `ray_monitor.js` / `castray_integration.js` 已被整合；`rayoutput.py` 推荐改为“已集成功能”状态，不再直接运行。
+
 ## 关键文件与改动摘要
 - `droneOnCampus/services/castray/main.py`
   - 启动时优先读取 `RAY_ADDRESS`；增加启动日志；在 `allow_local_start=False` 下初始化。
