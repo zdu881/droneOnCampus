@@ -6,6 +6,8 @@ class UserManager {
         this.transferLogEl = null;
         // load from localStorage if available
         this.load();
+        // 尝试在加载后进行 legacy id 迁移（若 unifiedNodeManager 已可用）
+        setTimeout(()=>{ try { this.migrateLegacyNodeIds(); } catch(e){ console.warn('migrateLegacyNodeIds error', e); } }, 1200);
         // default users
         if (this.users.size === 0) {
             this.createUser('alice', 'Alice', '#3b82f6');
@@ -38,6 +40,51 @@ class UserManager {
                 });
             }
         } catch(e){console.warn('load userManager',e)}
+    }
+
+    // 将 localStorage 中的 legacy node ids（short8/short12）映射为后端提供的 canonical id
+    migrateLegacyNodeIds() {
+        try {
+            const unified = window.unifiedNodeManager && window.unifiedNodeManager.unifiedNodes ? Array.from(window.unifiedNodeManager.unifiedNodes.keys()) : null;
+            if (!unified || !unified.length) {
+                console.info('userManager: unified nodes not available yet, skip migration');
+                return;
+            }
+
+            const toUpdate = [];
+            for (const [nodeId, userId] of this.nodeToUser.entries()) {
+                // 如果已经是完整 canonical id 并在 unified 中，则跳过
+                if (unified.includes(nodeId)) continue;
+
+                const s = String(nodeId);
+                const last12 = s.length>=12 ? s.substring(s.length-12) : s;
+                const last8 = s.length>=8 ? s.substring(s.length-8) : s;
+                let match = null;
+                const cand12 = unified.filter(k=>k.endsWith(last12));
+                const cand8 = unified.filter(k=>k.endsWith(last8));
+                if (cand12.length === 1) match = cand12[0];
+                else if (cand8.length === 1) match = cand8[0];
+
+                if (match) {
+                    toUpdate.push({oldId: nodeId, newId: match, userId});
+                }
+            }
+
+            if (toUpdate.length>0) {
+                console.info('userManager: migrating legacy node ids', toUpdate);
+                toUpdate.forEach(u=>{
+                    // remove old
+                    this.nodeToUser.delete(u.oldId);
+                    const owner = this.users.get(u.userId);
+                    if (owner) { owner.nodes.delete(u.oldId); owner.nodes.add(u.newId); }
+                    // set canonical mapping
+                    this.nodeToUser.set(u.newId, u.userId);
+                });
+                this.save();
+                // update badges for changed nodes
+                toUpdate.forEach(u=> this.updateNodeOwnerBadge(u.newId));
+            }
+        } catch(e) { console.warn('migrateLegacyNodeIds failed', e); }
     }
 
     createUser(id, name, color) {

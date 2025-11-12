@@ -398,6 +398,53 @@ body {
 }
 
 .panel-header {
+
+/* === 统一节点卡片 三色指示灯样式 === */
+.node-indicators {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.node-indicator {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  border: 2px solid rgba(255,255,255,0.08);
+  box-shadow: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.node-indicator.on {
+  transform: scale(1.15);
+}
+
+.node-indicator.red.on {
+  background: var(--danger-color);
+  box-shadow: 0 0 10px rgba(239,68,68,0.35);
+}
+
+.node-indicator.green.on {
+  background: var(--success-color);
+  box-shadow: 0 0 10px rgba(16,185,129,0.28);
+}
+
+.node-indicator.blue.on {
+  background: var(--info-color);
+  box-shadow: 0 0 10px rgba(59,130,246,0.28);
+}
+
+.node-indicator.pulse {
+  animation: nodePulse 1.6s infinite ease-in-out;
+}
+
+@keyframes nodePulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.35); opacity: 0.6; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
   display: flex;
   align-items: center;
   gap: 8px;

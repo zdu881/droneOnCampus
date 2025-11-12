@@ -130,7 +130,26 @@ class UnifiedNodeManager {
             ]);
 
             // 合并数据（返回 unmatched 信息以便调试）
-            const mergeResult = this.mergeNodeData(rayData, castrayData);
+            // 优先使用外部提供的 mergeNodeData（例如 core/node-merger.js 挂载到 window.nodeMerger），
+            // 如果不可用则回退到类内实现以保证兼容性。
+            let mergeResult;
+            if (window && window.nodeMerger && typeof window.nodeMerger.mergeNodeData === 'function') {
+                mergeResult = window.nodeMerger.mergeNodeData(rayData, castrayData);
+                // 外部合并返回的是序列化的 unifiedNodes 数组，需要将其填充回 this.unifiedNodes Map
+                try {
+                    this.unifiedNodes.clear();
+                    if (Array.isArray(mergeResult.unifiedNodes)) {
+                        mergeResult.unifiedNodes.forEach(n => {
+                            if (n && n.rayNodeId) this.unifiedNodes.set(n.rayNodeId, n);
+                        });
+                    }
+                } catch (e) {
+                    console.warn('将外部合并结果写入 this.unifiedNodes 时出错，回退到类内合并', e);
+                    mergeResult = this.mergeNodeData(rayData, castrayData);
+                }
+            } else {
+                mergeResult = this.mergeNodeData(rayData, castrayData);
+            }
 
             // 更新UI
             this.updateUnifiedView();
@@ -520,6 +539,12 @@ class UnifiedNodeManager {
                     <i class="fas ${this.getStatusIcon(overallStatus)}"></i>
                     ${this.getStatusText(overallStatus)}
                 </div>
+                <!-- 三色指示灯（红/绿/蓝） -->
+                <div class="node-indicators" data-node-id="${node.rayNodeId}">
+                  <div class="node-indicator red" data-type="red" title="红色告警"></div>
+                  <div class="node-indicator green" data-type="green" title="绿色告警"></div>
+                  <div class="node-indicator blue" data-type="blue" title="蓝色告警"></div>
+                </div>
             </div>
             
             <div class="node-card-content">
@@ -546,7 +571,63 @@ class UnifiedNodeManager {
             </div>
         `;
         
+        // 在卡片创建后启动本地的（模拟）预测告警更新逻辑
+        // 现在使用随机数据填充，后续可以替换为外部 API 的回调
+        this.attachSimulatedPrediction(card, node.rayNodeId);
+
         return card;
+    }
+
+    /**
+     * 将模拟的告警/预测驱动挂到卡片上
+     * 三色指示灯由外部预测决定，当前用随机数模拟
+     */
+    attachSimulatedPrediction(cardEl, nodeId) {
+        if (!cardEl) return;
+
+        const indicators = cardEl.querySelectorAll('.node-indicator');
+        if (!indicators || indicators.length === 0) return;
+
+        // 立即设置一次状态
+        const applyState = (state) => {
+            indicators.forEach(ind => {
+                const type = ind.dataset.type;
+                const on = !!state[type];
+                ind.classList.toggle('on', on);
+                // 轻微脉冲动画当为告警开启时
+                if (on) ind.classList.add('pulse'); else ind.classList.remove('pulse');
+            });
+        };
+
+        // 模拟函数：随机生成 red/green/blue 布尔值
+        const generateRandomPrediction = () => {
+            // 简单概率：green 常见，blue 偶发，red 低概率
+            return {
+                red: Math.random() < 0.08,
+                green: Math.random() < 0.45,
+                blue: Math.random() < 0.18
+            };
+        };
+
+        // 存储定时器引用，避免重复创建
+        if (!cardEl._predictionTimer) {
+            // 先立即应用一次
+            applyState(generateRandomPrediction());
+
+            // 每 4-8 秒随机间隔更新一次指示灯状态
+            const tick = () => {
+                try {
+                    const newState = generateRandomPrediction();
+                    applyState(newState);
+                    // 计划下一次
+                    const next = 4000 + Math.floor(Math.random() * 4000);
+                    cardEl._predictionTimer = setTimeout(tick, next);
+                } catch (e) {
+                    console.warn('prediction tick error', e);
+                }
+            };
+            cardEl._predictionTimer = setTimeout(tick, 4000 + Math.floor(Math.random() * 2000));
+        }
     }
 
     /**
