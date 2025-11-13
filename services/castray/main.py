@@ -264,6 +264,40 @@ async def get_ray_dashboard(dashboard_url: Optional[str] = None):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/nodes/unified")
+async def get_unified_nodes(dashboard_url: Optional[str] = None):
+    """返回前端期望的统一节点数组：{ nodes: [...] }，兼容前端的 /api/nodes/unified 调用。"""
+    try:
+        # 尝试初始化 cluster（不强制本地启动）
+        try:
+            await cluster.ensure_initialized()
+        except Exception:
+            pass
+
+        try:
+            cluster_resources = await cluster.get_cluster_resources()
+            available_resources = await cluster.get_available_resources()
+        except Exception:
+            cluster_resources, available_resources = {}, {}
+
+        dash = dashboard_url or os.environ.get('RAY_DASHBOARD', 'http://10.30.2.11:8265')
+        ray_nodes = []
+        try:
+            resp = requests.get(f"{dash}/api/v0/nodes", timeout=5)
+            if resp.ok:
+                payload = resp.json() or {}
+                data = payload.get('data') or {}
+                result = data.get('result') or {}
+                ray_nodes = result.get('result') or []
+        except Exception:
+            ray_nodes = []
+
+        frontend_nodes = _parse_ray_nodes_to_frontend_format(ray_nodes, cluster_resources, available_resources)
+        return {"nodes": frontend_nodes}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.on_event("startup")
 async def startup_event():
     """初始化 Ray 集群连接并（可选）创建演示节点"""
@@ -369,6 +403,49 @@ async def trigger_manual_transfer(request: dict):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/file-transfers")
+async def trigger_file_transfer_compat(request: dict):
+    """兼容旧前端路径：/api/file-transfers (POST) -> 等同于 /api/file-transfers/manual
+    保持与旧前端 `castray_integration.js` 的兼容性。
+    """
+    return await trigger_manual_transfer(request)
+
+
+@app.post("/api/nodes")
+async def create_node_compat(request: dict):
+    """兼容旧前端创建节点接口：POST /api/nodes
+
+    请求体示例: {"node_id": "demo_node_1", "port": 0}
+    """
+    node_id = request.get('node_id') or request.get('nodeId') or request.get('node_id')
+    if not node_id:
+        raise HTTPException(status_code=400, detail="node_id required")
+    try:
+        ok = await cluster.create_node(node_id)
+        return {"success": bool(ok), "node_id": node_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/files")
+async def list_files():
+    """列出 demo_files 目录中的可用文件，供前端选择要传输的文件。"""
+    demo_files_dir = Path("demo_files")
+    files = []
+    try:
+        demo_files_dir.mkdir(exist_ok=True)
+        for p in sorted(demo_files_dir.iterdir()):
+            if p.is_file():
+                try:
+                    size = p.stat().st_size
+                except Exception:
+                    size = 0
+                files.append({"name": p.name, "size": size})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    return {"files": files}
 
 if __name__ == '__main__':
     web_config = config.get("web_server", {})

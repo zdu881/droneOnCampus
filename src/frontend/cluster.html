@@ -120,7 +120,7 @@
             <h3>节点控制</h3>
             <div class="control-group">
               <input type="text" id="newNodeId" placeholder="节点ID (如: node_4)" />
-              <button id="createNodeBtn">创建节点</button>
+              <button id="createCastrayNodeBtn">创建节点</button>
             </div>
           </div>
         </div>
@@ -177,8 +177,11 @@
 
     <!-- 运行时配置：默认将前端指向本服务（可部署时覆盖） -->
     <script>
+      // 指定前端运行时的后端基址：
+      // - rayApiBase 指向我们在 main.py 中实现的兼容输出路由 /api/ray-dashboard
+      // - castrayApiBase 指向 CastRay API（/api/status 等由 main.py 提供）
       window.appConfig = window.appConfig || {
-        rayApiBase: window.location.origin, // 后端统一节点API在同源 /api/nodes/unified
+        rayApiBase: window.location.origin + '/api/ray-dashboard',
         castrayApiBase: window.location.origin,
         frontendBase: window.location.origin
       };

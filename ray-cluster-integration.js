@@ -20,7 +20,7 @@ class CastRayIntegration {
         controlPanel.className = 'castray-controls';
         controlPanel.innerHTML = `
             <div class="control-group">
-                <button id="createNodeBtn">创建节点</button>
+                <button id="createCastrayNodeBtn">创建节点</button>
                 <button id="sendMessageBtn">发送消息</button>
                 <button id="fileTransferBtn">文件传输</button>
                 <button id="toggleAutoTransfer">切换自动传输</button>
@@ -37,7 +37,8 @@ class CastRayIntegration {
     }
 
     bindControlEvents() {
-        document.getElementById('createNodeBtn').addEventListener('click', () => {
+        const createBtn = document.getElementById('createCastrayNodeBtn');
+        if (createBtn) createBtn.addEventListener('click', () => {
             this.createNode();
         });
 

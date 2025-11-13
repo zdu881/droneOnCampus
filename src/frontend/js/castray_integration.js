@@ -1,7 +1,8 @@
 // CastRay集成模块
 class CastRayIntegration {
     constructor() {
-        this.castrayApiBase = 'http://10.30.2.11:8000';
+        // 支持从 window.appConfig 注入 castrayApiBase
+        this.castrayApiBase = (window && window.appConfig && window.appConfig.castrayApiBase) ? window.appConfig.castrayApiBase : 'http://10.30.2.11:8000';
         this.websocket = null;
         this.castrayNodes = [];
         this.transferLog = [];
@@ -49,7 +50,8 @@ class CastRayIntegration {
         const castrayConnectBtn = document.getElementById('castrayConnectBtn');
         if (castrayConnectBtn) castrayConnectBtn.addEventListener('click', () => this.connectToCastRay());
 
-        const createNodeBtn = document.getElementById('createNodeBtn');
+        // dashboard.html 中此按钮已重命名为 createCastrayNodeBtn 以避免与统一节点管理器冲突
+        const createNodeBtn = document.getElementById('createCastrayNodeBtn');
         if (createNodeBtn) createNodeBtn.addEventListener('click', () => this.createNode());
 
         const startTransferBtn = document.getElementById('startTransferBtn');
@@ -135,10 +137,28 @@ class CastRayIntegration {
 
     connectWebSocket() {
         try {
-            this.websocket = new WebSocket('ws://10.30.2.11:8000/ws');
-            
+            // 构造基于 castrayApiBase 的 ws/wss 地址；支持 window.appConfig 为空值回退到 location.origin
+            let wsUrl = null;
+            try {
+                const base = this.castrayApiBase || window.location.origin;
+                if (base.startsWith('ws://') || base.startsWith('wss://')) {
+                    wsUrl = base.replace(/\/$/, '') + '/ws';
+                } else if (base.startsWith('http://') || base.startsWith('https://')) {
+                    const proto = base.startsWith('https://') ? 'wss' : 'ws';
+                    const host = base.replace(/^https?:\/\//, '').replace(/\/$/, '');
+                    wsUrl = `${proto}://${host}/ws`;
+                } else {
+                    const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+                    wsUrl = `${proto}://${location.host}/ws`;
+                }
+            } catch (e) {
+                wsUrl = `ws://${location.host}/ws`;
+            }
+
+            this.websocket = new WebSocket(wsUrl);
+
             this.websocket.onopen = () => {
-                console.log('WebSocket连接已建立');
+                console.log('WebSocket连接已建立', wsUrl);
             };
 
             this.websocket.onmessage = (event) => {

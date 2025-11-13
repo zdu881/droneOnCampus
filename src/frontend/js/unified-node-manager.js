@@ -80,7 +80,7 @@ class UnifiedNodeManager {
                     <button id="refreshNodesBtn" class="control-btn">
                         <i class="fas fa-sync-alt"></i> 刷新节点
                     </button>
-                    <button id="createNodeBtn" class="control-btn">
+                    <button id="createUnifiedNodeBtn" class="control-btn">
                         <i class="fas fa-plus"></i> 创建节点
                     </button>
                 </div>
@@ -100,8 +100,8 @@ class UnifiedNodeManager {
      * 设置事件监听器
      */
     setupEventListeners() {
-        const refreshBtn = document.getElementById('refreshNodesBtn');
-        const createBtn = document.getElementById('createNodeBtn');
+    const refreshBtn = document.getElementById('refreshNodesBtn');
+    const createBtn = document.getElementById('createUnifiedNodeBtn');
 
         if (refreshBtn) {
             refreshBtn.addEventListener('click', () => {

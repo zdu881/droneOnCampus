@@ -104,7 +104,7 @@ class RayClusterMonitor {
             // 如果统一API失败，尝试回退到原有逻辑
             console.log('尝试回退到原Ray API...');
             try {
-                const oldResponse = await fetch('http://10.30.2.11:9999/', {
+                const oldResponse = await fetch(RAY_API_BASE + '/', {
                     method: 'GET',
                     headers: {
                         'Accept': 'application/json',

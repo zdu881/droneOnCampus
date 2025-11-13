@@ -279,6 +279,24 @@ class UnrealEngineAPIManager {
   async getVehicleStatus() {
     return await this.sendRequest(this.droneActorPath, "GetVehicleStatus", {});
   }
+
+  // 简单的连通性检测，用于 dashboard-manager 的 testConnection 调用
+  async testConnection() {
+    try {
+      const resp = await fetch(this.baseUrl, { method: 'GET' });
+      if (resp.ok) {
+        try {
+          const data = await resp.json().catch(() => null);
+          return { success: true, data };
+        } catch (e) {
+          return { success: true };
+        }
+      }
+      return { success: false, status: resp.status, statusText: resp.statusText };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
 }
 
 // 创建全局实例
