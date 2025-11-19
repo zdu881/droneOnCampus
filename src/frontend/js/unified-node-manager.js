@@ -172,13 +172,25 @@ class UnifiedNodeManager {
      */
     async fetchRayNodes() {
         try {
-            const response = await fetch(this.rayApiBase, {
+            // 优先尝试统一节点端点 /api/nodes/unified
+            let response = await fetch(this.rayApiBase.replace(/\/$/, '') + '/api/nodes/unified', {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json'
                 }
             });
+
+            // 如失败则回退至 base 根（兼容旧实现）
+            if (!response.ok) {
+                response = await fetch(this.rayApiBase, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+            }
 
             if (!response.ok) {
                 throw new Error(`Ray API 请求失败: ${response.status}`);

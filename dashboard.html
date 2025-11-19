@@ -390,38 +390,67 @@
               <!-- 集群统计面板 -->
               <div class="cluster-metrics">
                 <div class="metric-card" data-metric="total-nodes">
-                  <div class="metric-title">总节点数</div>
-                  <div class="metric-value">0</div>
-                  <div class="metric-change positive">+0</div>
+                  <div class="metric-icon"><i class="fas fa-server"></i></div>
+                  <div class="metric-info">
+                    <div class="metric-title">总节点数</div>
+                    <div class="metric-value" id="total-nodes-value">0</div>
+                  </div>
                 </div>
                 <div class="metric-card" data-metric="alive-nodes">
-                  <div class="metric-title">活跃节点</div>
-                  <div class="metric-value">0</div>
-                  <div class="metric-change positive">+0</div>
+                  <div class="metric-icon"><i class="fas fa-check-circle"></i></div>
+                  <div class="metric-info">
+                    <div class="metric-title">活跃节点</div>
+                    <div class="metric-value" id="alive-nodes-value">0</div>
+                  </div>
                 </div>
                 <div class="metric-card" data-metric="cpu-usage">
-                  <div class="metric-title">CPU使用率</div>
-                  <div class="metric-value">0%</div>
-                  <div class="metric-change positive">+0%</div>
+                  <div class="metric-icon"><i class="fas fa-microchip"></i></div>
+                  <div class="metric-info">
+                    <div class="metric-title">CPU 使用</div>
+                    <div class="metric-value" id="cpu-usage-value">0 / 0</div>
+                    <div class="metric-subtitle" id="cpu-usage-percent">0%</div>
+                  </div>
                 </div>
                 <div class="metric-card" data-metric="memory-usage">
-                  <div class="metric-title">内存使用率</div>
-                  <div class="metric-value">0%</div>
-                  <div class="metric-change positive">+0%</div>
+                  <div class="metric-icon"><i class="fas fa-memory"></i></div>
+                  <div class="metric-info">
+                    <div class="metric-title">内存使用</div>
+                    <div class="metric-value" id="memory-usage-value">0 / 0 GB</div>
+                    <div class="metric-subtitle" id="memory-usage-percent">0%</div>
+                  </div>
+                </div>
+                <div class="metric-card" data-metric="gpu-usage">
+                  <div class="metric-icon"><i class="fas fa-video"></i></div>
+                  <div class="metric-info">
+                    <div class="metric-title">GPU 资源</div>
+                    <div class="metric-value" id="gpu-usage-value">0 个</div>
+                  </div>
                 </div>
               </div>
 
               <!-- 节点列表 -->
               <div class="cluster-nodes-panel">
                 <div class="nodes-header">
-                  <h3>集群节点</h3>
+                  <h3><i class="fas fa-network-wired"></i> 集群节点 <span class="node-count-badge" id="node-count-badge">0</span></h3>
                   <div class="nodes-controls">
                     <label>
-                      显示：
+                      <i class="fas fa-filter"></i>
                       <select id="nodes-filter">
                         <option value="all">所有节点</option>
                         <option value="active">活跃节点</option>
                         <option value="inactive">非活跃节点</option>
+                        <option value="gpu">GPU 节点</option>
+                        <option value="wired">有线连接</option>
+                        <option value="wireless">无线连接</option>
+                      </select>
+                    </label>
+                    <label>
+                      <i class="fas fa-sort"></i>
+                      <select id="nodes-sort">
+                        <option value="name">按名称</option>
+                        <option value="cpu">按CPU使用率</option>
+                        <option value="memory">按内存使用率</option>
+                        <option value="gpu">按GPU使用率</option>
                       </select>
                     </label>
                   </div>
@@ -429,13 +458,66 @@
                 <div class="nodes-container" id="cluster-nodes-grid">
                   <!-- 节点卡片将由JavaScript动态生成 -->
                   <div class="empty-state" id="cluster-empty-state">
-                    <div class="empty-icon">🔌</div>
+                    <div class="empty-icon"><i class="fas fa-plug"></i></div>
                     <h3>未连接到 CastRay 后端</h3>
-                    <p>请确保 CastRay 服务正在运行</p>
+                    <p>请确保 CastRay 服务正在运行于 <code>http://10.30.2.11:8000</code></p>
                     <div class="empty-actions">
-                      <button onclick="window.dashboardManager && window.dashboardManager.rayClusterManager ? window.dashboardManager.rayClusterManager.fetchClusterData() : console.log('Ray cluster manager not available')" class="retry-btn">重试连接</button>
-                      <a href="http://localhost:8000" target="_blank" class="check-backend-btn">检查后端服务</a>
+                      <button onclick="window.dashboardManager && window.dashboardManager.rayClusterManager ? window.dashboardManager.rayClusterManager.fetchClusterData() : console.log('Ray cluster manager not available')" class="retry-btn">
+                        <i class="fas fa-sync-alt"></i> 重试连接
+                      </button>
+                      <a href="http://10.30.2.11:8000/api/status" target="_blank" class="check-backend-btn">
+                        <i class="fas fa-external-link-alt"></i> 检查后端服务
+                      </a>
                     </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 文件传输对话框 -->
+              <div class="modal" id="file-transfer-modal" style="display: none;">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h3><i class="fas fa-exchange-alt"></i> 节点间文件传输</h3>
+                    <button class="modal-close" onclick="document.getElementById('file-transfer-modal').style.display='none'">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                    <form id="file-transfer-form">
+                      <div class="form-group">
+                        <label for="source-node">源节点：</label>
+                        <select id="source-node" required>
+                          <option value="">选择源节点...</option>
+                        </select>
+                      </div>
+                      <div class="form-group">
+                        <label for="target-node">目标节点：</label>
+                        <select id="target-node" required>
+                          <option value="">选择目标节点...</option>
+                        </select>
+                      </div>
+                      <div class="form-group">
+                        <label for="file-path">文件路径：</label>
+                        <input type="text" id="file-path" placeholder="/path/to/file.txt" required />
+                      </div>
+                      <div class="form-group">
+                        <label for="transfer-mode">传输模式：</label>
+                        <select id="transfer-mode">
+                          <option value="auto">自动选择最优路径</option>
+                          <option value="direct">直连传输</option>
+                          <option value="relay">中继传输</option>
+                        </select>
+                      </div>
+                      <div class="form-actions">
+                        <button type="submit" class="btn-primary">
+                          <i class="fas fa-paper-plane"></i> 开始传输
+                        </button>
+                        <button type="button" class="btn-secondary" onclick="document.getElementById('file-transfer-modal').style.display='none'">
+                          取消
+                        </button>
+                      </div>
+                    </form>
+                    <div id="transfer-status" class="transfer-status" style="display: none;"></div>
                   </div>
                 </div>
               </div>

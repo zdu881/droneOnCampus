@@ -5,7 +5,7 @@ echo ====================================
 echo.
 echo Please select interface mode:
 echo.
-echo 1. Legacy Interface (index.html)
+echo 1. Dashboard Interface (dashboard.html)
 echo 2. Professional Dashboard (dashboard.html) [NEW]
 echo 3. Exit
 echo.
@@ -13,7 +13,7 @@ set /p choice=Enter your choice (1-3):
 
 if "%choice%"=="1" (
     echo Starting Legacy Interface...
-    start "" "http://localhost:8080/index.html"
+    start "" "http://localhost:8080/src/frontend/dashboard.html"
     goto end
 )
 

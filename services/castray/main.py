@@ -1,5 +1,5 @@
 # Copied main.py from CastRay (adjusted imports to local package)
-from fastapi import FastAPI, WebSocket, HTTPException
+from fastapi import FastAPI, WebSocket, HTTPException, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
@@ -77,6 +77,63 @@ def _simulate_usage(min_val: float = 10, max_val: float = 80) -> float:
     return round(random.uniform(min_val, max_val), 1)
 
 
+def _get_real_node_usage(dashboard_url: str) -> dict:
+    """从 Ray Dashboard 获取真实的节点资源使用率和物理内存
+    
+    Returns:
+        dict: {ip: {'cpu': float, 'memory': float, 'gpu': float, 'memory_total_gb': float}}
+    """
+    try:
+        resp = requests.get(f"{dashboard_url}/nodes?view=summary", timeout=5)
+        if resp.ok:
+            data = resp.json()
+            summary = data.get('data', {}).get('summary', [])
+            # 以 IP 或 hostname 为 key 建立使用率映射
+            usage_map = {}
+            for node in summary:
+                ip = node.get('ip', '')
+                hostname = node.get('hostname', '')
+                cpu_percent = node.get('cpu', 0)
+                
+                # mem 数组格式: [total_bytes, used_bytes, percent, available_bytes]
+                mem_info = node.get('mem', [0, 0, 0, 0])
+                if len(mem_info) >= 3:
+                    mem_total_bytes = mem_info[0]
+                    mem_used_bytes = mem_info[1]
+                    # 使用实际的 used/total 计算百分比
+                    mem_percent = (mem_used_bytes / mem_total_bytes * 100) if mem_total_bytes > 0 else 0
+                    mem_total_gb = mem_total_bytes / (1024**3)
+                else:
+                    mem_percent = 0
+                    mem_total_gb = 0
+                
+                # 限制百分比在 0-100 之间
+                cpu_percent = max(0, min(100, cpu_percent))
+                mem_percent = max(0, min(100, mem_percent))
+                
+                # GPU 使用率（取所有 GPU 的平均值）
+                gpus = node.get('gpus', [])
+                gpu_percent = 0
+                if gpus:
+                    gpu_utilizations = [g.get('utilizationGpu', 0) for g in gpus]
+                    gpu_percent = sum(gpu_utilizations) / len(gpu_utilizations) if gpu_utilizations else 0
+                    gpu_percent = max(0, min(100, gpu_percent))
+                
+                usage_map[ip] = {
+                    'cpu': round(cpu_percent, 1),
+                    'memory': round(mem_percent, 1),
+                    'gpu': round(gpu_percent, 1),
+                    'memory_total_gb': round(mem_total_gb, 1)
+                }
+                if hostname and hostname != ip:
+                    usage_map[hostname] = usage_map[ip]
+            
+            return usage_map
+    except Exception as e:
+        logger.warning(f"Failed to get real node usage from dashboard: {e}")
+    return {}
+
+
 def _extract_node_identifier(resources_total: dict) -> Optional[str]:
     standard_keys = {
         'CPU', 'memory', 'GPU', 'object_store_memory',
@@ -111,14 +168,26 @@ def _generate_node_tasks(node: dict, cpu_usage: float, memory_usage: float, gpu_
     return tasks
 
 
-def _parse_ray_nodes_to_frontend_format(ray_nodes: list, cluster_resources: dict, available_resources: dict):
+def _parse_ray_nodes_to_frontend_format(ray_nodes: list, cluster_resources: dict, available_resources: dict, usage_map: dict = None):
     parsed_nodes = []
+    usage_map = usage_map or {}
     for node in ray_nodes:
         node_identifier = _extract_node_identifier(node.get('resources_total', {}))
         connection_type = _get_connection_type(node.get('resources_total', {}))
-        cpu_usage = _simulate_usage(20, 80)
-        memory_usage = _simulate_usage(15, 75)
-        gpu_usage = _simulate_usage(10, 90) if node.get('resources_total', {}).get('GPU', 0) > 0 else 0
+        
+        # 尝试从真实使用率数据获取，否则使用模拟数据
+        node_ip = node.get('node_ip', '')
+        real_usage = usage_map.get(node_ip, {})
+        cpu_usage = real_usage.get('cpu', _simulate_usage(20, 80))
+        memory_usage = real_usage.get('memory', _simulate_usage(15, 75))
+        gpu_usage = real_usage.get('gpu', _simulate_usage(10, 90) if node.get('resources_total', {}).get('GPU', 0) > 0 else 0)
+        
+        # 使用Dashboard返回的真实物理内存,如果没有则fallback到Ray资源内存
+        memory_total_gb = real_usage.get('memory_total_gb')
+        if memory_total_gb is None or memory_total_gb == 0:
+            # Fallback: 使用Ray资源内存
+            memory_total_gb = round((node.get('resources_total', {}).get('memory', 0)) / (1024**3))
+        
         tasks = _generate_node_tasks(node, cpu_usage, memory_usage, gpu_usage)
         parsed_node = {
             "id": (node.get('node_id', '') or '')[-8:],
@@ -137,7 +206,7 @@ def _parse_ray_nodes_to_frontend_format(ray_nodes: list, cluster_resources: dict
             "connectionType": connection_type,
             "resources": {
                 "totalCpu": node.get('resources_total', {}).get('CPU', 0),
-                "totalMemory": round((node.get('resources_total', {}).get('memory', 0)) / (1024**3)),
+                "totalMemory": memory_total_gb,
                 "totalGpu": node.get('resources_total', {}).get('GPU', 0),
                 "objectStore": round((node.get('resources_total', {}).get('object_store_memory', 0)) / (1024**3))
             }
@@ -216,11 +285,6 @@ async def get_ray_dashboard(dashboard_url: Optional[str] = None):
     优先使用 Ray 原生 API（cluster + available + nodes via Dashboard /api/v0）。
     """
     try:
-        # 确保已连接 Ray；不在此处强制启动本地集群
-        if not await cluster.ensure_initialized():
-            # 降级：仍尝试使用 Dashboard API 获取原始节点信息
-            pass
-
         # 1) 从 Ray 获取全局资源（若不可用则用空）
         try:
             cluster_resources = await cluster.get_cluster_resources()
@@ -241,7 +305,10 @@ async def get_ray_dashboard(dashboard_url: Optional[str] = None):
         except Exception:
             ray_nodes = []
 
-        frontend_nodes = _parse_ray_nodes_to_frontend_format(ray_nodes, cluster_resources, available_resources)
+        # 3) 获取真实的节点资源使用率
+        usage_map = _get_real_node_usage(dash)
+
+        frontend_nodes = _parse_ray_nodes_to_frontend_format(ray_nodes, cluster_resources, available_resources, usage_map)
         summary = _create_cluster_summary(cluster_resources, available_resources, frontend_nodes)
 
         return {
@@ -268,12 +335,6 @@ async def get_ray_dashboard(dashboard_url: Optional[str] = None):
 async def get_unified_nodes(dashboard_url: Optional[str] = None):
     """返回前端期望的统一节点数组：{ nodes: [...] }，兼容前端的 /api/nodes/unified 调用。"""
     try:
-        # 尝试初始化 cluster（不强制本地启动）
-        try:
-            await cluster.ensure_initialized()
-        except Exception:
-            pass
-
         try:
             cluster_resources = await cluster.get_cluster_resources()
             available_resources = await cluster.get_available_resources()
@@ -292,7 +353,10 @@ async def get_unified_nodes(dashboard_url: Optional[str] = None):
         except Exception:
             ray_nodes = []
 
-        frontend_nodes = _parse_ray_nodes_to_frontend_format(ray_nodes, cluster_resources, available_resources)
+        # 获取真实的节点资源使用率
+        usage_map = _get_real_node_usage(dash)
+
+        frontend_nodes = _parse_ray_nodes_to_frontend_format(ray_nodes, cluster_resources, available_resources, usage_map)
         return {"nodes": frontend_nodes}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -300,8 +364,11 @@ async def get_unified_nodes(dashboard_url: Optional[str] = None):
 
 @app.on_event("startup")
 async def startup_event():
-    """初始化 Ray 集群连接并（可选）创建演示节点"""
+    """初始化 Ray 集群连接并（可选）创建演示节点，启动WebSocket广播任务"""
     try:
+        # Start WebSocket broadcast task
+        asyncio.create_task(broadcast_cluster_update())
+        
         ray_config = config.get("ray_cluster", {})
         # 优先使用环境变量 RAY_ADDRESS（如果设置），否则使用配置文件中的 address
         ray_address = os.environ.get('RAY_ADDRESS', ray_config.get("address", "local"))
@@ -446,6 +513,176 @@ async def list_files():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     return {"files": files}
+
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    """WebSocket endpoint for real-time cluster status updates"""
+    await websocket.accept()
+    websocket_connections.append(websocket)
+    logger.info(f"WebSocket client connected. Total connections: {len(websocket_connections)}")
+    
+    try:
+        # Send initial cluster status
+        try:
+            import ray
+            dashboard_url = os.environ.get('RAY_DASHBOARD_URL', 'http://10.30.2.11:8265')
+            cluster_resources = ray.cluster_resources() if ray.is_initialized() else {}
+            available_resources = ray.available_resources() if ray.is_initialized() else {}
+            
+            usage_map = _get_real_node_usage(dashboard_url)
+            
+            # Get Ray nodes from dashboard API
+            ray_nodes = []
+            try:
+                resp = requests.get(f"{dashboard_url}/api/v0/nodes", timeout=5)
+                if resp.ok:
+                    payload = resp.json() or {}
+                    data = payload.get('data') or {}
+                    result = data.get('result') or {}
+                    ray_nodes = result.get('result') or []
+            except Exception:
+                pass
+            
+            nodes = _parse_ray_nodes_to_frontend_format(
+                ray_nodes, cluster_resources, available_resources, usage_map
+            )
+            
+            summary_data = {
+                'resources': {
+                    'cpu': {
+                        'total': cluster_resources.get('CPU', 0),
+                        'used': cluster_resources.get('CPU', 0) - available_resources.get('CPU', 0),
+                        'available': available_resources.get('CPU', 0)
+                    },
+                    'memory': {
+                        'total': cluster_resources.get('memory', 0),
+                        'used': cluster_resources.get('memory', 0) - available_resources.get('memory', 0),
+                        'available': available_resources.get('memory', 0)
+                    },
+                    'gpu': {
+                        'total': cluster_resources.get('GPU', 0),
+                        'used': cluster_resources.get('GPU', 0) - available_resources.get('GPU', 0),
+                        'available': available_resources.get('GPU', 0)
+                    }
+                }
+            }
+            
+            initial_data = {
+                'type': 'cluster_status',
+                'data': {
+                    'nodes': nodes,
+                    'summary': summary_data
+                }
+            }
+            await websocket.send_json(initial_data)
+        except Exception as e:
+            logger.error(f"Error sending initial cluster status: {e}")
+        
+        # Keep connection alive and handle incoming messages
+        while True:
+            try:
+                data = await asyncio.wait_for(websocket.receive_text(), timeout=1.0)
+                # Handle client messages if needed (e.g., ping/pong)
+                if data == "ping":
+                    await websocket.send_text("pong")
+            except asyncio.TimeoutError:
+                # No message received, continue
+                continue
+            except WebSocketDisconnect:
+                break
+                
+    except Exception as e:
+        logger.error(f"WebSocket error: {e}")
+    finally:
+        if websocket in websocket_connections:
+            websocket_connections.remove(websocket)
+        logger.info(f"WebSocket client disconnected. Total connections: {len(websocket_connections)}")
+
+
+async def broadcast_cluster_update():
+    """Background task to broadcast cluster status updates to all connected WebSocket clients"""
+    while True:
+        try:
+            await asyncio.sleep(3)  # Update every 3 seconds
+            
+            if not websocket_connections:
+                continue
+                
+            # Get current cluster status
+            try:
+                import ray
+                dashboard_url = os.environ.get('RAY_DASHBOARD_URL', 'http://10.30.2.11:8265')
+                cluster_resources = ray.cluster_resources() if ray.is_initialized() else {}
+                available_resources = ray.available_resources() if ray.is_initialized() else {}
+                
+                usage_map = _get_real_node_usage(dashboard_url)
+                
+                # Get Ray nodes from dashboard API
+                ray_nodes = []
+                try:
+                    resp = requests.get(f"{dashboard_url}/api/v0/nodes", timeout=5)
+                    if resp.ok:
+                        payload = resp.json() or {}
+                        data = payload.get('data') or {}
+                        result = data.get('result') or {}
+                        ray_nodes = result.get('result') or []
+                except Exception:
+                    pass
+                
+                nodes = _parse_ray_nodes_to_frontend_format(
+                    ray_nodes, cluster_resources, available_resources, usage_map
+                )
+                
+                summary_data = {
+                    'resources': {
+                        'cpu': {
+                            'total': cluster_resources.get('CPU', 0),
+                            'used': cluster_resources.get('CPU', 0) - available_resources.get('CPU', 0),
+                            'available': available_resources.get('CPU', 0)
+                        },
+                        'memory': {
+                            'total': cluster_resources.get('memory', 0),
+                            'used': cluster_resources.get('memory', 0) - available_resources.get('memory', 0),
+                            'available': available_resources.get('memory', 0)
+                        },
+                        'gpu': {
+                            'total': cluster_resources.get('GPU', 0),
+                            'used': cluster_resources.get('GPU', 0) - available_resources.get('GPU', 0),
+                            'available': available_resources.get('GPU', 0)
+                        }
+                    }
+                }
+                
+                update_data = {
+                    'type': 'cluster_status',
+                    'data': {
+                        'nodes': nodes,
+                        'summary': summary_data
+                    }
+                }
+                
+                # Broadcast to all connected clients
+                disconnected = []
+                for ws in websocket_connections:
+                    try:
+                        await ws.send_json(update_data)
+                    except Exception as e:
+                        logger.warning(f"Failed to send update to WebSocket client: {e}")
+                        disconnected.append(ws)
+                
+                # Remove disconnected clients
+                for ws in disconnected:
+                    if ws in websocket_connections:
+                        websocket_connections.remove(ws)
+                        
+            except Exception as e:
+                logger.error(f"Error preparing cluster update: {e}")
+                
+        except Exception as e:
+            logger.error(f"Error in broadcast_cluster_update: {e}")
+            await asyncio.sleep(5)
+
 
 if __name__ == '__main__':
     web_config = config.get("web_server", {})

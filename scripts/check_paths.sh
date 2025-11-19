@@ -39,7 +39,6 @@ echo "📄 检查关键文件..."
 
 # 检查关键文件
 files=(
-    "src/frontend/index.html"
     "src/frontend/dashboard.html"
     "src/frontend/css/styles.css"
     "src/frontend/css/dashboard-styles.css"
@@ -91,9 +90,8 @@ echo ""
 echo "🎯 测试前端HTTP服务器启动目录..."
 
 cd "$PROJECT_ROOT/src/frontend"
-if [ -f "index.html" ] && [ -f "dashboard.html" ]; then
+if [ -f "src/frontend/dashboard.html" ]; then
     echo "✅ 前端文件可访问"
-    echo "   - index.html: http://localhost:8080/index.html"
     echo "   - dashboard.html: http://localhost:8080/dashboard.html"
 else
     echo "❌ 前端文件缺失"

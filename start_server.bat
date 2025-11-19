@@ -16,7 +16,7 @@ if %errorlevel% neq 0 (
 echo Python found. Starting server...
 echo.
 echo Available interfaces:
-echo - Legacy Interface: http://localhost:8080/index.html
+echo - Professional Dashboard: http://localhost:8080/src/frontend/dashboard.html
 echo - Professional Dashboard: http://localhost:8080/dashboard.html
 echo.
 echo Press Ctrl+C to stop the server

@@ -759,7 +759,8 @@
     <script>
       // 保留原有值优先，但允许部署时注入覆盖。尽量靠 window.appConfig 提供运行时主机。
       window.appConfig = window.appConfig || window.appConfig === undefined ? window.appConfig || {} : window.appConfig;
-      window.appConfig.rayApiBase = window.appConfig.rayApiBase || 'http://10.30.2.11:9999';
+      // Ray API 基址：改为指向集成后的 CastRay 服务（提供 /api/nodes/unified）
+      window.appConfig.rayApiBase = window.appConfig.rayApiBase || 'http://10.30.2.11:8000';
       window.appConfig.castrayApiBase = window.appConfig.castrayApiBase || 'http://10.30.2.11:8000';
       window.appConfig.frontendBase = window.appConfig.frontendBase || 'http://10.30.2.11:8080';
     </script>
