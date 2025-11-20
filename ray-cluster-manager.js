@@ -424,6 +424,9 @@ class RayClusterManager {
             statusBadge.textContent = isAlive ? '在线' : '离线';
         }
 
+        // 更新工作状态指示灯
+        this.updateWorkStatus(card, node.workStatus || 'idle');
+
         // 获取资源使用率
         const cpuUsedPercent = node.cpu || 0;
         const memUsedPercent = node.memory || 0;
@@ -538,6 +541,20 @@ class RayClusterManager {
             <div class="node-header">
                 <h4 class="node-title">${node.name || node.nodeIp || 'Unknown Node'}</h4>
                 <span class="node-badge ${statusClass}">${statusText}</span>
+            </div>
+            <div class="node-status-indicators">
+                <div class="status-indicator" data-status="idle" title="正常运行">
+                    <div class="status-light idle"></div>
+                    <span class="status-label">空闲</span>
+                </div>
+                <div class="status-indicator" data-status="detecting" title="本地检测中">
+                    <div class="status-light detecting"></div>
+                    <span class="status-label">检测中</span>
+                </div>
+                <div class="status-indicator" data-status="sending" title="服务端检测中">
+                    <div class="status-light sending"></div>
+                    <span class="status-label">服务端</span>
+                </div>
             </div>
             <div class="node-info">
                 <div class="info-item">
@@ -654,6 +671,25 @@ class RayClusterManager {
                 <span>${status === 'connected' ? '已连接' : '未连接'}</span>
             `;
         }
+    }
+
+    // 更新节点工作状态指示灯
+    updateWorkStatus(card, workStatus) {
+        // workStatus: 'idle', 'detecting', 'sending'
+        const indicators = card.querySelectorAll('.status-indicator');
+        
+        indicators.forEach(indicator => {
+            const status = indicator.dataset.status;
+            const light = indicator.querySelector('.status-light');
+            
+            if (status === workStatus) {
+                indicator.classList.add('active');
+                light.classList.add('active');
+            } else {
+                indicator.classList.remove('active');
+                light.classList.remove('active');
+            }
+        });
     }
 
     // 开始定期更新

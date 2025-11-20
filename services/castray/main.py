@@ -4,11 +4,12 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import asyncio
+import aiohttp
 import time
 import json
 import os
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Dict
 import logging
 from datetime import datetime
 
@@ -168,9 +169,82 @@ def _generate_node_tasks(node: dict, cpu_usage: float, memory_usage: float, gpu_
     return tasks
 
 
-def _parse_ray_nodes_to_frontend_format(ray_nodes: list, cluster_resources: dict, available_resources: dict, usage_map: dict = None):
+# ============================================================================
+# CM-ZSB 集成函数
+# ============================================================================
+
+async def _get_node_work_status(node_ip: str, cm_zsb_port: int = 8000, timeout: float = 1.0) -> Dict:
+    """
+    异步获取单个节点的CM-ZSB工作状态
+    
+    Args:
+        node_ip: 节点IP地址
+        cm_zsb_port: CM-ZSB监控服务端口,默认8000
+        timeout: 请求超时时间(秒)
+    
+    Returns:
+        工作状态字典: {
+            'status': 'idle'|'detecting'|'sending'|'unknown',
+            'timestamp': ISO格式时间戳或None,
+            'error': 错误信息(如果请求失败)
+        }
+    """
+    url = f"http://{node_ip}:{cm_zsb_port}/api/status"
+    
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=timeout)) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    return {
+                        'status': data.get('status', 'unknown'),
+                        'timestamp': data.get('timestamp'),
+                        'error': None
+                    }
+                else:
+                    logger.warning(f"CM-ZSB service on {node_ip} returned {resp.status}")
+                    return {'status': 'unknown', 'timestamp': None, 'error': f"HTTP {resp.status}"}
+    
+    except asyncio.TimeoutError:
+        logger.debug(f"CM-ZSB status timeout for {node_ip} (service may not be deployed)")
+        return {'status': 'idle', 'timestamp': None, 'error': 'timeout'}
+    
+    except Exception as e:
+        logger.debug(f"CM-ZSB status error for {node_ip}: {e}")
+        return {'status': 'idle', 'timestamp': None, 'error': str(e)}
+
+
+async def _batch_get_work_statuses(node_ips: List[str], cm_zsb_port: int = 8000, timeout: float = 1.0) -> Dict[str, Dict]:
+    """
+    批量异步获取多个节点的CM-ZSB工作状态
+    
+    Args:
+        node_ips: 节点IP地址列表
+        cm_zsb_port: CM-ZSB监控服务端口
+        timeout: 单个请求超时时间(秒)
+    
+    Returns:
+        字典: {node_ip: status_dict}
+    """
+    tasks = [_get_node_work_status(ip, cm_zsb_port, timeout) for ip in node_ips]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    
+    status_map = {}
+    for node_ip, result in zip(node_ips, results):
+        if isinstance(result, Exception):
+            logger.error(f"Exception getting status for {node_ip}: {result}")
+            status_map[node_ip] = {'status': 'idle', 'timestamp': None, 'error': str(result)}
+        else:
+            status_map[node_ip] = result
+    
+    return status_map
+
+
+def _parse_ray_nodes_to_frontend_format(ray_nodes: list, cluster_resources: dict, available_resources: dict, usage_map: dict = None, work_status_map: dict = None):
     parsed_nodes = []
     usage_map = usage_map or {}
+    work_status_map = work_status_map or {}
+    
     for node in ray_nodes:
         node_identifier = _extract_node_identifier(node.get('resources_total', {}))
         connection_type = _get_connection_type(node.get('resources_total', {}))
@@ -188,6 +262,11 @@ def _parse_ray_nodes_to_frontend_format(ray_nodes: list, cluster_resources: dict
             # Fallback: 使用Ray资源内存
             memory_total_gb = round((node.get('resources_total', {}).get('memory', 0)) / (1024**3))
         
+        # 获取CM-ZSB工作状态
+        work_status_info = work_status_map.get(node_ip, {})
+        work_status = work_status_info.get('status', 'idle')
+        work_status_timestamp = work_status_info.get('timestamp')
+        
         tasks = _generate_node_tasks(node, cpu_usage, memory_usage, gpu_usage)
         parsed_node = {
             "id": (node.get('node_id', '') or '')[-8:],
@@ -204,6 +283,8 @@ def _parse_ray_nodes_to_frontend_format(ray_nodes: list, cluster_resources: dict
             "status": "active" if node.get('state') == 'ALIVE' else "dead",
             "stateMessage": node.get('state_message'),
             "connectionType": connection_type,
+            "workStatus": work_status,  # idle, detecting, sending - 从CM-ZSB获取
+            "workStatusTimestamp": work_status_timestamp,
             "resources": {
                 "totalCpu": node.get('resources_total', {}).get('CPU', 0),
                 "totalMemory": memory_total_gb,
@@ -308,7 +389,11 @@ async def get_ray_dashboard(dashboard_url: Optional[str] = None):
         # 3) 获取真实的节点资源使用率
         usage_map = _get_real_node_usage(dash)
 
-        frontend_nodes = _parse_ray_nodes_to_frontend_format(ray_nodes, cluster_resources, available_resources, usage_map)
+        # 4) 获取CM-ZSB工作状态（批量异步获取）
+        node_ips = [node.get('node_ip') for node in ray_nodes if node.get('node_ip')]
+        work_status_map = await _batch_get_work_statuses(node_ips, cm_zsb_port=8000, timeout=1.0)
+
+        frontend_nodes = _parse_ray_nodes_to_frontend_format(ray_nodes, cluster_resources, available_resources, usage_map, work_status_map)
         summary = _create_cluster_summary(cluster_resources, available_resources, frontend_nodes)
 
         return {
@@ -630,8 +715,12 @@ async def broadcast_cluster_update():
                 except Exception:
                     pass
                 
+                # Get CM-ZSB work statuses
+                node_ips = [node.get('node_ip') for node in ray_nodes if node.get('node_ip')]
+                work_status_map = await _batch_get_work_statuses(node_ips, cm_zsb_port=8000, timeout=1.0)
+                
                 nodes = _parse_ray_nodes_to_frontend_format(
-                    ray_nodes, cluster_resources, available_resources, usage_map
+                    ray_nodes, cluster_resources, available_resources, usage_map, work_status_map
                 )
                 
                 summary_data = {
