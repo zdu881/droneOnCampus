@@ -93,6 +93,10 @@
             <i class="fas fa-server"></i>
             <span>Ray集群</span>
           </button>
+          <button class="tab-btn" data-tab="fileTransfer">
+            <i class="fas fa-exchange-alt"></i>
+            <span>文件传输</span>
+          </button>
         </div>
 
         <!-- 主内容面板 -->
@@ -380,10 +384,6 @@
                     <i class="fas fa-stop"></i>
                     停止集群
                   </button>
-                  <button id="cluster-file-transfer-btn" class="cluster-btn">
-                    <i class="fas fa-upload"></i>
-                    文件传输
-                  </button>
                 </div>
               </div>
 
@@ -473,51 +473,112 @@
                 </div>
               </div>
 
-              <!-- 文件传输对话框 -->
-              <div class="modal" id="file-transfer-modal" style="display: none;">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <h3><i class="fas fa-exchange-alt"></i> 节点间文件传输</h3>
-                    <button class="modal-close" onclick="document.getElementById('file-transfer-modal').style.display='none'">
-                      <i class="fas fa-times"></i>
-                    </button>
-                  </div>
-                  <div class="modal-body">
-                    <form id="file-transfer-form">
+            </div>
+          </div>
+
+          <!-- 文件传输页面 -->
+          <div class="main-content" id="fileTransfer-content-page">
+            <div class="page-header">
+              <h1><i class="fas fa-exchange-alt"></i> 节点间文件传输</h1>
+              <p>管理 Ray 集群节点之间的文件传输任务</p>
+            </div>
+            <div class="page-content file-transfer-page">
+              <!-- 文件传输控制面板 -->
+              <div class="transfer-control-panel">
+                <div class="panel-section">
+                  <h3><i class="fas fa-paper-plane"></i> 新建传输任务</h3>
+                  <form id="file-transfer-form" class="transfer-form">
+                    <div class="form-row">
                       <div class="form-group">
-                        <label for="source-node">源节点：</label>
+                        <label for="source-node"><i class="fas fa-server"></i> 源节点</label>
                         <select id="source-node" required>
                           <option value="">选择源节点...</option>
                         </select>
                       </div>
                       <div class="form-group">
-                        <label for="target-node">目标节点：</label>
+                        <label for="target-node"><i class="fas fa-server"></i> 目标节点</label>
                         <select id="target-node" required>
                           <option value="">选择目标节点...</option>
                         </select>
                       </div>
-                      <div class="form-group">
-                        <label for="file-path">文件路径：</label>
+                    </div>
+                    <div class="form-row">
+                      <div class="form-group flex-grow">
+                        <label for="file-path"><i class="fas fa-file"></i> 文件路径</label>
                         <input type="text" id="file-path" placeholder="/path/to/file.txt" required />
+                        <div class="example-files">
+                          <span class="example-label">快速选择:</span>
+                          <button type="button" class="example-file-btn" data-path="/data/model.pth">模型文件</button>
+                          <button type="button" class="example-file-btn" data-path="/data/dataset.tar.gz">数据集</button>
+                          <button type="button" class="example-file-btn" data-path="/logs/training.log">日志文件</button>
+                          <button type="button" class="example-file-btn" data-path="/config/config.json">配置文件</button>
+                        </div>
                       </div>
                       <div class="form-group">
-                        <label for="transfer-mode">传输模式：</label>
+                        <label for="transfer-mode"><i class="fas fa-route"></i> 传输模式</label>
                         <select id="transfer-mode">
-                          <option value="auto">自动选择最优路径</option>
+                          <option value="auto">自动选择</option>
                           <option value="direct">直连传输</option>
                           <option value="relay">中继传输</option>
                         </select>
                       </div>
-                      <div class="form-actions">
-                        <button type="submit" class="btn-primary">
-                          <i class="fas fa-paper-plane"></i> 开始传输
-                        </button>
-                        <button type="button" class="btn-secondary" onclick="document.getElementById('file-transfer-modal').style.display='none'">
-                          取消
-                        </button>
-                      </div>
-                    </form>
-                    <div id="transfer-status" class="transfer-status" style="display: none;"></div>
+                    </div>
+                    <div class="form-actions">
+                      <button type="submit" class="btn-primary">
+                        <i class="fas fa-paper-plane"></i> 开始传输
+                      </button>
+                      <button type="button" class="btn-secondary" id="clear-form-btn">
+                        <i class="fas fa-eraser"></i> 清空表单
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                <!-- 拖拽上传区域 -->
+                <div class="panel-section">
+                  <div class="drag-drop-zone" id="drag-drop-zone">
+                    <div class="drag-drop-content">
+                      <i class="fas fa-cloud-upload-alt"></i>
+                      <h3>拖拽文件到此处</h3>
+                      <p>或点击选择文件上传到集群</p>
+                      <input type="file" id="file-upload-input" hidden multiple />
+                      <button class="btn-outline" onclick="document.getElementById('file-upload-input').click()">
+                        <i class="fas fa-folder-open"></i> 选择文件
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 传输队列和历史 -->
+              <div class="transfer-status-panel">
+                <div class="panel-header-tabs">
+                  <button class="tab-btn active" data-target="active-transfers"><i class="fas fa-spinner"></i> 进行中 <span class="badge" id="active-count">0</span></button>
+                  <button class="tab-btn" data-target="completed-transfers"><i class="fas fa-check-circle"></i> 已完成 <span class="badge" id="completed-count">0</span></button>
+                  <button class="tab-btn" data-target="failed-transfers"><i class="fas fa-exclamation-circle"></i> 失败 <span class="badge" id="failed-count">0</span></button>
+                </div>
+
+                <!-- 进行中的传输 -->
+                <div class="transfer-list active" id="active-transfers">
+                  <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>暂无进行中的传输任务</p>
+                  </div>
+                </div>
+
+                <!-- 已完成的传输 -->
+                <div class="transfer-list" id="completed-transfers" style="display: none;">
+                  <div class="empty-state">
+                    <i class="fas fa-check"></i>
+                    <p>暂无已完成的传输</p>
+                  </div>
+                </div>
+
+                <!-- 失败的传输 -->
+                <div class="transfer-list" id="failed-transfers" style="display: none;">
+                  <div class="empty-state">
+                    <i class="fas fa-times"></i>
+                    <p>暂无失败的传输</p>
                   </div>
                 </div>
               </div>
@@ -675,6 +736,7 @@
     <script src="api-manager.js"></script>
     <script src="pixel-streaming.js"></script>
     <script src="ray-cluster-manager.js"></script>
+    <script src="file-transfer-manager.js"></script>
     <script src="dashboard-manager.js"></script>
   </body>
 </html>

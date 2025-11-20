@@ -1,13 +1,15 @@
 # Copied main.py from CastRay (adjusted imports to local package)
-from fastapi import FastAPI, WebSocket, HTTPException, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, HTTPException, WebSocketDisconnect, UploadFile, File, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 import uvicorn
 import asyncio
 import aiohttp
 import time
 import json
 import os
+import shutil
 from pathlib import Path
 from typing import List, Optional, Dict
 import logging
@@ -771,6 +773,123 @@ async def broadcast_cluster_update():
         except Exception as e:
             logger.error(f"Error in broadcast_cluster_update: {e}")
             await asyncio.sleep(5)
+
+
+# ============================================================================
+# 文件传输API端点
+# ============================================================================
+
+@app.post("/api/file-transfer/upload")
+async def upload_file(
+    file: UploadFile = File(...),
+    target_node: str = Form(...),
+    target_path: str = Form(...)
+):
+    """
+    上传文件到目标节点
+    
+    Args:
+        file: 上传的文件
+        target_node: 目标节点IP
+        target_path: 目标路径
+    """
+    try:
+        # 创建临时存储目录
+        temp_dir = Path("/tmp/castray_uploads")
+        temp_dir.mkdir(exist_ok=True)
+        
+        # 保存上传的文件到临时位置
+        temp_file_path = temp_dir / file.filename
+        with open(temp_file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        file_size = temp_file_path.stat().st_size
+        
+        logger.info(f"File uploaded: {file.filename} ({file_size} bytes) -> {target_node}:{target_path}")
+        
+        # TODO: 实际传输文件到目标节点
+        # 这里可以使用Ray的对象存储或SSH/SCP
+        
+        return {
+            "success": True,
+            "message": "文件上传成功",
+            "filename": file.filename,
+            "size": file_size,
+            "target_node": target_node,
+            "target_path": target_path
+        }
+        
+    except Exception as e:
+        logger.error(f"File upload error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/file-transfer/node-to-node")
+async def transfer_between_nodes(
+    source_node: str = Form(...),
+    target_node: str = Form(...),
+    file_path: str = Form(...),
+    transfer_mode: str = Form("auto")
+):
+    """
+    在两个节点之间传输文件
+    
+    Args:
+        source_node: 源节点IP
+        target_node: 目标节点IP
+        file_path: 源文件路径
+        transfer_mode: 传输模式 (auto/direct/relay)
+    """
+    try:
+        logger.info(f"Transfer request: {source_node}:{file_path} -> {target_node} (mode: {transfer_mode})")
+        
+        # TODO: 实现实际的节点间文件传输
+        # 可以使用以下方式:
+        # 1. Ray的对象存储 (适合小文件)
+        # 2. SSH/SCP (适合大文件)
+        # 3. HTTP流式传输
+        
+        # 模拟传输
+        transfer_id = f"transfer_{int(time.time() * 1000)}"
+        
+        return {
+            "success": True,
+            "transfer_id": transfer_id,
+            "source_node": source_node,
+            "target_node": target_node,
+            "file_path": file_path,
+            "transfer_mode": transfer_mode,
+            "status": "started"
+        }
+        
+    except Exception as e:
+        logger.error(f"Transfer error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/file-transfer/status/{transfer_id}")
+async def get_transfer_status(transfer_id: str):
+    """
+    获取传输任务状态
+    
+    Args:
+        transfer_id: 传输ID
+    """
+    try:
+        # TODO: 实现真实的传输状态跟踪
+        # 目前返回模拟数据
+        
+        return {
+            "transfer_id": transfer_id,
+            "status": "in-progress",
+            "progress": 45.5,
+            "speed": 125.3,  # MB/s
+            "eta": 120  # 秒
+        }
+        
+    except Exception as e:
+        logger.error(f"Status query error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == '__main__':

@@ -10,6 +10,7 @@ class DashboardManager {
     this.isConnected = false;
     this.selectedObjectId = null;
     this.rayClusterManager = null; // Ray cluster manager instance
+    this.fileTransferManager = null; // File transfer manager instance
     this.droneData = {
       position: { x: -850.0, y: -30.0, z: 62.0 },
       battery: 87,
@@ -201,6 +202,11 @@ class DashboardManager {
     // 初始化Ray Cluster管理器（如果切换到rayCluster页面）
     if (pageName === 'rayCluster' && !this.rayClusterManager) {
       this.initRayClusterManager();
+    }
+
+    // 初始化文件传输管理器（如果切换到fileTransfer页面）
+    if (pageName === 'fileTransfer' && !this.fileTransferManager) {
+      this.initFileTransferManager();
     }
 
     this.logToConsole(`Switched to ${pageName} page`, "info");
@@ -715,6 +721,20 @@ class DashboardManager {
       }
     } catch (error) {
       this.logToConsole(`Failed to initialize Ray Cluster Manager: ${error.message}`, "error");
+    }
+  }
+
+  // 初始化文件传输管理器
+  initFileTransferManager() {
+    try {
+      if (typeof FileTransferManager !== 'undefined') {
+        this.fileTransferManager = new FileTransferManager(this);
+        this.logToConsole("File Transfer Manager initialized", "success");
+      } else {
+        this.logToConsole("FileTransferManager not available", "warning");
+      }
+    } catch (error) {
+      this.logToConsole(`Failed to initialize File Transfer Manager: ${error.message}`, "error");
     }
   }
 
