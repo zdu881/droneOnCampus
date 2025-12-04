@@ -116,14 +116,6 @@
 
               <!-- 视口工具栏 -->
               <div class="viewport-toolbar">
-                <div class="view-controls">
-                  <label>视角:</label>
-                  <select id="view-type-select">
-                    <option value="top">俯视图</option>
-                    <option value="perspective">透视图</option>
-                    <option value="follow">跟随视角</option>
-                  </select>
-                </div>
                 <div class="viewport-settings">
                   <button class="viewport-btn" id="toggle-grid">
                     <i class="fas fa-th"></i>
@@ -139,36 +131,6 @@
 
               <!-- 实时数据覆盖层 -->
               <div class="data-overlays">
-                <!-- 左上角 - 无人机遥测 -->
-                <div class="data-panel drone-telemetry">
-                  <div class="panel-header">
-                    <i class="fas fa-drone"></i>
-                    <span>无人机遥测</span>
-                  </div>
-                  <div class="data-grid">
-                    <div class="data-item">
-                      <span class="label">位置 X:</span>
-                      <span class="value" id="drone-x">--</span>
-                    </div>
-                    <div class="data-item">
-                      <span class="label">位置 Y:</span>
-                      <span class="value" id="drone-y">--</span>
-                    </div>
-                    <div class="data-item">
-                      <span class="label">高度:</span>
-                      <span class="value" id="drone-z">--</span>
-                    </div>
-                    <div class="data-item">
-                      <span class="label">电池:</span>
-                      <span class="value" id="drone-battery">--</span>
-                    </div>
-                    <div class="data-item">
-                      <span class="label">速度:</span>
-                      <span class="value" id="drone-speed">--</span>
-                    </div>
-                  </div>
-                </div>
-
                 <!-- 右上角 - 任务状态 -->
                 <div class="data-panel mission-status">
                   <div class="panel-header">
