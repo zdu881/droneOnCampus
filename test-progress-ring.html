@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progress Ring Test</title>
+    <style>
+        body {
+            background: #1a1d23;
+            color: white;
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+        
+        .test-card {
+            background: #2a2d35;
+            border: 1px solid #404454;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .resource-progress-ring {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            margin: 20px auto;
+        }
+        
+        .progress-ring {
+            transform: rotate(-90deg);
+            width: 60px;
+            height: 60px;
+        }
+        
+        .progress-ring-bg {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.1);
+            stroke-width: 4;
+        }
+        
+        .progress-ring-fill {
+            fill: none;
+            stroke-width: 4;
+            stroke-linecap: round;
+            transition: stroke-dasharray 0.5s ease, stroke 0.3s ease;
+            filter: drop-shadow(0 0 4px currentColor);
+            stroke-dashoffset: 0;
+        }
+        
+        .progress-percentage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-card">
+        <h3>25% Progress</h3>
+        <div class="resource-progress-ring">
+            <svg class="progress-ring" width="60" height="60">
+                <circle class="progress-ring-bg" cx="30" cy="30" r="26" />
+                <circle class="progress-ring-fill" cx="30" cy="30" r="26" 
+                    style="stroke: #10b981; stroke-dasharray: 40.84 163.36" />
+            </svg>
+            <div class="progress-percentage">25%</div>
+        </div>
+    </div>
+
+    <div class="test-card">
+        <h3>50% Progress</h3>
+        <div class="resource-progress-ring">
+            <svg class="progress-ring" width="60" height="60">
+                <circle class="progress-ring-bg" cx="30" cy="30" r="26" />
+                <circle class="progress-ring-fill" cx="30" cy="30" r="26" 
+                    style="stroke: #10b981; stroke-dasharray: 81.68 163.36" />
+            </svg>
+            <div class="progress-percentage">50%</div>
+        </div>
+    </div>
+
+    <div class="test-card">
+        <h3>75% Progress</h3>
+        <div class="resource-progress-ring">
+            <svg class="progress-ring" width="60" height="60">
+                <circle class="progress-ring-bg" cx="30" cy="30" r="26" />
+                <circle class="progress-ring-fill" cx="30" cy="30" r="26" 
+                    style="stroke: #f59e0b; stroke-dasharray: 122.52 163.36" />
+            </svg>
+            <div class="progress-percentage">75%</div>
+        </div>
+    </div>
+
+    <div class="test-card">
+        <h3>100% Progress</h3>
+        <div class="resource-progress-ring">
+            <svg class="progress-ring" width="60" height="60">
+                <circle class="progress-ring-bg" cx="30" cy="30" r="26" />
+                <circle class="progress-ring-fill" cx="30" cy="30" r="26" 
+                    style="stroke: #ef4444; stroke-dasharray: 163.36 163.36" />
+            </svg>
+            <div class="progress-percentage">100%</div>
+        </div>
+    </div>
+
+    <script>
+        // Test calculation
+        const radius = 26;
+        const circumference = 2 * Math.PI * radius;
+        console.log('Circle circumference:', circumference);
+        console.log('25%:', circumference * 0.25);
+        console.log('50%:', circumference * 0.50);
+        console.log('75%:', circumference * 0.75);
+        console.log('100%:', circumference);
+    </script>
+</body>
+</html>

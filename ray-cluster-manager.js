@@ -8,7 +8,7 @@ class RayClusterManager {
         // 优先使用 window.appConfig.castrayApiBase，其次使用 CastRay 默认地址
         try {
             const cfg = (window && window.appConfig) ? window.appConfig : {};
-            this.backendUrl = cfg.castrayApiBase || 'http://10.30.2.11:8000';
+            this.backendUrl = cfg.castrayApiBase || 'http://10.30.2.11:8001';
         } catch (e) {
             this.backendUrl = 'http://10.30.2.11:8000';
         }
@@ -432,41 +432,53 @@ class RayClusterManager {
         const memUsedPercent = node.memory || 0;
         const gpuUsedPercent = node.gpu || 0;
 
-        // 更新CPU进度条
-        const cpuSegment = card.querySelector('.resource-item:nth-child(1) .stat-segment');
-        if (cpuSegment) {
-            cpuSegment.style.width = `${cpuUsedPercent}%`;
-            cpuSegment.style.background = this.getUsageColor(cpuUsedPercent);
-        }
-        const cpuValue = card.querySelector('.resource-item:nth-child(1) .resource-value');
-        if (cpuValue) {
-            const cpuTotal = (node.resources?.totalCpu || 0).toFixed(0);
-            cpuValue.textContent = `${cpuTotal} 核 (${cpuUsedPercent.toFixed(1)}%)`;
-        }
-
-        // 更新内存进度条
-        const memSegment = card.querySelector('.resource-item:nth-child(2) .stat-segment');
-        if (memSegment) {
-            memSegment.style.width = `${memUsedPercent}%`;
-            memSegment.style.background = this.getUsageColor(memUsedPercent);
-        }
-        const memValue = card.querySelector('.resource-item:nth-child(2) .resource-value');
-        if (memValue) {
-            const memoryTotal = node.resources?.totalMemory || 0;
-            const memoryUsed = (memoryTotal * memUsedPercent / 100).toFixed(1);
-            memValue.textContent = `${memoryUsed} / ${memoryTotal.toFixed(1)} GB (${memUsedPercent.toFixed(1)}%)`;
+        // 更新CPU资源卡片
+        const cpuCards = card.querySelectorAll('.resource-card');
+        if (cpuCards[0]) {
+            const cpuRing = cpuCards[0].querySelector('.progress-ring-fill');
+            const cpuPercent = cpuCards[0].querySelector('.progress-percentage');
+            const cpuValue = cpuCards[0].querySelector('.resource-card-value');
+            if (cpuRing) {
+                cpuRing.style.stroke = this.getUsageColor(cpuUsedPercent);
+                cpuRing.style.strokeDasharray = `${(cpuUsedPercent / 100 * 163.36).toFixed(2)} 163.36`;
+            }
+            if (cpuPercent) cpuPercent.textContent = `${cpuUsedPercent.toFixed(0)}%`;
+            if (cpuValue) {
+                const cpuTotal = (node.resources?.totalCpu || 0).toFixed(0);
+                cpuValue.textContent = `${cpuTotal} 核`;
+            }
         }
 
-        // 更新GPU进度条(如果存在)
-        const gpuSegment = card.querySelector('.resource-item:nth-child(3) .stat-segment');
-        if (gpuSegment) {
-            gpuSegment.style.width = `${gpuUsedPercent}%`;
-            gpuSegment.style.background = this.getUsageColor(gpuUsedPercent);
+        // 更新内存资源卡片
+        if (cpuCards[1]) {
+            const memRing = cpuCards[1].querySelector('.progress-ring-fill');
+            const memPercent = cpuCards[1].querySelector('.progress-percentage');
+            const memValue = cpuCards[1].querySelector('.resource-card-value');
+            if (memRing) {
+                memRing.style.stroke = this.getUsageColor(memUsedPercent);
+                memRing.style.strokeDasharray = `${(memUsedPercent / 100 * 163.36).toFixed(2)} 163.36`;
+            }
+            if (memPercent) memPercent.textContent = `${memUsedPercent.toFixed(0)}%`;
+            if (memValue) {
+                const memoryTotal = node.resources?.totalMemory || 0;
+                memValue.textContent = `${memoryTotal.toFixed(1)} GB`;
+            }
         }
-        const gpuValue = card.querySelector('.resource-item:nth-child(3) .resource-value');
-        if (gpuValue) {
-            const gpuTotal = node.resources?.totalGpu || 0;
-            gpuValue.textContent = `${gpuTotal} 个 (${gpuUsedPercent.toFixed(1)}%)`;
+
+        // 更新GPU资源卡片(如果存在)
+        if (cpuCards[2]) {
+            const gpuRing = cpuCards[2].querySelector('.progress-ring-fill');
+            const gpuPercent = cpuCards[2].querySelector('.progress-percentage');
+            const gpuValue = cpuCards[2].querySelector('.resource-card-value');
+            if (gpuRing) {
+                gpuRing.style.stroke = this.getUsageColor(gpuUsedPercent);
+                gpuRing.style.strokeDasharray = `${(gpuUsedPercent / 100 * 163.36).toFixed(2)} 163.36`;
+            }
+            if (gpuPercent) gpuPercent.textContent = `${gpuUsedPercent.toFixed(0)}%`;
+            if (gpuValue) {
+                const gpuTotal = node.resources?.totalGpu || 0;
+                gpuValue.textContent = `${gpuTotal} 个`;
+            }
         }
 
         // 更新任务标签
@@ -545,15 +557,15 @@ class RayClusterManager {
             <div class="node-status-indicators">
                 <div class="status-indicator" data-status="idle" title="正常运行">
                     <div class="status-light idle"></div>
-                    <span class="status-label">空闲</span>
+                    <span class="status-label">正常运行</span>
                 </div>
-                <div class="status-indicator" data-status="detecting" title="本地检测中">
+                <div class="status-indicator" data-status="detecting" title="检测中">
                     <div class="status-light detecting"></div>
                     <span class="status-label">检测中</span>
                 </div>
                 <div class="status-indicator" data-status="sending" title="服务端检测中">
                     <div class="status-light sending"></div>
-                    <span class="status-label">服务端</span>
+                    <span class="status-label">服务端检测中</span>
                 </div>
             </div>
             <div class="node-info">
@@ -567,29 +579,58 @@ class RayClusterManager {
                 </div>
             </div>
             <div class="node-resources">
-                <div class="resource-item">
-                    <span class="resource-label"><i class="fas fa-microchip"></i> CPU</span>
-                    <div class="stat-bar-multi">
-                        <div class="stat-segment" style="width: ${cpuUsedPercent}%; background: ${this.getUsageColor(cpuUsedPercent)}"></div>
+                <div class="resource-card-grid">
+                    <div class="resource-card">
+                        <div class="resource-card-icon"><i class="fas fa-microchip"></i></div>
+                        <div class="resource-card-content">
+                            <div class="resource-card-label">CPU</div>
+                            <div class="resource-card-value">${cpuTotal.toFixed(0)} 核</div>
+                            <div class="resource-progress-ring" data-progress="${cpuUsedPercent}">
+                                <svg class="progress-ring" width="60" height="60">
+                                    <circle class="progress-ring-bg" cx="30" cy="30" r="26" />
+                                    <circle class="progress-ring-fill" cx="30" cy="30" r="26" 
+                                        style="stroke: ${this.getUsageColor(cpuUsedPercent)}; 
+                                               stroke-dasharray: ${(cpuUsedPercent / 100 * 163.36).toFixed(2)} 163.36" />
+                                </svg>
+                                <div class="progress-percentage">${cpuUsedPercent.toFixed(0)}%</div>
+                            </div>
+                        </div>
                     </div>
-                    <span class="resource-value">${cpuTotal.toFixed(0)} 核 (${cpuUsedPercent.toFixed(1)}%)</span>
-                </div>
-                <div class="resource-item">
-                    <span class="resource-label"><i class="fas fa-memory"></i> 内存</span>
-                    <div class="stat-bar-multi">
-                        <div class="stat-segment" style="width: ${memUsedPercent}%; background: ${this.getUsageColor(memUsedPercent)}"></div>
+                    <div class="resource-card">
+                        <div class="resource-card-icon"><i class="fas fa-memory"></i></div>
+                        <div class="resource-card-content">
+                            <div class="resource-card-label">内存</div>
+                            <div class="resource-card-value">${memoryTotal.toFixed(1)} GB</div>
+                            <div class="resource-progress-ring" data-progress="${memUsedPercent}">
+                                <svg class="progress-ring" width="60" height="60">
+                                    <circle class="progress-ring-bg" cx="30" cy="30" r="26" />
+                                    <circle class="progress-ring-fill" cx="30" cy="30" r="26" 
+                                        style="stroke: ${this.getUsageColor(memUsedPercent)}; 
+                                               stroke-dasharray: ${(memUsedPercent / 100 * 163.36).toFixed(2)} 163.36" />
+                                </svg>
+                                <div class="progress-percentage">${memUsedPercent.toFixed(0)}%</div>
+                            </div>
+                        </div>
                     </div>
-                    <span class="resource-value">${(memoryTotal * memUsedPercent / 100).toFixed(1)} / ${memoryTotal.toFixed(1)} GB (${memUsedPercent.toFixed(1)}%)</span>
-                </div>
-                ${gpuTotal > 0 ? `
-                <div class="resource-item">
-                    <span class="resource-label"><i class="fas fa-cube"></i> GPU</span>
-                    <div class="stat-bar-multi">
-                        <div class="stat-segment" style="width: ${gpuUsedPercent}%; background: ${this.getUsageColor(gpuUsedPercent)}"></div>
+                    ${gpuTotal > 0 ? `
+                    <div class="resource-card">
+                        <div class="resource-card-icon"><i class="fas fa-cube"></i></div>
+                        <div class="resource-card-content">
+                            <div class="resource-card-label">GPU</div>
+                            <div class="resource-card-value">${gpuTotal} 个</div>
+                            <div class="resource-progress-ring" data-progress="${gpuUsedPercent}">
+                                <svg class="progress-ring" width="60" height="60">
+                                    <circle class="progress-ring-bg" cx="30" cy="30" r="26" />
+                                    <circle class="progress-ring-fill" cx="30" cy="30" r="26" 
+                                        style="stroke: ${this.getUsageColor(gpuUsedPercent)}; 
+                                               stroke-dasharray: ${(gpuUsedPercent / 100 * 163.36).toFixed(2)} 163.36" />
+                                </svg>
+                                <div class="progress-percentage">${gpuUsedPercent.toFixed(0)}%</div>
+                            </div>
+                        </div>
                     </div>
-                    <span class="resource-value">${gpuTotal} 个 (${gpuUsedPercent.toFixed(1)}%)</span>
+                    ` : ''}
                 </div>
-                ` : ''}
             </div>
             ${tasks.length > 0 ? `
             <div class="node-tasks">
@@ -871,10 +912,10 @@ class RayClusterManager {
 
     // 根据使用率获取颜色
     getUsageColor(percent) {
-        if (percent < 30) return 'linear-gradient(90deg, #4caf50, #66bb6a)'; // 绿色 - 低使用率
-        if (percent < 60) return 'linear-gradient(90deg, #2196f3, #42a5f5)'; // 蓝色 - 中等使用率
-        if (percent < 80) return 'linear-gradient(90deg, #ff9800, #ffa726)'; // 橙色 - 高使用率
-        return 'linear-gradient(90deg, #f44336, #e57373)'; // 红色 - 非常高使用率
+        if (percent < 30) return '#4caf50'; // 绿色 - 低使用率
+        if (percent < 60) return '#2196f3'; // 蓝色 - 中等使用率
+        if (percent < 80) return '#ff9800'; // 橙色 - 高使用率
+        return '#f44336'; // 红色 - 非常高使用率
     }
 
     // 销毁管理器

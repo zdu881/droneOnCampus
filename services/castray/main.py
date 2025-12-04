@@ -824,6 +824,62 @@ async def upload_file(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/file/read")
+async def read_file_content(path: str):
+    """
+    读取文件内容
+    
+    Args:
+        path: 文件路径
+    """
+    try:
+        if not os.path.exists(path):
+            raise HTTPException(status_code=404, detail=f"文件不存在: {path}")
+        
+        # 安全检查 - 只允许读取特定目录下的文件
+        allowed_dirs = [
+            '/data/home/sim6g/rayCode/droneOnCampus/demo_files',
+            '/data/home/sim6g/rayCode/droneOnCampus/downloads',
+            '/tmp'
+        ]
+        
+        abs_path = os.path.abspath(path)
+        if not any(abs_path.startswith(d) for d in allowed_dirs):
+            raise HTTPException(status_code=403, detail="不允许读取该目录下的文件")
+        
+        # 读取文件内容
+        with open(path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        return {
+            "success": True,
+            "path": path,
+            "content": content,
+            "size": len(content)
+        }
+        
+    except HTTPException:
+        raise
+    except UnicodeDecodeError:
+        # 如果是二进制文件，返回base64编码
+        import base64
+        with open(path, 'rb') as f:
+            content = base64.b64encode(f.read()).decode('utf-8')
+        return {
+            "success": True,
+            "path": path,
+            "content": content,
+            "encoding": "base64",
+            "size": os.path.getsize(path)
+        }
+    except Exception as e:
+        logger.error(f"File read error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# 传输任务存储 - 用于跟踪传输状态
+transfer_tasks: Dict[str, Dict] = {}
+
 @app.post("/api/file-transfer/node-to-node")
 async def transfer_between_nodes(
     source_node: str = Form(...),
@@ -835,22 +891,52 @@ async def transfer_between_nodes(
     在两个节点之间传输文件
     
     Args:
-        source_node: 源节点IP
-        target_node: 目标节点IP
+        source_node: 源节点IP或节点名称
+        target_node: 目标节点IP或节点名称
         file_path: 源文件路径
         transfer_mode: 传输模式 (auto/direct/relay)
     """
     try:
         logger.info(f"Transfer request: {source_node}:{file_path} -> {target_node} (mode: {transfer_mode})")
         
-        # TODO: 实现实际的节点间文件传输
-        # 可以使用以下方式:
-        # 1. Ray的对象存储 (适合小文件)
-        # 2. SSH/SCP (适合大文件)
-        # 3. HTTP流式传输
+        # 验证源文件是否存在
+        if not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail=f"源文件不存在: {file_path}")
         
-        # 模拟传输
+        # 获取文件信息
+        file_stat = os.stat(file_path)
+        file_size = file_stat.st_size
+        file_name = os.path.basename(file_path)
+        
+        # 生成传输ID
         transfer_id = f"transfer_{int(time.time() * 1000)}"
+        
+        # 确定目标路径 (使用downloads目录模拟不同节点的存储)
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        target_dir = os.path.join(base_dir, "downloads", f"node_{target_node.replace('.', '_')}")
+        os.makedirs(target_dir, exist_ok=True)
+        target_path = os.path.join(target_dir, file_name)
+        
+        # 创建传输任务记录
+        transfer_tasks[transfer_id] = {
+            "id": transfer_id,
+            "source_node": source_node,
+            "target_node": target_node,
+            "file_path": file_path,
+            "target_path": target_path,
+            "file_name": file_name,
+            "file_size": file_size,
+            "transfer_mode": transfer_mode,
+            "status": "in-progress",
+            "progress": 0,
+            "start_time": time.time(),
+            "end_time": None,
+            "error": None
+        }
+        
+        # 异步执行文件传输
+        import asyncio
+        asyncio.create_task(_execute_file_transfer(transfer_id))
         
         return {
             "success": True,
@@ -858,13 +944,64 @@ async def transfer_between_nodes(
             "source_node": source_node,
             "target_node": target_node,
             "file_path": file_path,
+            "file_name": file_name,
+            "file_size": file_size,
+            "target_path": target_path,
             "transfer_mode": transfer_mode,
             "status": "started"
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Transfer error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+async def _execute_file_transfer(transfer_id: str):
+    """
+    异步执行实际的文件传输
+    """
+    task = transfer_tasks.get(transfer_id)
+    if not task:
+        return
+    
+    try:
+        import shutil
+        source_path = task["file_path"]
+        target_path = task["target_path"]
+        file_size = task["file_size"]
+        
+        # 模拟分块传输以显示进度
+        chunk_size = max(1024 * 1024, file_size // 10)  # 至少1MB或文件的1/10
+        bytes_copied = 0
+        
+        with open(source_path, 'rb') as src, open(target_path, 'wb') as dst:
+            while True:
+                chunk = src.read(chunk_size)
+                if not chunk:
+                    break
+                dst.write(chunk)
+                bytes_copied += len(chunk)
+                
+                # 更新进度
+                progress = min(100, (bytes_copied / file_size) * 100)
+                task["progress"] = progress
+                
+                # 添加一些延迟以便前端可以看到进度变化
+                await asyncio.sleep(0.1)
+        
+        # 传输完成
+        task["status"] = "completed"
+        task["progress"] = 100
+        task["end_time"] = time.time()
+        logger.info(f"Transfer {transfer_id} completed: {source_path} -> {target_path}")
+        
+    except Exception as e:
+        task["status"] = "failed"
+        task["error"] = str(e)
+        task["end_time"] = time.time()
+        logger.error(f"Transfer {transfer_id} failed: {e}")
 
 
 @app.get("/api/file-transfer/status/{transfer_id}")
@@ -876,20 +1013,64 @@ async def get_transfer_status(transfer_id: str):
         transfer_id: 传输ID
     """
     try:
-        # TODO: 实现真实的传输状态跟踪
-        # 目前返回模拟数据
+        # 查找真实的传输任务
+        task = transfer_tasks.get(transfer_id)
         
-        return {
-            "transfer_id": transfer_id,
-            "status": "in-progress",
-            "progress": 45.5,
-            "speed": 125.3,  # MB/s
-            "eta": 120  # 秒
-        }
+        if task:
+            # 计算传输速度和预计剩余时间
+            elapsed = time.time() - task["start_time"]
+            progress = task["progress"]
+            file_size_mb = task["file_size"] / (1024 * 1024)
+            
+            if elapsed > 0 and progress > 0:
+                speed = (progress / 100 * file_size_mb) / elapsed  # MB/s
+                if speed > 0 and progress < 100:
+                    remaining_mb = file_size_mb * (1 - progress / 100)
+                    eta = int(remaining_mb / speed)
+                else:
+                    eta = 0
+            else:
+                speed = 0
+                eta = 0
+            
+            return {
+                "transfer_id": transfer_id,
+                "status": task["status"],
+                "progress": task["progress"],
+                "speed": round(speed, 2),
+                "eta": eta,
+                "file_name": task["file_name"],
+                "file_size": task["file_size"],
+                "source_node": task["source_node"],
+                "target_node": task["target_node"],
+                "target_path": task["target_path"],
+                "error": task.get("error")
+            }
+        else:
+            # 如果找不到任务，返回完成状态（兼容旧的模拟传输）
+            return {
+                "transfer_id": transfer_id,
+                "status": "completed",
+                "progress": 100,
+                "speed": 0,
+                "eta": 0
+            }
         
     except Exception as e:
         logger.error(f"Status query error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/file-transfer/list")
+async def list_transfers():
+    """
+    获取所有传输任务列表
+    """
+    return {
+        "success": True,
+        "transfers": list(transfer_tasks.values()),
+        "total": len(transfer_tasks)
+    }
 
 
 if __name__ == '__main__':

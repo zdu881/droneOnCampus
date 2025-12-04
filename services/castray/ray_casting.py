@@ -195,6 +195,9 @@ class CastingNode:
         self.file_transfer_manager = FileTransferManager(f"downloads/{node_id}")
         self.file_msg_factory = FileTransferMessage()
         
+        # 存储待处理的文件信息
+        self.pending_file_info = {}
+        
         # 自动传输任务队列
         self.auto_transfer_queue = []
         self.auto_transfer_enabled = True
@@ -452,6 +455,12 @@ class CastingNode:
                 response = self.file_transfer_manager.handle_transfer_request(message, auto_accept=True)
                 await self._send_response_to_sender(response, sender_addr)
                 
+                # 存储文件信息以便后续使用
+                file_id = message['file_info']['file_id']
+                if not hasattr(self, 'pending_file_info'):
+                    self.pending_file_info = {}
+                self.pending_file_info[file_id] = message['file_info']
+                
                 logger.info(f"节点 {self.node_id} 接收文件传输请求: {message['file_info']['file_name']}")
                 
             elif msg_type == "file_chunk":
@@ -465,10 +474,19 @@ class CastingNode:
                 expected_chunks = message["chunk"].get("total_chunks", 0)
                 
                 if len(chunks) == expected_chunks:
-                    # 完成文件传输
-                    file_info = {"file_name": f"received_file_{file_id}", "file_hash": ""}
+                    # 完成文件传输，获取文件信息
+                    file_info = getattr(self, 'pending_file_info', {}).get(file_id, {})
+                    if not file_info:
+                        file_info = {"file_name": f"received_file_{file_id}", "file_hash": ""}
+                    
                     complete_response = self.file_transfer_manager.complete_file_transfer(file_id, file_info)
                     await self._send_response_to_sender(complete_response, sender_addr)
+                    
+                    # 清理文件信息
+                    if hasattr(self, 'pending_file_info') and file_id in self.pending_file_info:
+                        del self.pending_file_info[file_id]
+                    
+                    logger.info(f"节点 {self.node_id} 完成文件接收: {file_info.get('file_name', file_id)}")
                     
             elif msg_type in ["file_transfer_accept", "file_transfer_reject"]:
                 # 处理传输响应
@@ -484,8 +502,36 @@ class CastingNode:
                 logger.debug(f"收到块确认: {message}")
                 
             elif msg_type == "file_transfer_complete":
-                # 处理传输完成
-                logger.info(f"文件传输完成: {message}")
+                # 处理传输完成消息（接收者发送给发送者）
+                file_id = message.get("file_id")
+                receiver_id = message.get("receiver_id")
+                success = message.get("success", False)
+                
+                logger.info(f"收到传输完成消息: {file_id} from {receiver_id}, success={success}")
+                
+                # 更新发送者端的传输状态
+                transfer = self.file_transfer_manager.get_transfer_status(file_id)
+                if transfer:
+                    if success:
+                        # 标记该接收者已成功完成
+                        if receiver_id not in transfer.get("completed_by", []):
+                            transfer["completed_by"].append(receiver_id)
+                        
+                        # 检查是否所有接收者都已完成
+                        total_recipients = len(transfer.get("recipients", []))
+                        completed_count = len(transfer.get("completed_by", []))
+                        
+                        if completed_count >= total_recipients:
+                            transfer["status"] = "completed"
+                            logger.info(f"所有接收者已完成传输: {file_id}")
+                        else:
+                            transfer["status"] = "partially_completed"
+                            logger.info(f"部分接收者已完成传输: {completed_count}/{total_recipients}")
+                    else:
+                        # 标记该接收者失败
+                        if receiver_id not in transfer.get("failed_by", []):
+                            transfer["failed_by"].append(receiver_id)
+                        logger.warning(f"接收者 {receiver_id} 传输失败: {file_id}")
                 
         except Exception as e:
             logger.error(f"处理文件消息失败: {e}")
@@ -518,6 +564,16 @@ class CastingNode:
                 await asyncio.sleep(0.01)
                 
             logger.info(f"完成发送 {len(chunks)} 个文件块")
+            
+            # 发送完所有块后，更新传输状态为已完成
+            transfer["status"] = "completed"
+            transfer["end_time"] = time.time()
+            
+            # 标记传输成功并更新统计
+            receiver_id = transfer.get("recipients", ["unknown"])[0]  # 获取接收者ID
+            self.file_transfer_manager.mark_transfer_success(file_id, [receiver_id])
+            
+            logger.info(f"文件传输完成: {file_id} -> {receiver_id}")
             
         except Exception as e:
             logger.error(f"发送文件块失败: {e}")
@@ -574,6 +630,33 @@ class CastingNode:
     def get_status(self):
         """获取节点状态"""
         file_stats = self.file_transfer_manager.get_statistics()
+        all_transfers = self.file_transfer_manager.get_all_transfers()
+        
+        # 分类传输任务
+        active_transfers = []
+        completed_transfers = []
+        failed_transfers = []
+        
+        for transfer_id, transfer in all_transfers.items():
+            transfer_info = {
+                "transfer_id": transfer_id,
+                "file_path": transfer.get("file_path", ""),
+                "recipients": transfer.get("recipients", []),
+                "status": transfer.get("status", "unknown"),
+                "completed_by": transfer.get("completed_by", []),
+                "failed_by": transfer.get("failed_by", []),
+                "start_time": transfer.get("start_time", 0),
+                "end_time": transfer.get("end_time"),
+                "file_size": transfer.get("file_size", 0)
+            }
+            
+            status = transfer.get("status", "unknown")
+            if status == "completed":
+                completed_transfers.append(transfer_info)
+            elif status in ["failed", "partially_failed"]:
+                failed_transfers.append(transfer_info)
+            else:
+                active_transfers.append(transfer_info)
         
         return {
             "node_id": self.node_id,
@@ -586,7 +669,12 @@ class CastingNode:
                 [msg["timestamp"] for msg in self.sent_messages] + [0]
             ),
             "file_transfer_stats": file_stats,
-            "active_transfers": len(self.file_transfer_manager.get_all_transfers()),
+            "active_transfers": active_transfers,
+            "completed_transfers": completed_transfers,
+            "failed_transfers": failed_transfers,
+            "active_transfers_count": len(active_transfers),
+            "completed_transfers_count": len(completed_transfers),
+            "failed_transfers_count": len(failed_transfers),
             "auto_transfer_queue": len(self.auto_transfer_queue),
             "auto_transfer_enabled": self.auto_transfer_enabled
         }

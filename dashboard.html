@@ -460,12 +460,12 @@
                   <div class="empty-state" id="cluster-empty-state">
                     <div class="empty-icon"><i class="fas fa-plug"></i></div>
                     <h3>未连接到 CastRay 后端</h3>
-                    <p>请确保 CastRay 服务正在运行于 <code>http://10.30.2.11:8000</code></p>
+                    <p>请确保 CastRay 服务正在运行于 <code>http://10.30.2.11:8001</code></p>
                     <div class="empty-actions">
                       <button onclick="window.dashboardManager && window.dashboardManager.rayClusterManager ? window.dashboardManager.rayClusterManager.fetchClusterData() : console.log('Ray cluster manager not available')" class="retry-btn">
                         <i class="fas fa-sync-alt"></i> 重试连接
                       </button>
-                      <a href="http://10.30.2.11:8000/api/status" target="_blank" class="check-backend-btn">
+                      <a href="http://10.30.2.11:8001/api/status" target="_blank" class="check-backend-btn">
                         <i class="fas fa-external-link-alt"></i> 检查后端服务
                       </a>
                     </div>
@@ -508,10 +508,10 @@
                         <input type="text" id="file-path" placeholder="/path/to/file.txt" required />
                         <div class="example-files">
                           <span class="example-label">快速选择:</span>
-                          <button type="button" class="example-file-btn" data-path="/data/model.pth">模型文件</button>
-                          <button type="button" class="example-file-btn" data-path="/data/dataset.tar.gz">数据集</button>
-                          <button type="button" class="example-file-btn" data-path="/logs/training.log">日志文件</button>
-                          <button type="button" class="example-file-btn" data-path="/config/config.json">配置文件</button>
+                          <button type="button" class="example-file-btn" data-path="/data/home/sim6g/rayCode/droneOnCampus/demo_files/config.json">配置文件</button>
+                          <button type="button" class="example-file-btn" data-path="/data/home/sim6g/rayCode/droneOnCampus/demo_files/data.txt">数据文件</button>
+                          <button type="button" class="example-file-btn" data-path="/data/home/sim6g/rayCode/droneOnCampus/demo_files/flight.com" style="background: #ff9800; color: white;">🚁 飞行指令</button>
+                          <button type="button" class="example-file-btn" data-path="/data/home/sim6g/rayCode/droneOnCampus/README.md">说明文档</button>
                         </div>
                       </div>
                       <div class="form-group">

@@ -347,7 +347,21 @@ class FileTransferManager:
     
     def get_transfer_status(self, file_id: str) -> Optional[Dict[str, Any]]:
         """获取传输状态"""
-        return self.active_transfers.get(file_id)
+        transfer = self.active_transfers.get(file_id)
+        if transfer:
+            # 增强返回的状态信息
+            status_copy = transfer.copy()
+            total_recipients = len(transfer.get("recipients", []))
+            completed_count = len(transfer.get("completed_by", []))
+            failed_count = len(transfer.get("failed_by", []))
+            
+            status_copy["total_recipients"] = total_recipients
+            status_copy["completed_count"] = completed_count
+            status_copy["failed_count"] = failed_count
+            status_copy["progress_percent"] = (completed_count / total_recipients * 100) if total_recipients > 0 else 0
+            
+            return status_copy
+        return None
     
     def get_all_transfers(self) -> Dict[str, Dict[str, Any]]:
         """获取所有传输"""
@@ -383,20 +397,29 @@ class FileTransferManager:
         try:
             if file_id in self.active_transfers:
                 transfer = self.active_transfers[file_id]
-                transfer["completed_by"].extend(successful_recipients)
+                
+                # 只添加尚未标记的接收者
+                newly_completed = [r for r in successful_recipients if r not in transfer["completed_by"]]
+                transfer["completed_by"].extend(newly_completed)
                 
                 # 检查是否所有接收者都完成了
                 if len(transfer["completed_by"]) >= len(transfer["recipients"]):
                     transfer["status"] = "completed"
-                # 增加统计：每个成功接收者计为一次成功传输
-                succ_count = len(successful_recipients)
-                self.transfer_stats["successful_transfers"] += succ_count
-                # 增加字节计数（如果知道文件大小）
-                try:
-                    file_size = transfer.get("file_size") or os.path.getsize(transfer.get("file_path"))
-                    self.transfer_stats["bytes_transferred"] += file_size * succ_count
-                except Exception:
-                    pass
+                    logger.info(f"传输 {file_id} 所有接收者已完成")
+                else:
+                    transfer["status"] = "in_progress"
+                
+                # 增加统计：每个新成功接收者计为一次成功传输（避免重复计数）
+                if newly_completed:
+                    succ_count = len(newly_completed)
+                    self.transfer_stats["successful_transfers"] += succ_count
+                    # 增加字节计数（如果知道文件大小）
+                    try:
+                        file_size = transfer.get("file_size") or os.path.getsize(transfer.get("file_path"))
+                        self.transfer_stats["bytes_transferred"] += file_size * succ_count
+                    except Exception:
+                        pass
+                    logger.info(f"标记 {succ_count} 个接收者传输成功: {file_id}")
         except Exception as e:
             logger.error(f"标记传输成功时出错: {e}")
 

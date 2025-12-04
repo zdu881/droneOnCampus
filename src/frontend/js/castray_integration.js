@@ -2,7 +2,7 @@
 class CastRayIntegration {
     constructor() {
         // 支持从 window.appConfig 注入 castrayApiBase
-        this.castrayApiBase = (window && window.appConfig && window.appConfig.castrayApiBase) ? window.appConfig.castrayApiBase : 'http://10.30.2.11:8000';
+        this.castrayApiBase = (window && window.appConfig && window.appConfig.castrayApiBase) ? window.appConfig.castrayApiBase : 'http://10.30.2.11:8001';
         this.websocket = null;
         this.castrayNodes = [];
         this.transferLog = [];

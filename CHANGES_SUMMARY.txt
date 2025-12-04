@@ -1,0 +1,53 @@
+文件传输完成状态Bug修复 - 变更摘要
+========================================
+
+修复的Bug:
+-----------
+文件传输完成后,任务不会从传输中转到已完成状态
+
+修改的文件:
+-----------
+1. services/castray/ray_casting.py (5处修改)
+   - _start_sending_chunks: 添加完成状态更新
+   - handle_file_message: 完善完成消息处理
+   - handle_file_message: 添加文件信息存储
+   - __init__: 初始化pending_file_info
+   - get_status: 返回详细传输分类
+
+2. services/castray/file_transfer.py (2处修改)
+   - mark_transfer_success: 避免重复计数
+   - get_transfer_status: 返回增强信息
+
+新增的文件:
+-----------
+1. FILE_TRANSFER_FIX.md - 技术文档(英文)
+2. FILE_TRANSFER_FIX_SUMMARY.md - 总结文档(中文)
+3. test_transfer_completion.py - 验证测试脚本
+4. CHANGES_SUMMARY.txt - 本文件
+
+关键修复点:
+-----------
+✓ 发送完所有块后更新状态为completed
+✓ 正确处理file_transfer_complete消息
+✓ 更新completed_by列表
+✓ 检查所有接收者是否都已完成
+✓ 避免统计数据重复计数
+✓ 支持多接收者场景
+
+验证方法:
+---------
+python3 test_transfer_completion.py
+
+预期结果:
+---------
+- 传输状态: initiated -> in_progress -> completed
+- completed_transfers列表包含已完成传输
+- active_transfers列表在完成后变空
+- 统计数据正确累加(无重复)
+
+兼容性:
+-------
+✓ 向后兼容
+✓ 不影响现有功能
+✓ API增强但不破坏现有字段
+
