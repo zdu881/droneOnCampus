@@ -181,8 +181,691 @@ class DashboardManager {
     // 更新body类
     document.body.className = `${scenario}-scenario`;
 
+    // 切换场景内容
+    const vehicleContent = document.querySelector('.vehicle-scenario-content');
+    const mainContent = document.querySelector('.main-content-panel');
+    
+    if (scenario === 'vehicle') {
+      // 显示自动驾驶场景
+      if (vehicleContent) {
+        vehicleContent.style.display = 'block';
+        mainContent.style.display = 'none';
+      }
+      this.initVehicleScenario();
+    } else {
+      // 显示无人机场景
+      if (vehicleContent) {
+        vehicleContent.style.display = 'none';
+        mainContent.style.display = 'block';
+      }
+    }
+
     this.logToConsole(`Switched to ${scenario} scenario`, "info");
   }
+
+  initVehicleScenario() {
+    // 初始化自动驾驶场景
+    this.selectedDetectionNode = null;
+    this.setupDetectionUI();
+    this.setupDetectionEventListeners();
+    
+    // 初始化简化的飞行控制
+    this.setupSimpleFlightControl();
+    
+    // 初始化 CM-ZSB 与灯光映射
+    this.setupStationLightMapping();
+  }
+
+  // 简化的飞行控制初始化
+  setupSimpleFlightControl() {
+    // 创建路径管理器
+    if (!window.flightPathManager && window.apiManager) {
+      window.flightPathManager = new FlightPathManager(window.apiManager);
+    }
+
+    // 创建简化飞行 UI 管理器
+    if (!window.droneSimpleFlightUI) {
+      window.droneSimpleFlightUI = new DroneSimpleFlightUI(this);
+    }
+
+    // 注入飞行控制 UI
+    const vehicleContent = document.getElementById('vehicle-scenario-content');
+    if (vehicleContent) {
+      // 查找飞行控制容器或创建
+      let flightControlContainer = vehicleContent.querySelector('.simple-flight-container');
+      if (!flightControlContainer) {
+        flightControlContainer = document.createElement('div');
+        flightControlContainer.className = 'simple-flight-container';
+        // 插入到灯光控制下面
+        const lightControlSection = vehicleContent.querySelector('.light-control-section');
+        if (lightControlSection) {
+          lightControlSection.parentNode.insertBefore(flightControlContainer, lightControlSection.nextSibling);
+        } else {
+          vehicleContent.appendChild(flightControlContainer);
+        }
+      }
+
+      // 创建 UI
+      window.droneSimpleFlightUI.createUI(flightControlContainer, window.flightPathManager);
+      this.logToConsole('飞行控制 UI 已加载', 'success');
+    }
+  }
+
+  // CM-ZSB 与灯光映射初始化
+  setupStationLightMapping() {
+    // 节点检测配置
+    this.nodeDetectionConfig = {
+      nodes: [
+        { id: 'node-1', url: 'http://10.30.2.11:8000/node1/status', lightIndex: 1 },
+        { id: 'node-2', url: 'http://10.30.2.11:8000/node2/status', lightIndex: 2 },
+        { id: 'node-3', url: 'http://10.30.2.11:8000/node3/status', lightIndex: 3 }
+      ],
+      statusToColorMap: {
+        'idle': 1,        // 绿色 - 正常/空闲
+        'detecting': 0,   // 红色 - 检测中
+        'transmitting': 2, // 黄色 - 发送中
+        'error': 0        // 红色 - 错误
+      },
+      checkInterval: 3000  // 3秒检测一次
+    };
+
+    // 启动后台检测任务
+    this.startNodeDetectionTask();
+  }
+
+  // 启动节点检测任务
+  startNodeDetectionTask() {
+    if (this.nodeDetectionInterval) {
+      clearInterval(this.nodeDetectionInterval);
+    }
+
+    this.nodeDetectionInterval = setInterval(() => {
+      this.checkNodeStatusAndUpdateLights();
+    }, this.nodeDetectionConfig.checkInterval);
+
+    // 立即执行一次
+    this.checkNodeStatusAndUpdateLights();
+  }
+
+  // 检查节点状态并更新灯光
+  async checkNodeStatusAndUpdateLights() {
+    if (!window.apiManager || !this.nodeDetectionConfig) return;
+
+    const config = this.nodeDetectionConfig;
+
+    for (const nodeConfig of config.nodes) {
+      try {
+        // 模拟节点状态检测（实际应该从真实API获取）
+        const status = await this.getNodeStatus(nodeConfig.id);
+        const colorCode = config.statusToColorMap[status] || 0;
+
+        // 更新对应的灯光
+        const light = `light${nodeConfig.lightIndex}`;
+        await window.apiManager.changeBaseStationLight(nodeConfig.lightIndex, colorCode);
+
+        console.log(`✓ 节点 ${nodeConfig.id} 状态: ${status} → 灯光${nodeConfig.lightIndex}变为颜色${colorCode}`);
+      } catch (error) {
+        console.error(`检测节点 ${nodeConfig.id} 失败:`, error);
+      }
+    }
+  }
+
+  // 获取节点状态（模拟或真实）
+  async getNodeStatus(nodeId) {
+    // TODO: 这里应该真实调用 CM-ZSB API
+    // 现在返回模拟数据
+    const statusList = ['idle', 'detecting', 'transmitting', 'error'];
+    return statusList[Math.floor(Math.random() * statusList.length)];
+  }
+
+    // 配置节点信息（与检测节点一致）
+    const nodeConfigs = [
+      {
+        nodeId: 'node-1',
+        lightIndex: 1,
+        checkUrl: 'http://10.30.2.11:8000/health' // CM-ZSB 或应用的健康检查端点
+      },
+      {
+        nodeId: 'node-2',
+        lightIndex: 2,
+        checkUrl: 'http://10.30.2.12:8000/health'
+      },
+      {
+        nodeId: 'node-3',
+        lightIndex: 3,
+        checkUrl: 'http://10.30.2.13:8000/health'
+      }
+    ];
+
+    window.stationLightMappingManager.initializeNodes(nodeConfigs);
+
+    // 添加自定义状态映射（可选）
+    window.stationLightMappingManager.addStatusColorMapping('running', 1); // 绿色
+    window.stationLightMappingManager.addStatusColorMapping('warning', 2); // 黄色
+    window.stationLightMappingManager.addStatusColorMapping('failed', 0);  // 红色
+
+    // 启动自动监控（每3秒检测一次）
+    window.stationLightMappingManager.startMonitoring(3000);
+
+    this.logToConsole('CM-ZSB 与灯光映射已初始化', 'success');
+
+    // 添加控制按钮事件
+    this.setupStationLightMappingControls();
+  }
+
+  // 设置 CM-ZSB 灯光映射的控制按钮
+  setupStationLightMappingControls() {
+    // 启动监控按钮
+    const startMonitoringBtn = document.getElementById('start-monitoring-btn');
+    if (startMonitoringBtn) {
+      startMonitoringBtn.addEventListener('click', () => {
+        const intervalInput = document.querySelector('#monitoring-interval');
+        const interval = intervalInput ? parseInt(intervalInput.value) * 1000 : 3000;
+        window.stationLightMappingManager.startMonitoring(interval);
+        this.logToConsole(`已启动监控（间隔: ${interval}ms）`, 'success');
+      });
+    }
+
+    // 停止监控按钮
+    const stopMonitoringBtn = document.getElementById('stop-monitoring-btn');
+    if (stopMonitoringBtn) {
+      stopMonitoringBtn.addEventListener('click', () => {
+        window.stationLightMappingManager.stopMonitoring();
+        this.logToConsole('已停止监控', 'info');
+      });
+    }
+
+    // 检测间隔输入框
+    const intervalInput = document.querySelector('#monitoring-interval');
+    if (intervalInput) {
+      intervalInput.addEventListener('change', (e) => {
+        const interval = parseInt(e.target.value) * 1000;
+        window.stationLightMappingManager.setMonitoringInterval(interval);
+        this.logToConsole(`监控间隔已更新为 ${interval}ms`, 'info');
+      });
+    }
+
+    // 手动检测按钮
+    document.querySelectorAll('.manual-check-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const nodeId = btn.dataset.nodeId;
+        this.logToConsole(`正在检测节点 ${nodeId}...`, 'info');
+        const status = await window.stationLightMappingManager.checkSingleNodeStatus(nodeId);
+        const desc = window.stationLightMappingManager.getNodeStatusDescription(nodeId);
+        this.logToConsole(`节点 ${nodeId} 状态: ${desc}`, 'success');
+        
+        // 更新灯光
+        const result = await window.stationLightMappingManager.updateSingleLight(nodeId);
+        if (!result.success) {
+          this.logToConsole(`灯光更新失败: ${result.error}`, 'error');
+        }
+      });
+    });
+  }
+
+  setupDetectionUI() {
+    // 从Ray集群获取节点列表并显示
+    const nodesGrid = document.getElementById('detection-nodes-grid');
+    if (!nodesGrid) return;
+
+    // 获取可用节点列表（从Ray集群信息或使用示例节点）
+    const nodes = [
+      { id: 'node-1', name: '边缘节点 M1', ip: '10.30.2.11', cpu: 8, memory: 16 },
+      { id: 'node-2', name: '边缘节点 M2', ip: '10.30.2.12', cpu: 4, memory: 8 },
+      { id: 'node-3', name: '边缘节点 M3', ip: '10.30.2.13', cpu: 8, memory: 16 },
+    ];
+
+    nodesGrid.innerHTML = nodes.map(node => `
+      <div class="node-item" data-node-id="${node.id}">
+        <div class="node-item-icon">
+          <i class="fas fa-server"></i>
+        </div>
+        <div class="node-item-info">
+          <div class="node-item-name">${node.name}</div>
+          <div class="node-item-status">${node.ip} | CPU: ${node.cpu}c | RAM: ${node.memory}GB</div>
+        </div>
+      </div>
+    `).join('');
+
+    // 默认选择第一个节点
+    const firstNode = nodesGrid.querySelector('.node-item');
+    if (firstNode) {
+      firstNode.click();
+    }
+  }
+
+  setupDetectionEventListeners() {
+    // 节点选择
+    document.querySelectorAll('.node-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        document.querySelectorAll('.node-item').forEach(n => n.classList.remove('selected'));
+        item.classList.add('selected');
+        this.selectedDetectionNode = item.dataset.nodeId;
+      });
+    });
+
+    // 检测模式按钮
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const mode = btn.dataset.mode;
+        this.startDetection(mode);
+      });
+    });
+
+    // 重新检测按钮
+    const resetBtn = document.getElementById('reset-detection-btn');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        this.resetDetectionUI();
+      });
+    }
+
+    // 灯光控制事件监听
+    this.setupLightControlListeners();
+  }
+
+  setupLightControlListeners() {
+    // 灯光选择按钮
+    document.querySelectorAll('.light-select-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.light-select-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        this.selectedLightIndex = btn.dataset.light;
+      });
+    });
+
+    // 颜色选择按钮
+    document.querySelectorAll('.color-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const colorCode = btn.dataset.color;
+        const lightIndex = this.selectedLightIndex || 'all';
+        
+        this.logToConsole(`正在改变灯光颜色...`, 'info');
+        
+        try {
+          let result;
+          if (lightIndex === 'all') {
+            result = await window.ueApiManager.changeBaseStationLight(0, parseInt(colorCode));
+          } else {
+            result = await window.ueApiManager.changeBaseStationLight(parseInt(lightIndex), parseInt(colorCode));
+          }
+          
+          if (result.success) {
+            this.updateLightStatus();
+            this.logToConsole(`灯光颜色改变成功`, 'success');
+          } else {
+            this.logToConsole(`灯光颜色改变失败: ${result.error}`, 'error');
+          }
+        } catch (error) {
+          this.logToConsole(`灯光控制异常: ${error.message}`, 'error');
+        }
+      });
+    });
+
+    // 高级操作按钮
+    const blinkBtn = document.getElementById('light-blink-btn');
+    if (blinkBtn) {
+      blinkBtn.addEventListener('click', async () => {
+        const lightIndex = this.selectedLightIndex || 'all';
+        const colorCode = 0; // 红色闪烁
+        
+        this.logToConsole(`灯光闪烁中...`, 'info');
+        
+        try {
+          let result;
+          if (lightIndex === 'all') {
+            result = await window.ueApiManager.blinkBaseStationLight(0, colorCode, 3, 300);
+          } else {
+            result = await window.ueApiManager.blinkBaseStationLight(
+              parseInt(lightIndex), 
+              colorCode, 
+              3, 
+              300
+            );
+          }
+          
+          if (result.success) {
+            this.logToConsole(`灯光闪烁完成`, 'success');
+          } else {
+            this.logToConsole(`灯光闪烁失败`, 'error');
+          }
+        } catch (error) {
+          this.logToConsole(`灯光闪烁异常: ${error.message}`, 'error');
+        }
+      });
+    }
+
+    // 序列点亮按钮
+    const sequenceBtn = document.getElementById('light-sequence-btn');
+    if (sequenceBtn) {
+      sequenceBtn.addEventListener('click', async () => {
+        this.logToConsole(`执行灯光序列...`, 'info');
+        
+        try {
+          // 全部设为绿色
+          await window.ueApiManager.setBaseStationGreen(0);
+          await this.delay(500);
+          
+          // 依次设为红色
+          for (let i = 1; i <= 3; i++) {
+            await window.ueApiManager.setBaseStationRed(i);
+            await this.delay(500);
+            await window.ueApiManager.setBaseStationGreen(i);
+            await this.delay(300);
+          }
+          
+          this.updateLightStatus();
+          this.logToConsole(`灯光序列执行完成`, 'success');
+        } catch (error) {
+          this.logToConsole(`灯光序列执行失败: ${error.message}`, 'error');
+        }
+      });
+    }
+
+    // 测试连接按钮
+    const testBtn = document.getElementById('light-test-btn');
+    if (testBtn) {
+      testBtn.addEventListener('click', async () => {
+        this.logToConsole(`测试UE灯光连接...`, 'info');
+        
+        try {
+          // 通过改变灯光颜色来测试连接
+          const result = await window.ueApiManager.setBaseStationGreen(0);
+          
+          if (result.success) {
+            this.logToConsole(`✓ UE灯光连接正常`, 'success');
+          } else {
+            this.logToConsole(`✗ UE灯光连接失败: ${result.error}`, 'error');
+          }
+        } catch (error) {
+          this.logToConsole(`UE灯光连接异常: ${error.message}`, 'error');
+        }
+      });
+    }
+
+    // 快速控制按钮
+    const allGreenBtn = document.getElementById('all-green-btn');
+    if (allGreenBtn) {
+      allGreenBtn.addEventListener('click', async () => {
+        try {
+          await window.ueApiManager.setBaseStationGreen(0);
+          this.updateLightStatus();
+          this.logToConsole(`全部灯光设为绿色`, 'success');
+        } catch (error) {
+          this.logToConsole(`操作失败: ${error.message}`, 'error');
+        }
+      });
+    }
+
+    const allRedBtn = document.getElementById('all-red-btn');
+    if (allRedBtn) {
+      allRedBtn.addEventListener('click', async () => {
+        try {
+          await window.ueApiManager.setBaseStationRed(0);
+          this.updateLightStatus();
+          this.logToConsole(`全部灯光设为红色`, 'success');
+        } catch (error) {
+          this.logToConsole(`操作失败: ${error.message}`, 'error');
+        }
+      });
+    }
+
+    const allYellowBtn = document.getElementById('all-yellow-btn');
+    if (allYellowBtn) {
+      allYellowBtn.addEventListener('click', async () => {
+        try {
+          await window.ueApiManager.setBaseStationYellow(0);
+          this.updateLightStatus();
+          this.logToConsole(`全部灯光设为黄色`, 'success');
+        } catch (error) {
+          this.logToConsole(`操作失败: ${error.message}`, 'error');
+        }
+      });
+    }
+
+    // 初始化默认选择
+    this.selectedLightIndex = 'all';
+  }
+
+  updateLightStatus() {
+    // 更新灯光状态显示
+    // 这里可以从API获取实时状态，或者基于最后一个命令更新UI
+    const colorNames = ['红色', '绿色', '黄色'];
+    
+    // 模拟更新显示
+    for (let i = 1; i <= 3; i++) {
+      const statusEl = document.getElementById(`light${i}-status`);
+      if (statusEl) {
+        // 这里应该获取实际状态，现在使用默认值
+        statusEl.innerHTML = `<i class="fas fa-circle"></i> 绿色`;
+        statusEl.classList.remove('green', 'red', 'yellow');
+        statusEl.classList.add('green');
+      }
+    }
+  }
+
+  delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  startDetection(mode) {
+    if (!this.selectedDetectionNode) {
+      this.logToConsole('请先选择检测节点', 'warning');
+      return;
+    }
+
+    // 显示进度区域，隐藏结果
+    const progressArea = document.querySelector('.detection-progress-area');
+    const resultsArea = document.querySelector('.detection-results-area');
+    
+    if (progressArea) progressArea.style.display = 'flex';
+    if (resultsArea) resultsArea.style.display = 'none';
+
+    // 重置进度条
+    const progressFill = document.querySelector('.progress-fill');
+    const progressPercent = document.querySelector('.progress-percent');
+    const progressMessage = document.getElementById('progress-message');
+    
+    if (progressFill) progressFill.style.width = '0%';
+    if (progressPercent) progressPercent.textContent = '0%';
+    if (progressMessage) progressMessage.textContent = '正在初始化检测任务...';
+
+    // 调用检测API
+    this.runDetectionTask(mode);
+  }
+
+  async runDetectionTask(mode) {
+    try {
+      const nodeId = this.selectedDetectionNode;
+      const url = 'http://10.30.2.11:8000/api/station-maintenance/detect';
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          node_id: nodeId,
+          mode: mode,  // 'auto' 或 'example'
+          data_source: mode === 'auto' ? 'realtime' : 'example',
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const taskId = data.task_id;
+
+      this.logToConsole(`检测任务已启动 (Task ID: ${taskId})`, 'info');
+
+      // 开始轮询检测状态
+      this.pollDetectionStatus(taskId);
+
+    } catch (error) {
+      this.logToConsole(`检测启动失败: ${error.message}`, 'error');
+      
+      // 显示错误结果
+      const resultsArea = document.querySelector('.detection-results-area');
+      const progressArea = document.querySelector('.detection-progress-area');
+      const resultStatus = document.querySelector('.result-status');
+      
+      if (progressArea) progressArea.style.display = 'none';
+      if (resultsArea) {
+        resultsArea.style.display = 'flex';
+        if (resultStatus) {
+          resultStatus.classList.remove('success');
+          resultStatus.classList.add('error');
+          resultStatus.textContent = '✗ 检测失败';
+        }
+      }
+    }
+  }
+
+  async pollDetectionStatus(taskId) {
+    const maxAttempts = 120; // 120秒超时
+    let attempts = 0;
+
+    const poll = async () => {
+      try {
+        const url = `http://10.30.2.11:8000/api/station-maintenance/status/${taskId}`;
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+          throw new Error(`Status check failed: ${response.status}`);
+        }
+
+        const status = await response.json();
+
+        // 更新进度条和消息
+        this.updateDetectionProgress(status);
+
+        // 检查是否完成
+        if (status.completed) {
+          this.showDetectionResults(status);
+          return;
+        }
+
+        attempts++;
+        if (attempts < maxAttempts) {
+          // 1秒后再次轮询
+          setTimeout(poll, 1000);
+        } else {
+          throw new Error('检测超时');
+        }
+
+      } catch (error) {
+        this.logToConsole(`轮询失败: ${error.message}`, 'error');
+        this.showDetectionError(error.message);
+      }
+    };
+
+    poll();
+  }
+
+  updateDetectionProgress(status) {
+    const progressFill = document.querySelector('.progress-fill');
+    const progressPercent = document.querySelector('.progress-percent');
+    const progressStatus = document.querySelector('.progress-status');
+    const progressMessage = document.getElementById('progress-message');
+
+    if (progressFill && status.progress) {
+      progressFill.style.width = `${status.progress}%`;
+    }
+    if (progressPercent && status.progress) {
+      progressPercent.textContent = `${status.progress}%`;
+    }
+    if (progressStatus && status.status) {
+      progressStatus.textContent = this.getProgressStatusText(status.status);
+    }
+    if (progressMessage && status.message) {
+      progressMessage.textContent = status.message;
+    }
+  }
+
+  getProgressStatusText(status) {
+    const statusMap = {
+      'initializing': '初始化中',
+      'processing': '处理中',
+      'analyzing': '分析中',
+      'completed': '已完成',
+      'error': '错误',
+    };
+    return statusMap[status] || status;
+  }
+
+  showDetectionResults(status) {
+    const progressArea = document.querySelector('.detection-progress-area');
+    const resultsArea = document.querySelector('.detection-results-area');
+    const resultStatus = document.querySelector('.result-status');
+
+    if (progressArea) progressArea.style.display = 'none';
+    if (resultsArea) resultsArea.style.display = 'flex';
+
+    if (resultStatus && status.error) {
+      resultStatus.classList.remove('success');
+      resultStatus.classList.add('error');
+      resultStatus.textContent = '✗ 检测异常';
+    } else if (resultStatus) {
+      resultStatus.classList.remove('error');
+      resultStatus.classList.add('success');
+      resultStatus.textContent = '✓ 检测完成';
+    }
+
+    // 更新结果显示
+    const results = status.results || {};
+    const totalSamples = document.getElementById('result-total-samples');
+    const highConfidence = document.getElementById('result-high-confidence');
+    const lowConfidence = document.getElementById('result-low-confidence');
+    const inferenceTime = document.getElementById('result-inference-time');
+
+    if (totalSamples) totalSamples.textContent = results.total_samples || 0;
+    if (highConfidence) highConfidence.textContent = results.high_confidence || 0;
+    if (lowConfidence) lowConfidence.textContent = results.low_confidence || 0;
+    if (inferenceTime) inferenceTime.textContent = `${results.inference_time || 0}ms`;
+
+    this.logToConsole('检测完成', 'success');
+  }
+
+  showDetectionError(errorMessage) {
+    const resultsArea = document.querySelector('.detection-results-area');
+    const progressArea = document.querySelector('.detection-progress-area');
+    const resultStatus = document.querySelector('.result-status');
+
+    if (progressArea) progressArea.style.display = 'none';
+    if (resultsArea) {
+      resultsArea.style.display = 'flex';
+      if (resultStatus) {
+        resultStatus.classList.remove('success');
+        resultStatus.classList.add('error');
+        resultStatus.textContent = '✗ 检测失败';
+      }
+    }
+  }
+
+  resetDetectionUI() {
+    const progressArea = document.querySelector('.detection-progress-area');
+    const resultsArea = document.querySelector('.detection-results-area');
+    const progressFill = document.querySelector('.progress-fill');
+    const progressPercent = document.querySelector('.progress-percent');
+    const progressMessage = document.getElementById('progress-message');
+    const modeButtons = document.querySelectorAll('.mode-btn');
+
+    if (progressArea) progressArea.style.display = 'none';
+    if (resultsArea) resultsArea.style.display = 'none';
+    if (progressFill) progressFill.style.width = '0%';
+    if (progressPercent) progressPercent.textContent = '0%';
+    if (progressMessage) progressMessage.textContent = '准备就绪';
+    
+    // 清除活跃的模式按钮
+    modeButtons.forEach(btn => btn.classList.remove('active'));
+
+    this.logToConsole('检测已重置', 'info');
+  }
+
 
   switchPage(pageName) {
     this.currentPage = pageName;

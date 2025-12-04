@@ -2,14 +2,17 @@
 class UnrealEngineAPIManager {
   constructor() {
     this.baseUrl = "http://10.30.2.11:30010/remote/object/call";
+    this.method = "PUT";  // UE Remote Control API 官方文档规范：使用 PUT 方法调用函数
     this.headers = {
       "Content-Type": "application/json",
     };
 
-    // 运行时路径配置 - 更新为与(1).py文件一致的路径
-    this.droneActorPath = "/Game/NewMap.NewMap:PersistentLevel.NewMap_C_0"; // 更新为新的无人机路径
+    // 运行时路径配置 - 使用关卡蓝图路径（推荐）
+    // PIE模式路径: /Game/UEDPIE_0_NewMap.NewMap:PersistentLevel.NewMap_C_3
+    // 打包后路径: /Game/NewMap.NewMap:PersistentLevel.NewMap_C_3
+    this.droneActorPath = "/Game/UEDPIE_0_NewMap.NewMap:PersistentLevel.NewMap_C_3"; // 关卡蓝图路径
     this.levelScriptActorPath =
-      "/Game/NewMap.NewMap:PersistentLevel.NewMap_C_0";
+      "/Game/UEDPIE_0_NewMap.NewMap:PersistentLevel.NewMap_C_3"; // 关卡蓝图路径
 
     // 预定义的位置坐标
     this.locations = {
@@ -33,7 +36,7 @@ class UnrealEngineAPIManager {
       console.log("发送参数:", parameters);
 
       const response = await fetch(this.baseUrl, {
-        method: "PUT",
+        method: this.method,  // 使用 PUT 方法（UE官方规范）
         headers: this.headers,
         body: JSON.stringify(payload),
       });
@@ -278,6 +281,119 @@ class UnrealEngineAPIManager {
   // 获取车辆状态 (Vehicle Scenario)
   async getVehicleStatus() {
     return await this.sendRequest(this.droneActorPath, "GetVehicleStatus", {});
+  }
+
+  // ==================== 基站灯光控制方法 ====================
+  
+  // 基站灯光对象路径（根据UE API规范）
+  getBaseStationLightPaths() {
+    return {
+      light1: "/Game/NewMap.NewMap:PersistentLevel.light_C_UAID_A0AD9F0755B9CFA302_2066102057",
+      light2: "/Game/NewMap.NewMap:PersistentLevel.light_C_UAID_A0AD9F0755B9D2A302_1321381589",
+      light3: "/Game/NewMap.NewMap:PersistentLevel.light_C_UAID_A0AD9F0755B9D2A302_1393896590"
+    };
+  }
+
+  // 改变基站灯光颜色
+  // lightIndex: 1, 2, 3 (单个灯) 或 0 (全部灯)
+  // colorCode: 0=红, 1=绿, 2=黄
+  async changeBaseStationLight(lightIndex, colorCode) {
+    const lightPaths = this.getBaseStationLightPaths();
+    
+    if (lightIndex === 0) {
+      // 改变所有灯光
+      const results = [];
+      for (let i = 1; i <= 3; i++) {
+        const result = await this.sendRequest(
+          lightPaths[`light${i}`],
+          "ChangeColorAPI",
+          { Active: colorCode }
+        );
+        results.push(result);
+      }
+      return { 
+        success: results.every(r => r.success), 
+        results: results 
+      };
+    } else if (lightIndex >= 1 && lightIndex <= 3) {
+      // 改变单个灯光
+      return await this.sendRequest(
+        lightPaths[`light${lightIndex}`],
+        "ChangeColorAPI",
+        { Active: colorCode }
+      );
+    } else {
+      return { 
+        success: false, 
+        error: "无效的灯光索引，应该是0-3" 
+      };
+    }
+  }
+
+  // 设置基站灯光为绿色（正常状态）
+  async setBaseStationGreen(lightIndex = 0) {
+    console.log(`设置基站灯光${lightIndex === 0 ? "全部" : lightIndex}为绿色`);
+    return await this.changeBaseStationLight(lightIndex, 1); // 1 = 绿色
+  }
+
+  // 设置基站灯光为红色（错误/检测中状态）
+  async setBaseStationRed(lightIndex = 0) {
+    console.log(`设置基站灯光${lightIndex === 0 ? "全部" : lightIndex}为红色`);
+    return await this.changeBaseStationLight(lightIndex, 0); // 0 = 红色
+  }
+
+  // 设置基站灯光为黄色（警告/处理中状态）
+  async setBaseStationYellow(lightIndex = 0) {
+    console.log(`设置基站灯光${lightIndex === 0 ? "全部" : lightIndex}为黄色`);
+    return await this.changeBaseStationLight(lightIndex, 2); // 2 = 黄色
+  }
+
+  // 根据状态自动设置灯光颜色
+  // status: "idle" (绿) | "detecting" (黄) | "sending" (红) | "error" (红)
+  async setBaseStationStatusLight(lightIndex, status) {
+    let colorCode;
+    switch (status) {
+      case "idle":
+        colorCode = 1; // 绿色
+        break;
+      case "detecting":
+        colorCode = 2; // 黄色
+        break;
+      case "sending":
+      case "error":
+        colorCode = 0; // 红色
+        break;
+      default:
+        return { success: false, error: `未知状态: ${status}` };
+    }
+    
+    console.log(`设置基站灯光${lightIndex}状态为${status}`);
+    return await this.changeBaseStationLight(lightIndex, colorCode);
+  }
+
+  // 灯光闪烁效果
+  async blinkBaseStationLight(lightIndex, colorCode, count = 3, interval = 300) {
+    console.log(`基站灯光${lightIndex}闪烁${count}次`);
+    
+    const results = [];
+    for (let i = 0; i < count; i++) {
+      const onResult = await this.changeBaseStationLight(lightIndex, colorCode);
+      results.push(onResult);
+      
+      await new Promise(resolve => setTimeout(resolve, interval));
+      
+      const offResult = await this.changeBaseStationLight(lightIndex, 1); // 恢复为绿色
+      results.push(offResult);
+      
+      if (i < count - 1) {
+        await new Promise(resolve => setTimeout(resolve, interval));
+      }
+    }
+    
+    return {
+      success: results.every(r => r.success),
+      results: results
+    };
   }
 }
 

@@ -728,15 +728,231 @@
               </div>
             </div>
           </div>
+
+          <!-- 自动驾驶场景页面 -->
+          <div class="main-content vehicle-scenario-content" style="display: none;" id="vehicle-scenario-content">
+            <div class="scenario-container">
+              <!-- 基站运维卡片 -->
+              <div class="station-maintenance-card">
+                <div class="card-header">
+                  <h3><i class="fas fa-tools"></i> 基站运维</h3>
+                </div>
+                <div class="card-content">
+                  <!-- 检测模式选择 -->
+                  <div class="detection-mode-selector">
+                    <label>选择检测模式:</label>
+                    <div class="mode-buttons">
+                      <button class="mode-btn active" data-mode="auto">
+                        <i class="fas fa-play"></i> 开始检测
+                      </button>
+                      <button class="mode-btn" data-mode="example">
+                        <i class="fas fa-database"></i> 案例检测
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- 检测进度区域 -->
+                  <div class="detection-progress-area" style="display: none;">
+                    <div class="progress-header">
+                      <h4>检测进行中...</h4>
+                      <span class="progress-status">准备中</span>
+                    </div>
+                    <div class="progress-bar-container">
+                      <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                      </div>
+                      <span class="progress-percent">0%</span>
+                    </div>
+                    <div class="progress-detail">
+                      <p id="progress-message">正在初始化检测任务...</p>
+                    </div>
+                  </div>
+
+                  <!-- 检测结果区域 -->
+                  <div class="detection-results-area" style="display: none;">
+                    <div class="results-header">
+                      <h4>检测结果</h4>
+                      <span class="result-status success">✓ 检测完成</span>
+                    </div>
+                    <div class="results-content">
+                      <div class="result-item">
+                        <span class="result-label">总样本数:</span>
+                        <span class="result-value" id="result-total-samples">0</span>
+                      </div>
+                      <div class="result-item">
+                        <span class="result-label">高置信度:</span>
+                        <span class="result-value high-confidence" id="result-high-confidence">0</span>
+                      </div>
+                      <div class="result-item">
+                        <span class="result-label">低置信度:</span>
+                        <span class="result-value low-confidence" id="result-low-confidence">0</span>
+                      </div>
+                      <div class="result-item">
+                        <span class="result-label">推理耗时:</span>
+                        <span class="result-value" id="result-inference-time">0ms</span>
+                      </div>
+                    </div>
+                    <button class="action-btn primary-btn" id="reset-detection-btn">
+                      <i class="fas fa-redo"></i> 重新检测
+                    </button>
+                  </div>
+
+                  <!-- 灯光控制区域（新增） -->
+                  <div class="light-control-area" style="display: none;">
+                    <div class="control-header">
+                      <h4><i class="fas fa-lightbulb"></i> 基站灯光控制</h4>
+                    </div>
+                    <div class="light-controls">
+                      <!-- 单个灯光控制 -->
+                      <div class="light-control-group">
+                        <label>灯光选择:</label>
+                        <div class="light-selector">
+                          <button class="light-select-btn active" data-light="all">
+                            <i class="fas fa-circle"></i> 全部灯光
+                          </button>
+                          <button class="light-select-btn" data-light="1">
+                            <i class="fas fa-circle"></i> 灯光1
+                          </button>
+                          <button class="light-select-btn" data-light="2">
+                            <i class="fas fa-circle"></i> 灯光2
+                          </button>
+                          <button class="light-select-btn" data-light="3">
+                            <i class="fas fa-circle"></i> 灯光3
+                          </button>
+                        </div>
+                      </div>
+
+                      <!-- 颜色控制 -->
+                      <div class="light-control-group">
+                        <label>灯光颜色:</label>
+                        <div class="color-buttons">
+                          <button class="color-btn red-btn" data-color="0" title="红色 - 错误/检测中">
+                            <i class="fas fa-circle"></i> 红色
+                          </button>
+                          <button class="color-btn green-btn" data-color="1" title="绿色 - 正常/空闲">
+                            <i class="fas fa-circle"></i> 绿色
+                          </button>
+                          <button class="color-btn yellow-btn" data-color="2" title="黄色 - 警告/处理中">
+                            <i class="fas fa-circle"></i> 黄色
+                          </button>
+                        </div>
+                      </div>
+
+                      <!-- 高级操作 -->
+                      <div class="light-control-group">
+                        <label>高级操作:</label>
+                        <div class="advanced-buttons">
+                          <button class="action-btn" id="light-blink-btn">
+                            <i class="fas fa-heart-pulse"></i> 闪烁
+                          </button>
+                          <button class="action-btn" id="light-sequence-btn">
+                            <i class="fas fa-wave-square"></i> 序列点亮
+                          </button>
+                          <button class="action-btn" id="light-test-btn">
+                            <i class="fas fa-check-circle"></i> 测试连接
+                          </button>
+                        </div>
+                      </div>
+
+                      <!-- 灯光状态显示 -->
+                      <div class="light-status-display">
+                        <p>当前灯光状态:</p>
+                        <div class="status-items">
+                          <div class="status-item">
+                            <span class="status-name">灯光1:</span>
+                            <span class="status-color" id="light1-status">
+                              <i class="fas fa-circle"></i> 绿色
+                            </span>
+                          </div>
+                          <div class="status-item">
+                            <span class="status-name">灯光2:</span>
+                            <span class="status-color" id="light2-status">
+                              <i class="fas fa-circle"></i> 绿色
+                            </span>
+                          </div>
+                          <div class="status-item">
+                            <span class="status-name">灯光3:</span>
+                            <span class="status-color" id="light3-status">
+                              <i class="fas fa-circle"></i> 绿色
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 灯光控制面板（可选的独立卡片） -->
+              <div class="light-control-card" style="display: none;">
+                <div class="card-header">
+                  <h3><i class="fas fa-lightbulb"></i> 灯光控制面板</h3>
+                </div>
+                <div class="card-content">
+                  <div class="light-panel">
+                    <!-- 灯光指示器 -->
+                    <div class="light-indicators">
+                      <div class="indicator-group">
+                        <div class="light-indicator" id="indicator-light1">
+                          <div class="light-bulb green"></div>
+                          <p>灯光1</p>
+                        </div>
+                      </div>
+                      <div class="indicator-group">
+                        <div class="light-indicator" id="indicator-light2">
+                          <div class="light-bulb green"></div>
+                          <p>灯光2</p>
+                        </div>
+                      </div>
+                      <div class="indicator-group">
+                        <div class="light-indicator" id="indicator-light3">
+                          <div class="light-bulb green"></div>
+                          <p>灯光3</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 快速控制 -->
+                    <div class="quick-controls">
+                      <button class="quick-btn all-green" id="all-green-btn">
+                        <i class="fas fa-circle"></i> 全部绿色
+                      </button>
+                      <button class="quick-btn all-red" id="all-red-btn">
+                        <i class="fas fa-circle"></i> 全部红色
+                      </button>
+                      <button class="quick-btn all-yellow" id="all-yellow-btn">
+                        <i class="fas fa-circle"></i> 全部黄色
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 节点选择卡片 -->
+          <div class="node-selection-card">
+            <div class="card-header">
+              <h3><i class="fas fa-server"></i> 选择检测节点</h3>
+            </div>
+            <div class="card-content">
+              <div class="nodes-grid" id="detection-nodes-grid">
+                <!-- 节点将动态生成 -->
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- JavaScript 模块 -->
     <script src="api-manager.js"></script>
+    <script src="ue-light-manager.js"></script>
     <script src="pixel-streaming.js"></script>
     <script src="ray-cluster-manager.js"></script>
     <script src="file-transfer-manager.js"></script>
+    <script src="js/simplified-flight-manager.js"></script>
+    <script src="js/simplified-flight-ui.js"></script>
     <script src="dashboard-manager.js"></script>
   </body>
 </html>

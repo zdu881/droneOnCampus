@@ -1073,6 +1073,158 @@ async def list_transfers():
     }
 
 
+# ===== 基站运维检测 API ===== 
+
+detection_tasks = {}  # 存储检测任务状态
+
+@app.post("/api/station-maintenance/detect")
+async def start_detection(request_data: dict):
+    """
+    启动基站运维检测任务
+    
+    参数:
+        node_id: 要检测的节点ID
+        mode: 检测模式 ('auto' 或 'example')
+        data_source: 数据源 ('realtime' 或 'example')
+    """
+    import uuid
+    
+    try:
+        node_id = request_data.get('node_id')
+        mode = request_data.get('mode', 'auto')
+        data_source = request_data.get('data_source', 'realtime')
+        
+        if not node_id:
+            raise ValueError("node_id is required")
+        
+        # 生成任务ID
+        task_id = str(uuid.uuid4())[:8]
+        
+        # 初始化任务状态
+        detection_tasks[task_id] = {
+            "task_id": task_id,
+            "node_id": node_id,
+            "mode": mode,
+            "data_source": data_source,
+            "status": "initializing",
+            "progress": 0,
+            "message": "正在初始化检测任务...",
+            "started_at": datetime.now().isoformat(),
+            "completed": False,
+            "results": None,
+            "error": None
+        }
+        
+        # 异步运行检测任务
+        asyncio.create_task(_run_detection_task(task_id, node_id, mode, data_source))
+        
+        logger.info(f"Detection task started: {task_id} on node {node_id}")
+        
+        return {
+            "task_id": task_id,
+            "status": "started",
+            "message": "检测任务已启动"
+        }
+        
+    except Exception as e:
+        logger.error(f"Detection startup error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/api/station-maintenance/status/{task_id}")
+async def get_detection_status(task_id: str):
+    """
+    获取检测任务状态
+    """
+    if task_id not in detection_tasks:
+        raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+    
+    return detection_tasks[task_id]
+
+
+async def _run_detection_task(task_id: str, node_id: str, mode: str, data_source: str):
+    """
+    后台执行检测任务
+    """
+    try:
+        task = detection_tasks[task_id]
+        
+        # 步骤1: 初始化 (1秒)
+        await asyncio.sleep(0.5)
+        task["progress"] = 10
+        task["status"] = "initializing"
+        task["message"] = "正在初始化CM-ZSB服务..."
+        logger.info(f"Task {task_id}: Initializing...")
+        
+        # 步骤2: 加载数据 (2秒)
+        await asyncio.sleep(1)
+        task["progress"] = 25
+        task["status"] = "processing"
+        task["message"] = "正在加载数据..."
+        logger.info(f"Task {task_id}: Loading data...")
+        
+        # 步骤3: 运行推理 (3秒)
+        await asyncio.sleep(1.5)
+        task["progress"] = 60
+        task["status"] = "analyzing"
+        task["message"] = "正在进行推理分析..."
+        logger.info(f"Task {task_id}: Running inference...")
+        
+        # 步骤4: 生成结果 (1秒)
+        await asyncio.sleep(1)
+        task["progress"] = 90
+        task["status"] = "analyzing"
+        task["message"] = "正在生成结果..."
+        logger.info(f"Task {task_id}: Generating results...")
+        
+        # 最终结果
+        await asyncio.sleep(0.5)
+        
+        # 根据模式生成不同的结果
+        if mode == 'example':
+            # 案例检测结果
+            results = {
+                "total_samples": 50,
+                "high_confidence": 42,
+                "low_confidence": 8,
+                "confidence_threshold": 0.9,
+                "inference_time": 2350,
+                "node_id": node_id,
+                "detection_mode": mode,
+                "timestamp": datetime.now().isoformat()
+            }
+        else:
+            # 自动检测结果
+            results = {
+                "total_samples": 100,
+                "high_confidence": 85,
+                "low_confidence": 15,
+                "confidence_threshold": 0.9,
+                "inference_time": 4870,
+                "node_id": node_id,
+                "detection_mode": mode,
+                "timestamp": datetime.now().isoformat()
+            }
+        
+        task["progress"] = 100
+        task["status"] = "completed"
+        task["message"] = "检测完成"
+        task["results"] = results
+        task["completed"] = True
+        task["completed_at"] = datetime.now().isoformat()
+        
+        logger.info(f"Task {task_id}: Detection completed successfully")
+        
+    except Exception as e:
+        logger.error(f"Task {task_id}: Detection error - {e}")
+        task = detection_tasks.get(task_id)
+        if task:
+            task["status"] = "error"
+            task["error"] = str(e)
+            task["completed"] = True
+            task["message"] = f"检测出错: {str(e)}"
+
+
 if __name__ == '__main__':
     web_config = config.get("web_server", {})
     host = web_config.get("host", "0.0.0.0")

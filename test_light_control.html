@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UE 灯光控制测试页面</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1d23 0%, #2a2d35 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #404454;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: #00d4ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .header p {
+            color: #b4b8c1;
+            font-size: 14px;
+        }
+
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .test-card {
+            background: rgba(42, 45, 53, 0.95);
+            border: 1px solid #404454;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #00d4ff;
+        }
+
+        .test-section {
+            margin-bottom: 20px;
+        }
+
+        .test-section label {
+            display: block;
+            margin-bottom: 10px;
+            color: #b4b8c1;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: 2px solid #404454;
+            background: #3a3d45;
+            color: #ffffff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        button:hover {
+            background: #00d4ff;
+            border-color: #00d4ff;
+            color: #1a1d23;
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
+        }
+
+        button.red {
+            border-color: #ff6b6b;
+            color: #ff6b6b;
+        }
+
+        button.red:hover {
+            background: #ff6b6b;
+            color: #1a1d23;
+        }
+
+        button.green {
+            border-color: #51cf66;
+            color: #51cf66;
+        }
+
+        button.green:hover {
+            background: #51cf66;
+            color: #1a1d23;
+        }
+
+        button.yellow {
+            border-color: #ffd93d;
+            color: #ffd93d;
+        }
+
+        button.yellow:hover {
+            background: #ffd93d;
+            color: #1a1d23;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        input {
+            flex: 1;
+            padding: 8px 12px;
+            background: #3a3d45;
+            border: 1px solid #404454;
+            color: #ffffff;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+        }
+
+        .console {
+            background: #1a1d23;
+            border: 1px solid #404454;
+            border-radius: 12px;
+            padding: 20px;
+            height: 400px;
+            overflow-y: auto;
+            font-family: "Monaco", "Courier New", monospace;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .console-line {
+            margin-bottom: 8px;
+            padding: 4px 8px;
+            border-left: 3px solid transparent;
+            border-radius: 2px;
+        }
+
+        .console-line.info {
+            color: #00d4ff;
+            border-left-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .console-line.success {
+            color: #51cf66;
+            border-left-color: #51cf66;
+            background: rgba(81, 207, 102, 0.1);
+        }
+
+        .console-line.error {
+            color: #ff6b6b;
+            border-left-color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+        }
+
+        .console-line.warning {
+            color: #ffd93d;
+            border-left-color: #ffd93d;
+            background: rgba(255, 217, 61, 0.1);
+        }
+
+        .status-display {
+            background: #3a3d45;
+            border: 1px solid #404454;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #404454;
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-label {
+            color: #b4b8c1;
+            font-size: 12px;
+        }
+
+        .status-value {
+            color: #00d4ff;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .light-indicator {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-left: 8px;
+            border: 2px solid #404454;
+        }
+
+        .light-indicator.green {
+            background: #51cf66;
+            border-color: #51cf66;
+            box-shadow: 0 0 10px rgba(81, 207, 102, 0.5);
+        }
+
+        .light-indicator.red {
+            background: #ff6b6b;
+            border-color: #ff6b6b;
+            box-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+        }
+
+        .light-indicator.yellow {
+            background: #ffd93d;
+            border-color: #ffd93d;
+            box-shadow: 0 0 10px rgba(255, 217, 61, 0.5);
+        }
+
+        @media (max-width: 768px) {
+            .test-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1a1d23;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #404454;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #505568;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 页面头部 -->
+        <div class="header">
+            <h1>
+                <i class="fas fa-lightbulb"></i>
+                UE 灯光控制测试面板
+            </h1>
+            <p>基站灯光UE API集成测试工具 - 支持红/绿/黄三色灯光控制</p>
+        </div>
+
+        <!-- 测试区域 -->
+        <div class="test-grid">
+            <!-- 单个灯光控制卡片 -->
+            <div class="test-card">
+                <div class="card-title">
+                    <i class="fas fa-circle"></i> 单个灯光控制
+                </div>
+
+                <div class="test-section">
+                    <label>选择灯光:</label>
+                    <div class="button-group">
+                        <button onclick="selectLight(1)">灯光 1</button>
+                        <button onclick="selectLight(2)">灯光 2</button>
+                        <button onclick="selectLight(3)">灯光 3</button>
+                        <button onclick="selectLight(0)">全部灯光</button>
+                    </div>
+                </div>
+
+                <div class="test-section">
+                    <label>设置颜色:</label>
+                    <div class="button-group">
+                        <button class="red" onclick="setLightColor(0)">
+                            <i class="fas fa-circle"></i> 红色
+                        </button>
+                        <button class="green" onclick="setLightColor(1)">
+                            <i class="fas fa-circle"></i> 绿色
+                        </button>
+                        <button class="yellow" onclick="setLightColor(2)">
+                            <i class="fas fa-circle"></i> 黄色
+                        </button>
+                    </div>
+                </div>
+
+                <div class="test-section">
+                    <label>高级操作:</label>
+                    <div class="button-group">
+                        <button onclick="testBlink()">
+                            <i class="fas fa-heart-pulse"></i> 闪烁
+                        </button>
+                        <button onclick="testSequence()">
+                            <i class="fas fa-wave-square"></i> 序列
+                        </button>
+                    </div>
+                </div>
+
+                <div class="status-display">
+                    <div class="status-item">
+                        <span class="status-label">选中灯光:</span>
+                        <span class="status-value" id="selected-light">全部灯光</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">API连接:</span>
+                        <span class="status-value" id="connection-status">
+                            <i class="fas fa-circle light-indicator red"></i> 未连接
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 快速操作卡片 -->
+            <div class="test-card">
+                <div class="card-title">
+                    <i class="fas fa-bolt"></i> 快速操作
+                </div>
+
+                <div class="test-section">
+                    <label>一键控制:</label>
+                    <div class="button-group">
+                        <button class="green" onclick="quickGreen()">
+                            全部 绿色
+                        </button>
+                        <button class="red" onclick="quickRed()">
+                            全部 红色
+                        </button>
+                        <button class="yellow" onclick="quickYellow()">
+                            全部 黄色
+                        </button>
+                    </div>
+                </div>
+
+                <div class="test-section">
+                    <label>测试操作:</label>
+                    <div class="button-group">
+                        <button onclick="testConnection()">
+                            <i class="fas fa-check-circle"></i> 测试连接
+                        </button>
+                        <button onclick="clearConsole()">
+                            <i class="fas fa-trash"></i> 清空日志
+                        </button>
+                    </div>
+                </div>
+
+                <div class="status-display">
+                    <div class="status-item">
+                        <span class="status-label">灯光1:</span>
+                        <span class="status-value">
+                            绿色
+                            <span class="light-indicator green"></span>
+                        </span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">灯光2:</span>
+                        <span class="status-value">
+                            绿色
+                            <span class="light-indicator green"></span>
+                        </span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">灯光3:</span>
+                        <span class="status-value">
+                            绿色
+                            <span class="light-indicator green"></span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 自定义操作卡片 -->
+            <div class="test-card">
+                <div class="card-title">
+                    <i class="fas fa-sliders"></i> 自定义操作
+                </div>
+
+                <div class="test-section">
+                    <label>批量操作:</label>
+                    <div class="button-group">
+                        <button onclick="testAllColors()">
+                            <i class="fas fa-palette"></i> 循环颜色
+                        </button>
+                        <button onclick="testBlinkAll()">
+                            <i class="fas fa-circle-notch"></i> 全部闪烁
+                        </button>
+                    </div>
+                </div>
+
+                <div class="test-section">
+                    <label>配置参数:</label>
+                    <div class="input-group">
+                        <input type="number" id="blink-count" placeholder="闪烁次数" value="3" min="1" max="10">
+                        <button onclick="updateBlinkCount()">更新</button>
+                    </div>
+                    <div class="input-group">
+                        <input type="number" id="blink-interval" placeholder="闪烁间隔(ms)" value="300" min="100" max="1000">
+                        <button onclick="updateBlinkInterval()">更新</button>
+                    </div>
+                </div>
+
+                <div class="status-display">
+                    <div class="status-item">
+                        <span class="status-label">闪烁配置:</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">次数:</span>
+                        <span class="status-value" id="config-count">3</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">间隔:</span>
+                        <span class="status-value" id="config-interval">300ms</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 控制台输出 -->
+        <div>
+            <h3 style="margin-bottom: 15px; color: #00d4ff; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-terminal"></i>
+                控制台输出
+            </h3>
+            <div class="console" id="console"></div>
+        </div>
+    </div>
+
+    <script src="api-manager.js"></script>
+    <script src="ue-light-manager.js"></script>
+    <script>
+        let selectedLight = 0;
+        let blinkCount = 3;
+        let blinkInterval = 300;
+
+        function logToConsole(message, type = 'info') {
+            const console = document.getElementById('console');
+            const line = document.createElement('div');
+            line.className = `console-line ${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            line.textContent = `[${timestamp}] ${message}`;
+            console.appendChild(line);
+            console.scrollTop = console.scrollHeight;
+        }
+
+        function clearConsole() {
+            document.getElementById('console').innerHTML = '';
+            logToConsole('控制台已清空', 'info');
+        }
+
+        function selectLight(lightIndex) {
+            selectedLight = lightIndex;
+            const names = ['全部灯光', '灯光 1', '灯光 2', '灯光 3'];
+            document.getElementById('selected-light').textContent = names[lightIndex];
+            logToConsole(`已选择: ${names[lightIndex]}`, 'info');
+        }
+
+        async function setLightColor(colorCode) {
+            const colorNames = ['红色', '绿色', '黄色'];
+            logToConsole(`正在设置灯光颜色为 ${colorNames[colorCode]}...`, 'info');
+
+            try {
+                let result;
+                if (selectedLight === 0) {
+                    result = await window.ueApiManager.changeBaseStationLight(0, colorCode);
+                } else {
+                    result = await window.ueApiManager.changeBaseStationLight(selectedLight, colorCode);
+                }
+
+                if (result.success) {
+                    logToConsole(`✓ 灯光颜色设置成功 - ${colorNames[colorCode]}`, 'success');
+                    updateConnectionStatus(true);
+                } else {
+                    logToConsole(`✗ 灯光颜色设置失败: ${result.error}`, 'error');
+                    updateConnectionStatus(false);
+                }
+            } catch (error) {
+                logToConsole(`✗ 异常: ${error.message}`, 'error');
+                updateConnectionStatus(false);
+            }
+        }
+
+        async function testBlink() {
+            logToConsole(`开始闪烁测试 (${blinkCount}次, ${blinkInterval}ms间隔)...`, 'info');
+
+            try {
+                let result;
+                if (selectedLight === 0) {
+                    result = await window.ueApiManager.blinkBaseStationLight(0, 0, blinkCount, blinkInterval);
+                } else {
+                    result = await window.ueApiManager.blinkBaseStationLight(selectedLight, 0, blinkCount, blinkInterval);
+                }
+
+                if (result.success) {
+                    logToConsole(`✓ 闪烁测试完成`, 'success');
+                } else {
+                    logToConsole(`✗ 闪烁测试失败`, 'error');
+                }
+            } catch (error) {
+                logToConsole(`✗ 异常: ${error.message}`, 'error');
+            }
+        }
+
+        async function testSequence() {
+            logToConsole('执行灯光序列...', 'info');
+
+            try {
+                // 全部设为绿色
+                await window.ueApiManager.setBaseStationGreen(0);
+                await delay(500);
+
+                // 依次设为红色
+                for (let i = 1; i <= 3; i++) {
+                    await window.ueApiManager.setBaseStationRed(i);
+                    await delay(500);
+                    await window.ueApiManager.setBaseStationGreen(i);
+                    await delay(300);
+                }
+
+                logToConsole(`✓ 灯光序列执行完成`, 'success');
+            } catch (error) {
+                logToConsole(`✗ 序列执行失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function quickGreen() {
+            logToConsole('设置全部灯光为绿色...', 'info');
+            try {
+                await window.ueApiManager.setBaseStationGreen(0);
+                logToConsole('✓ 全部灯光已设为绿色', 'success');
+                updateConnectionStatus(true);
+            } catch (error) {
+                logToConsole(`✗ 失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function quickRed() {
+            logToConsole('设置全部灯光为红色...', 'info');
+            try {
+                await window.ueApiManager.setBaseStationRed(0);
+                logToConsole('✓ 全部灯光已设为红色', 'success');
+                updateConnectionStatus(true);
+            } catch (error) {
+                logToConsole(`✗ 失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function quickYellow() {
+            logToConsole('设置全部灯光为黄色...', 'info');
+            try {
+                await window.ueApiManager.setBaseStationYellow(0);
+                logToConsole('✓ 全部灯光已设为黄色', 'success');
+                updateConnectionStatus(true);
+            } catch (error) {
+                logToConsole(`✗ 失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function testConnection() {
+            logToConsole('测试UE灯光API连接...', 'info');
+            try {
+                const result = await window.ueApiManager.testConnection();
+                if (result.success) {
+                    logToConsole('✓ UE灯光API连接成功', 'success');
+                    updateConnectionStatus(true);
+                } else {
+                    logToConsole('✗ UE灯光API连接失败', 'error');
+                    updateConnectionStatus(false);
+                }
+            } catch (error) {
+                logToConsole(`✗ 连接测试异常: ${error.message}`, 'error');
+                updateConnectionStatus(false);
+            }
+        }
+
+        async function testAllColors() {
+            logToConsole('开始循环颜色测试...', 'info');
+            const colors = [0, 1, 2];
+            const colorNames = ['红色', '绿色', '黄色'];
+
+            try {
+                for (const color of colors) {
+                    await window.ueApiManager.changeBaseStationLight(0, color);
+                    logToConsole(`设置为 ${colorNames[color]}`, 'info');
+                    await delay(1000);
+                }
+                logToConsole('✓ 颜色循环测试完成', 'success');
+            } catch (error) {
+                logToConsole(`✗ 失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function testBlinkAll() {
+            logToConsole('全部灯光闪烁测试...', 'info');
+            try {
+                for (let i = 1; i <= 3; i++) {
+                    await window.ueApiManager.blinkBaseStationLight(i, 0, blinkCount, blinkInterval);
+                    if (i < 3) await delay(500);
+                }
+                logToConsole('✓ 全部灯光闪烁测试完成', 'success');
+            } catch (error) {
+                logToConsole(`✗ 失败: ${error.message}`, 'error');
+            }
+        }
+
+        function updateBlinkCount() {
+            const input = document.getElementById('blink-count');
+            blinkCount = parseInt(input.value) || 3;
+            document.getElementById('config-count').textContent = blinkCount;
+            logToConsole(`闪烁次数已更新为: ${blinkCount}`, 'info');
+        }
+
+        function updateBlinkInterval() {
+            const input = document.getElementById('blink-interval');
+            blinkInterval = parseInt(input.value) || 300;
+            document.getElementById('config-interval').textContent = `${blinkInterval}ms`;
+            logToConsole(`闪烁间隔已更新为: ${blinkInterval}ms`, 'info');
+        }
+
+        function updateConnectionStatus(isConnected) {
+            const statusEl = document.getElementById('connection-status');
+            if (isConnected) {
+                statusEl.innerHTML = '<i class="fas fa-circle light-indicator green"></i> 已连接';
+            } else {
+                statusEl.innerHTML = '<i class="fas fa-circle light-indicator red"></i> 连接失败';
+            }
+        }
+
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // 初始化
+        window.addEventListener('DOMContentLoaded', () => {
+            selectLight(0);
+            logToConsole('UE 灯光控制测试面板已就绪', 'success');
+            logToConsole('提示: 确保UE服务器运行在 http://10.30.2.11:30010', 'info');
+        });
+    </script>
+</body>
+</html>

@@ -2567,7 +2567,316 @@ input[type="number"]:focus {
   }
 }
 
-@media (max-width: 768px) {
+/* ===== 自动驾驶场景 - 基站运维样式 ===== */
+
+.vehicle-scenario-content {
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.scenario-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  max-width: 1400px;
+}
+
+/* 基站运维卡片 */
+.station-maintenance-card {
+  background: linear-gradient(135deg, var(--secondary-bg) 0%, var(--tertiary-bg) 100%);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-lg);
+}
+
+.card-header {
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.card-header h3 {
+  color: var(--text-primary);
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-header h3 i {
+  color: var(--accent-primary);
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 检测模式选择 */
+.detection-mode-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.detection-mode-selector label {
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.mode-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.mode-btn {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: var(--secondary-bg);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.mode-btn:hover {
+  border-color: var(--accent-primary);
+  color: var(--text-primary);
+}
+
+.mode-btn.active {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  border-color: transparent;
+  color: white;
+  box-shadow: var(--glow-primary);
+}
+
+/* 检测进度区域 */
+.detection-progress-area {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.progress-header h4 {
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.progress-status {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.progress-bar-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 8px;
+  background: var(--tertiary-bg);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+  border-radius: 4px;
+  width: 0%;
+  transition: width 0.3s ease;
+  box-shadow: var(--glow-primary);
+}
+
+.progress-percent {
+  color: var(--text-secondary);
+  font-size: 12px;
+  min-width: 40px;
+  text-align: right;
+}
+
+.progress-detail {
+  background: var(--tertiary-bg);
+  padding: 12px;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+}
+
+.progress-detail p {
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin: 0;
+}
+
+/* 检测结果区域 */
+.detection-results-area {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.results-header h4 {
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.result-status {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 4px;
+}
+
+.result-status.success {
+  background: rgba(16, 185, 129, 0.2);
+  color: var(--success-color);
+}
+
+.result-status.error {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--danger-color);
+}
+
+.results-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--tertiary-bg);
+  padding: 15px;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+}
+
+.result-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.result-item:last-child {
+  border-bottom: none;
+}
+
+.result-label {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.result-value {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.result-value.high-confidence {
+  color: var(--success-color);
+}
+
+.result-value.low-confidence {
+  color: var(--warning-color);
+}
+
+#reset-detection-btn {
+  margin-top: 10px;
+}
+
+/* 节点选择卡片 */
+.node-selection-card {
+  background: linear-gradient(135deg, var(--secondary-bg) 0%, var(--tertiary-bg) 100%);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-lg);
+}
+
+.nodes-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.node-item {
+  padding: 12px;
+  background: var(--tertiary-bg);
+  border: 2px solid var(--border-color);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.node-item:hover {
+  border-color: var(--accent-primary);
+  background: rgba(0, 212, 255, 0.05);
+}
+
+.node-item.selected {
+  border-color: var(--accent-primary);
+  background: rgba(0, 212, 255, 0.1);
+  box-shadow: var(--glow-primary);
+}
+
+.node-item-icon {
+  font-size: 20px;
+  color: var(--accent-primary);
+}
+
+.node-item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.node-item-name {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.node-item-status {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+@media (max-width: 1024px) {
+  .scenario-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+
   .properties-panel {
     position: absolute;
     right: 0;
@@ -2604,6 +2913,1302 @@ input[type="number"]:focus {
   }
   
   .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==================== 灯光控制样式 ==================== */
+
+/* 灯光控制区域 */
+.light-control-area {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
+}
+
+.control-header {
+  margin-bottom: 20px;
+}
+
+.control-header h4 {
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.control-header i {
+  color: var(--accent-primary);
+  font-size: 16px;
+}
+
+/* 灯光控制组 */
+.light-control-group {
+  margin-bottom: 20px;
+}
+
+.light-control-group label {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* 灯光选择器 */
+.light-selector {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.light-select-btn {
+  padding: 8px 12px;
+  border: 2px solid var(--border-color);
+  background: var(--secondary-bg);
+  color: var(--text-secondary);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.light-select-btn:hover {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.light-select-btn.active {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: var(--primary-bg);
+}
+
+.light-select-btn i {
+  font-size: 10px;
+}
+
+/* 颜色按钮 */
+.color-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.color-btn {
+  padding: 12px 16px;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 红色按钮 */
+.color-btn.red-btn {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ff6b6b;
+  border-color: #ff6b6b;
+}
+
+.color-btn.red-btn:hover {
+  background: rgba(239, 68, 68, 0.25);
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+  transform: translateY(-2px);
+}
+
+.color-btn.red-btn i {
+  color: #ff6b6b;
+}
+
+/* 绿色按钮 */
+.color-btn.green-btn {
+  background: rgba(16, 185, 129, 0.15);
+  color: #51cf66;
+  border-color: #51cf66;
+}
+
+.color-btn.green-btn:hover {
+  background: rgba(16, 185, 129, 0.25);
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+  transform: translateY(-2px);
+}
+
+.color-btn.green-btn i {
+  color: #51cf66;
+}
+
+/* 黄色按钮 */
+.color-btn.yellow-btn {
+  background: rgba(245, 158, 11, 0.15);
+  color: #ffd93d;
+  border-color: #ffd93d;
+}
+
+.color-btn.yellow-btn:hover {
+  background: rgba(245, 158, 11, 0.25);
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+  transform: translateY(-2px);
+}
+
+.color-btn.yellow-btn i {
+  color: #ffd93d;
+}
+
+/* 高级按钮 */
+.advanced-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+#light-blink-btn,
+#light-sequence-btn,
+#light-test-btn {
+  padding: 10px 12px;
+  background: var(--tertiary-bg);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+#light-blink-btn:hover,
+#light-sequence-btn:hover,
+#light-test-btn:hover {
+  background: var(--accent-primary);
+  color: var(--primary-bg);
+  border-color: var(--accent-primary);
+  box-shadow: var(--glow-primary);
+  transform: translateY(-2px);
+}
+
+/* 灯光状态显示 */
+.light-status-display {
+  margin-top: 20px;
+  padding: 15px;
+  background: var(--secondary-bg);
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+.light-status-display p {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-items {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  background: var(--tertiary-bg);
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+}
+
+.status-name {
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.status-color {
+  color: var(--text-primary);
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.status-color i {
+  font-size: 8px;
+}
+
+/* 绿色状态 */
+.status-color.green i {
+  color: #51cf66;
+}
+
+/* 红色状态 */
+.status-color.red i {
+  color: #ff6b6b;
+}
+
+/* 黄色状态 */
+.status-color.yellow i {
+  color: #ffd93d;
+}
+
+/* 灯光控制卡片 */
+.light-control-card {
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.light-control-card .card-header {
+  padding: 16px;
+  background: var(--secondary-bg);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.light-control-card .card-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.light-control-card .card-header i {
+  color: var(--accent-primary);
+  font-size: 16px;
+}
+
+.light-control-card .card-content {
+  padding: 16px;
+}
+
+/* 灯光面板 */
+.light-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 灯光指示器 */
+.light-indicators {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+
+.indicator-group {
+  display: flex;
+  justify-content: center;
+}
+
+.light-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.light-indicator p {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* 灯泡指示器 */
+.light-bulb {
+  width: 40px;
+  height: 50px;
+  border-radius: 50% 50% 40% 40%;
+  border: 2px solid var(--border-color);
+  position: relative;
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.light-bulb::before {
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 8px;
+  background: var(--border-color);
+  border-radius: 2px;
+}
+
+.light-bulb.green {
+  background: #51cf66;
+  border-color: #51cf66;
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.3), 0 0 15px rgba(81, 207, 102, 0.5);
+}
+
+.light-bulb.red {
+  background: #ff6b6b;
+  border-color: #ff6b6b;
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.3), 0 0 15px rgba(255, 107, 107, 0.5);
+}
+
+.light-bulb.yellow {
+  background: #ffd93d;
+  border-color: #ffd93d;
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.3), 0 0 15px rgba(255, 217, 61, 0.5);
+}
+
+/* 快速控制 */
+.quick-controls {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color);
+}
+
+.quick-btn {
+  padding: 12px 16px;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.quick-btn.all-green {
+  background: rgba(81, 207, 102, 0.15);
+  color: #51cf66;
+  border-color: #51cf66;
+}
+
+.quick-btn.all-green:hover {
+  background: rgba(81, 207, 102, 0.25);
+  box-shadow: 0 0 15px rgba(81, 207, 102, 0.4);
+  transform: translateY(-2px);
+}
+
+.quick-btn.all-red {
+  background: rgba(255, 107, 107, 0.15);
+  color: #ff6b6b;
+  border-color: #ff6b6b;
+}
+
+.quick-btn.all-red:hover {
+  background: rgba(255, 107, 107, 0.25);
+  box-shadow: 0 0 15px rgba(255, 107, 107, 0.4);
+  transform: translateY(-2px);
+}
+
+.quick-btn.all-yellow {
+  background: rgba(255, 217, 61, 0.15);
+  color: #ffd93d;
+  border-color: #ffd93d;
+}
+
+.quick-btn.all-yellow:hover {
+  background: rgba(255, 217, 61, 0.25);
+  box-shadow: 0 0 15px rgba(255, 217, 61, 0.4);
+  transform: translateY(-2px);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .light-selector {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .color-buttons {
+    grid-template-columns: 1fr;
+  }
+
+  .advanced-buttons {
+    grid-template-columns: 1fr;
+  }
+
+  .status-items {
+    grid-template-columns: 1fr;
+  }
+
+  .light-indicators {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .quick-controls {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== 简化的无人机飞行控制样式 ===== */
+.simple-flight-card {
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  padding: 20px;
+  color: var(--text-primary);
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.simple-flight-card .card-header {
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--accent-primary);
+  padding-bottom: 10px;
+}
+
+.simple-flight-card .card-header h3 {
+  font-size: 1.3em;
+  color: var(--accent-primary);
+  text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+}
+
+/* 飞行部分 */
+.flight-section {
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.flight-section h4 {
+  font-size: 0.95em;
+  color: var(--accent-primary);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+/* 坐标输入 */
+.coordinate-inputs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.coord-input-small {
+  display: flex;
+  flex-direction: column;
+}
+
+.coord-input-small label {
+  font-size: 0.8em;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.coord-input-small input {
+  padding: 6px;
+  background: var(--tertiary-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: 4px;
+  font-size: 0.85em;
+  font-family: "Courier New", monospace;
+  transition: border-color 0.3s ease;
+}
+
+.coord-input-small input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 8px rgba(0, 212, 255, 0.2);
+}
+
+/* 预设选择 */
+.form-control {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--tertiary-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: 4px;
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 8px rgba(0, 212, 255, 0.2);
+}
+
+/* 飞行信息框 */
+.flight-info-box {
+  background: rgba(0, 212, 255, 0.1);
+  border: 1px solid var(--accent-primary);
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 12px;
+  font-size: 0.9em;
+  color: var(--text-secondary);
+  font-family: "Courier New", monospace;
+  line-height: 1.6;
+}
+
+/* 飞行按钮 */
+.flight-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.btn-primary,
+.btn-danger {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  font-weight: 600;
+  font-size: 0.9em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-primary {
+  background: var(--success-color);
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.5);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-danger {
+  background: var(--danger-color);
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+}
+
+.btn-danger:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 0 25px rgba(239, 68, 68, 0.5);
+}
+
+.btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 飞行状态 */
+.flight-state-box {
+  background: var(--tertiary-bg);
+  border-left: 4px solid var(--info-color);
+  border-radius: 4px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-label {
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 0.9em;
+  min-width: 80px;
+}
+
+.status-value {
+  color: var(--text-primary);
+  font-family: "Courier New", monospace;
+  font-weight: 600;
+  flex: 1;
+}
+
+.status-flying {
+  color: var(--warning-color);
+  animation: pulse 1s infinite;
+}
+
+.status-completed {
+  color: var(--success-color);
+}
+
+.status-error {
+  color: var(--danger-color);
+}
+
+.status-stopped {
+  color: var(--text-secondary);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* ===== 无人机路径规划样式 ===== */
+.path-planning-card {
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  padding: 20px;
+  color: var(--text-primary);
+}
+
+.path-planning-card .card-header {
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--accent-primary);
+  padding-bottom: 10px;
+}
+
+.path-planning-card .card-header h3 {
+  font-size: 1.4em;
+  color: var(--accent-primary);
+  text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+}
+
+/* 路径类型按钮 */
+.path-type-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.path-type-btn {
+  padding: 10px 15px;
+  background: var(--secondary-bg);
+  border: 2px solid var(--border-color);
+  color: var(--text-secondary);
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.path-type-btn:hover {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.path-type-btn.active {
+  background: var(--accent-primary);
+  color: var(--primary-bg);
+  border-color: var(--accent-primary);
+  box-shadow: var(--glow-primary);
+}
+
+/* 部分样式 */
+.section {
+  margin: 15px 0;
+}
+
+.section-title {
+  display: block;
+  font-weight: 600;
+  color: var(--accent-primary);
+  margin-bottom: 8px;
+  font-size: 0.95em;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* 表单控件 */
+.form-control,
+select {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: 4px;
+  font-size: 0.9em;
+  transition: border-color 0.3s ease;
+}
+
+.form-control:focus,
+select:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 8px rgba(0, 212, 255, 0.2);
+}
+
+/* 坐标输入 */
+.coordinate-input-group {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.coord-input {
+  display: flex;
+  flex-direction: column;
+}
+
+.coord-input label {
+  font-size: 0.85em;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.coord-input input,
+.coord-input select {
+  padding: 8px;
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.coord-input input:focus,
+.coord-input select:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 8px rgba(0, 212, 255, 0.2);
+}
+
+.coord-input.full {
+  grid-column: 1 / -1;
+}
+
+/* 路径点列表 */
+.waypoints-list {
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 10px;
+  margin: 10px 0;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.waypoint-item {
+  background: var(--tertiary-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background 0.3s ease;
+}
+
+.waypoint-item:hover {
+  background: rgba(0, 212, 255, 0.1);
+  border-color: var(--accent-primary);
+}
+
+.waypoint-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  width: 100%;
+}
+
+.waypoint-index {
+  font-weight: 600;
+  color: var(--accent-primary);
+  min-width: 40px;
+}
+
+.waypoint-coords {
+  display: grid;
+  grid-template-columns: repeat(3, 60px);
+  gap: 5px;
+}
+
+.waypoint-coords input {
+  width: 60px;
+  padding: 4px 6px;
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: 3px;
+  font-size: 0.8em;
+}
+
+.waypoint-coords input:focus {
+  border-color: var(--accent-primary);
+}
+
+.waypoint-advanced {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.waypoint-advanced select,
+.waypoint-advanced input {
+  padding: 4px 6px;
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: 3px;
+  font-size: 0.8em;
+}
+
+.waypoint-advanced select {
+  min-width: 70px;
+}
+
+.waypoint-advanced input {
+  width: 60px;
+}
+
+.delete-waypoint-btn {
+  padding: 4px 8px;
+  background: var(--danger-color);
+  border: none;
+  color: white;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: opacity 0.3s ease;
+}
+
+.delete-waypoint-btn:hover {
+  opacity: 0.8;
+}
+
+/* 路径信息 */
+.path-info {
+  font-size: 0.95em;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* 高级选项 */
+.advanced-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.checkbox-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkbox-input input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--accent-primary);
+}
+
+.checkbox-input label {
+  cursor: pointer;
+  font-size: 0.95em;
+  color: var(--text-secondary);
+}
+
+/* 按钮样式 */
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95em;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--accent-primary);
+  color: var(--primary-bg);
+  box-shadow: var(--glow-primary);
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+}
+
+.btn-success {
+  background: var(--success-color);
+  color: white;
+  box-shadow: var(--glow-success);
+}
+
+.btn-success:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(16, 185, 129, 0.5);
+}
+
+.btn-warning {
+  background: var(--warning-color);
+  color: white;
+  box-shadow: var(--glow-warning);
+}
+
+.btn-warning:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(245, 158, 11, 0.5);
+}
+
+.btn-danger {
+  background: var(--danger-color);
+  color: white;
+  box-shadow: var(--glow-danger);
+}
+
+.btn-danger:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(239, 68, 68, 0.5);
+}
+
+.btn-secondary {
+  background: var(--secondary-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+/* 飞行控制 */
+.flight-controls {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin: 15px 0;
+}
+
+.flight-controls .btn {
+  justify-content: center;
+  width: 100%;
+}
+
+/* 飞行状态 */
+.flight-status {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid var(--success-color);
+  border-radius: 6px;
+  padding: 15px;
+  margin-top: 15px;
+}
+
+.flight-status .status-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  font-size: 0.95em;
+  border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.flight-status .status-item:last-child {
+  border-bottom: none;
+}
+
+.flight-status .status-item label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.flight-status .status-item span {
+  color: var(--text-primary);
+  font-family: "Courier New", monospace;
+}
+
+.flight-state-flying {
+  color: var(--warning-color);
+  font-weight: 600;
+}
+
+.flight-state-completed {
+  color: var(--success-color);
+  font-weight: 600;
+}
+
+.flight-state-error {
+  color: var(--danger-color);
+  font-weight: 600;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .path-type-buttons {
+    grid-template-columns: 1fr;
+  }
+
+  .coordinate-input-group {
+    grid-template-columns: 1fr;
+  }
+
+  .waypoint-coords {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .advanced-options {
+    grid-template-columns: 1fr;
+  }
+
+  .flight-controls {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== 简化版飞行控制样式 ===== */
+.simple-flight-control {
+  margin: 20px 0;
+}
+
+.flight-control-card {
+  background: var(--panel-bg);
+  border: 2px solid var(--accent-primary);
+  border-radius: var(--border-radius-lg);
+  padding: 20px;
+  color: var(--text-primary);
+  box-shadow: var(--glow-primary);
+}
+
+.flight-control-card h3 {
+  font-size: 1.3em;
+  color: var(--accent-primary);
+  margin-bottom: 15px;
+  text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+}
+
+.flight-selection {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.location-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.location-selector label {
+  font-weight: 600;
+  color: var(--accent-primary);
+  font-size: 0.9em;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.location-select {
+  padding: 10px;
+  background: var(--secondary-bg);
+  border: 2px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: 6px;
+  font-size: 0.95em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.location-select:hover {
+  border-color: var(--accent-primary);
+}
+
+.location-select:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+}
+
+.location-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.flight-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.fly-btn {
+  background: var(--success-color);
+  color: white;
+  font-weight: 600;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: var(--glow-success);
+}
+
+.fly-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(16, 185, 129, 0.6);
+}
+
+.fly-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.stop-btn {
+  background: var(--danger-color);
+  color: white;
+  font-weight: 600;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: var(--glow-danger);
+}
+
+.stop-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(239, 68, 68, 0.6);
+}
+
+.stop-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.flight-status-display {
+  background: var(--secondary-bg);
+  border-left: 4px solid var(--info-color);
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.flight-status-display.status-success {
+  border-left-color: var(--success-color);
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.flight-status-display.status-error {
+  border-left-color: var(--danger-color);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.flight-status-display.status-warning {
+  border-left-color: var(--warning-color);
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.flight-status-display.status-info {
+  border-left-color: var(--accent-primary);
+  background: rgba(0, 212, 255, 0.1);
+}
+
+.status-text {
+  color: var(--text-primary);
+  font-size: 0.95em;
+  margin: 0;
+  font-weight: 500;
+}
+
+.flight-info {
+  background: rgba(0, 212, 255, 0.05);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 10px;
+}
+
+.flight-info .info-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  font-size: 0.9em;
+  border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+}
+
+.flight-info .info-item:last-child {
+  border-bottom: none;
+}
+
+.flight-info label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.flight-info span {
+  color: var(--accent-primary);
+  font-family: "Courier New", monospace;
+  font-weight: 600;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .flight-selection {
+    grid-template-columns: 1fr;
+  }
+
+  .flight-buttons {
     grid-template-columns: 1fr;
   }
 }
