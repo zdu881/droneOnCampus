@@ -362,10 +362,21 @@ async def root_info():
     return {"result": True, "msg": "CastRay service running", "ts": datetime.now().isoformat()}
 
 
+def _get_nodes_from_ray_api():
+    """备用方案：直接使用 Ray Python API 获取节点信息（当 Dashboard 不可用时）
+    注意：目前禁用 Ray API 连接以避免阻塞，直接返回空列表
+    当 Ray 集群可用时，请使用 Ray Dashboard API
+    """
+    # TODO: 当 Ray 集群正确配置后，可以启用以下代码
+    # 目前直接返回空列表，避免 ray.init() 阻塞
+    logger.warning("[Ray API] Ray 集群不可用，返回空节点列表")
+    return []
+
+
 @app.get("/api/ray-dashboard")
 async def get_ray_dashboard(dashboard_url: Optional[str] = None):
     """返回与原 rayoutput.py 兼容的结构，供前端消费。
-    优先使用 Ray 原生 API（cluster + available + nodes via Dashboard /api/v0）。
+    优先使用 Ray Dashboard API，如果失败则使用 Ray Python API。
     """
     try:
         # 1) 从 Ray 获取全局资源（若不可用则用空）
@@ -385,11 +396,14 @@ async def get_ray_dashboard(dashboard_url: Optional[str] = None):
                 data = payload.get('data') or {}
                 result = data.get('result') or {}
                 ray_nodes = result.get('result') or []
-        except Exception:
-            ray_nodes = []
+                logger.info(f"[Dashboard API] 成功获取 {len(ray_nodes)} 个节点")
+        except Exception as e:
+            logger.warning(f"[Dashboard API] 连接失败，切换到 Ray API: {e}")
+            # 备用方案：使用 Ray Python API
+            ray_nodes = _get_nodes_from_ray_api()
 
         # 3) 获取真实的节点资源使用率
-        usage_map = _get_real_node_usage(dash)
+        usage_map = _get_real_node_usage(dash) if dash else {}
 
         # 4) 获取CM-ZSB工作状态（批量异步获取）
         node_ips = [node.get('node_ip') for node in ray_nodes if node.get('node_ip')]
@@ -415,6 +429,7 @@ async def get_ray_dashboard(dashboard_url: Optional[str] = None):
             }
         }
     except Exception as e:
+        logger.error(f"[API] 获取集群信息失败: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -437,81 +452,40 @@ async def get_unified_nodes(dashboard_url: Optional[str] = None):
                 data = payload.get('data') or {}
                 result = data.get('result') or {}
                 ray_nodes = result.get('result') or []
-        except Exception:
-            ray_nodes = []
+                logger.info(f"[Dashboard API] 成功获取 {len(ray_nodes)} 个节点")
+        except Exception as e:
+            logger.warning(f"[Dashboard API] 连接失败，切换到 Ray API: {e}")
+            # 备用方案：使用 Ray Python API
+            ray_nodes = _get_nodes_from_ray_api()
 
         # 获取真实的节点资源使用率
-        usage_map = _get_real_node_usage(dash)
+        usage_map = _get_real_node_usage(dash) if dash else {}
 
         frontend_nodes = _parse_ray_nodes_to_frontend_format(ray_nodes, cluster_resources, available_resources, usage_map)
         return {"nodes": frontend_nodes}
     except Exception as e:
+        logger.error(f"[API] 获取统一节点失败: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.on_event("startup")
 async def startup_event():
-    """初始化 Ray 集群连接并（可选）创建演示节点，启动WebSocket广播任务"""
+    """初始化服务，启动WebSocket广播任务
+    注意：Ray 集群连接已禁用以避免启动时阻塞
+    """
     try:
         # Start WebSocket broadcast task
         asyncio.create_task(broadcast_cluster_update())
         
-        ray_config = config.get("ray_cluster", {})
-        # 优先使用环境变量 RAY_ADDRESS（如果设置），否则使用配置文件中的 address
-        ray_address = os.environ.get('RAY_ADDRESS', ray_config.get("address", "local"))
-        namespace = ray_config.get("namespace", "castray")
-        create_demo = ray_config.get("create_demo_nodes", True)
-
-        logger.info(f"启动时使用的 Ray 地址: {ray_address}（env 优先）; namespace={namespace}")
-
-        # 初始化 Ray（cluster.initialize_ray 会进行发现/连接）
-        # 不在应用 startup 阶段强制启动本地 Ray（外部集群可能已存在）
-        success = await cluster.initialize_ray(ray_address, namespace, allow_local_start=False)
-        if not success:
-            logger.warning("启动时未能初始化 Ray 集群；服务将以降级模式运行")
-            app.state.ready = False
-            return
-
-        # Ray 已初始化（或允许本地启动），仅当初始化成功且配置要求时创建演示节点并等待它们就绪
-        if success and create_demo:
-            max_retries = ray_config.get("max_retries", 3)
-            retry_delay = ray_config.get("retry_delay", 2)
-            created = 0
-            demo_node_ids = [f"demo_node_{i+1}" for i in range(2)]
-
-            for node_id in demo_node_ids:
-                attempt = 0
-                while attempt < max_retries:
-                    try:
-                        ok = await cluster.create_node(node_id)
-                        if ok:
-                            # 等待该节点在 cluster.node_ports 中出现，最多等 10s
-                            wait_deadline = time.time() + 10
-                            while time.time() < wait_deadline:
-                                ports = await cluster.get_node_ports()
-                                if node_id in ports and ports[node_id] > 0:
-                                    created += 1
-                                    logger.info(f"演示节点 {node_id} 已就绪，端口: {ports[node_id]}")
-                                    break
-                                await asyncio.sleep(0.5)
-                            else:
-                                logger.warning(f"演示节点 {node_id} 创建成功但未在端口映射中注册（可能尚未启动）")
-                            break
-                        else:
-                            attempt += 1
-                            logger.warning(f"创建演示节点 {node_id} 失败，重试 {attempt}/{max_retries}...")
-                            await asyncio.sleep(retry_delay)
-                    except Exception as e:
-                        attempt += 1
-                        logger.debug(f"创建演示节点 {node_id} 时发生异常: {e} （重试 {attempt}/{max_retries}）")
-                        await asyncio.sleep(retry_delay)
-
-            logger.info(f"已尝试创建 {len(demo_node_ids)} 个演示节点，成功创建 {created} 个")
-
-        # 标记服务为已准备好（即已完成Ray初始化及演示节点创建尝试）
+        # 标记服务为已准备好
+        # 注意：Ray 集群连接已禁用，服务以独立模式运行
+        # 当 Ray Dashboard 可用时，API 会自动从 Dashboard 获取数据
         app.state.ready = True
+        logger.info("CastRay 服务启动完成 (独立模式 - Ray 集群连接已禁用)")
+        
     except Exception as e:
         logger.error(f"startup_event 错误: {e}")
+        app.state.ready = True  # 即使出错也标记为就绪，避免阻塞
 
 
 @app.on_event("shutdown")

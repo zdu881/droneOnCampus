@@ -40,6 +40,9 @@ class DashboardManager {
   }
 
   init() {
+    // 初始化全局应用配置
+    this.initializeAppConfig();
+    
     this.setupEventListeners();
     this.initializeDataUpdates();
     this.updateSystemTime();
@@ -51,6 +54,43 @@ class DashboardManager {
 
     console.log("Dashboard Manager initialized");
     this.logToConsole("Dashboard Manager initialized", "info");
+  }
+
+  // 初始化全局应用配置
+  initializeAppConfig() {
+    if (!window.appConfig) {
+      window.appConfig = {};
+    }
+    
+    // UE Remote Control API
+    window.appConfig.ueRemoteControlUrl = window.appConfig.ueRemoteControlUrl || 'http://10.30.2.11:30010';
+    
+    // CastRay Backend API（主要服务，端口 8000 - 支持 REST API 和 WebSocket）
+    window.appConfig.castrayApiBase = window.appConfig.castrayApiBase || 'http://10.30.2.11:8000';
+    
+    // CastRay WebSocket（端口 8000/ws）
+    window.appConfig.castrayWsUrl = window.appConfig.castrayWsUrl || 'ws://10.30.2.11:8000/ws';
+    
+    // Ray/CM-ZSB API（备用方案，仅用于预测功能，端口 8000）
+    window.appConfig.rayApiBase = window.appConfig.rayApiBase || 'http://10.30.2.11:8000';
+    window.appConfig.wsUrl = window.appConfig.wsUrl || 'ws://10.30.2.11:8000/ws';
+    
+    // Vehicle Agent (可选，本地部署，端口 5000)
+    window.appConfig.vehicleAgentUrl = window.appConfig.vehicleAgentUrl || 'http://10.30.2.11:5000/api/agent/decision';
+    
+    // Pixel Streaming (端口 80)
+    window.appConfig.pixelStreamingUrl = window.appConfig.pixelStreamingUrl || 'http://10.30.2.11:80';
+    
+    // Frontend Server (端口 8080)
+    window.appConfig.frontendBase = window.appConfig.frontendBase || 'http://10.30.2.11:8080';
+    
+    // File Server (端口 8001 - 用于文件下载)
+    window.appConfig.fileServerUrl = window.appConfig.fileServerUrl || 'http://10.30.2.11:8001';
+    
+    console.log('[Config] ✓ App Config initialized');
+    console.log('[Config] CastRay API Base:', window.appConfig.castrayApiBase);
+    console.log('[Config] CastRay WebSocket URL:', window.appConfig.castrayWsUrl);
+    console.log('[Config] Pixel Streaming:', window.appConfig.pixelStreamingUrl);
   }
 
   setupEventListeners() {
@@ -127,6 +167,43 @@ class DashboardManager {
       });
     }
 
+    // 自动驾驶场景视口工具栏
+    // 视角切换按钮（单按钮，循环切换）
+    const autonomousChangeViewBtn = document.getElementById("autonomous-change-view");
+    if (autonomousChangeViewBtn) {
+      autonomousChangeViewBtn.addEventListener("click", () => {
+        this.changeAutonomousView();
+      });
+    }
+
+    const autonomousToggleGrid = document.getElementById("autonomous-toggle-grid");
+    if (autonomousToggleGrid) {
+      autonomousToggleGrid.addEventListener("click", () => {
+        this.toggleAutonomousGrid();
+      });
+    }
+
+    const autonomousToggleCompass = document.getElementById("autonomous-toggle-compass");
+    if (autonomousToggleCompass) {
+      autonomousToggleCompass.addEventListener("click", () => {
+        this.toggleAutonomousCompass();
+      });
+    }
+
+    const autonomousResetView = document.getElementById("autonomous-reset-view");
+    if (autonomousResetView) {
+      autonomousResetView.addEventListener("click", () => {
+        this.resetAutonomousView();
+      });
+    }
+
+    const autonomousFullscreenBtn = document.getElementById("autonomous-fullscreen-btn");
+    if (autonomousFullscreenBtn) {
+      autonomousFullscreenBtn.addEventListener("click", () => {
+        this.toggleAutonomousFullscreen();
+      });
+    }
+
     // 属性面板折叠
     const collapseBtn = document.getElementById("collapse-properties");
     if (collapseBtn) {
@@ -181,23 +258,19 @@ class DashboardManager {
     // 更新body类
     document.body.className = `${scenario}-scenario`;
 
-    // 切换场景内容
-    const vehicleContent = document.querySelector('.vehicle-scenario-content');
-    const mainContent = document.querySelector('.main-content-panel');
+    // 在 Ray 集群页面中切换内容
+    const droneNodesPanel = document.getElementById('drone-nodes-panel');
+    const vehicleScenarioPanel = document.getElementById('vehicle-scenario-panel');
     
     if (scenario === 'vehicle') {
-      // 显示自动驾驶场景
-      if (vehicleContent) {
-        vehicleContent.style.display = 'block';
-        mainContent.style.display = 'none';
-      }
-      this.initVehicleScenario();
+      // 显示自动驾驶场景内容
+      if (droneNodesPanel) droneNodesPanel.style.display = 'none';
+      if (vehicleScenarioPanel) vehicleScenarioPanel.style.display = 'block';
+      this.initVehicleDetection();
     } else {
-      // 显示无人机场景
-      if (vehicleContent) {
-        vehicleContent.style.display = 'none';
-        mainContent.style.display = 'block';
-      }
+      // 显示无人机配送场景内容
+      if (droneNodesPanel) droneNodesPanel.style.display = 'block';
+      if (vehicleScenarioPanel) vehicleScenarioPanel.style.display = 'none';
     }
 
     this.logToConsole(`Switched to ${scenario} scenario`, "info");
@@ -218,36 +291,50 @@ class DashboardManager {
 
   // 简化的飞行控制初始化
   setupSimpleFlightControl() {
-    // 创建路径管理器
-    if (!window.flightPathManager && window.apiManager) {
-      window.flightPathManager = new FlightPathManager(window.apiManager);
-    }
+    try {
+      // 预设位置定义
+      this.PRESET_LOCATIONS = {
+        warehouse: { x: 0, y: 0, z: 100, name: '库房' },
+        library: { x: -850, y: -30, z: 62, name: '图书馆' },
+        dormitory: { x: 500, y: 400, z: 80, name: '宿舍' },
+        cafeteria: { x: -200, y: 300, z: 75, name: '食堂' }
+      };
 
-    // 创建简化飞行 UI 管理器
-    if (!window.droneSimpleFlightUI) {
-      window.droneSimpleFlightUI = new DroneSimpleFlightUI(this);
-    }
-
-    // 注入飞行控制 UI
-    const vehicleContent = document.getElementById('vehicle-scenario-content');
-    if (vehicleContent) {
-      // 查找飞行控制容器或创建
-      let flightControlContainer = vehicleContent.querySelector('.simple-flight-container');
-      if (!flightControlContainer) {
-        flightControlContainer = document.createElement('div');
-        flightControlContainer.className = 'simple-flight-container';
-        // 插入到灯光控制下面
-        const lightControlSection = vehicleContent.querySelector('.light-control-section');
-        if (lightControlSection) {
-          lightControlSection.parentNode.insertBefore(flightControlContainer, lightControlSection.nextSibling);
-        } else {
-          vehicleContent.appendChild(flightControlContainer);
-        }
+      // 绑定预设位置选择器
+      const presetSelector = document.getElementById('preset-location-select');
+      if (presetSelector) {
+        presetSelector.addEventListener('change', (e) => {
+          const preset = e.target.value;
+          if (preset && this.PRESET_LOCATIONS[preset]) {
+            const location = this.PRESET_LOCATIONS[preset];
+            document.getElementById('target-location-x').value = location.x;
+            document.getElementById('target-location-y').value = location.y;
+            document.getElementById('target-location-z').value = location.z;
+            this.logToConsole(`已选择预设位置: ${location.name}`, 'info');
+          }
+        });
       }
 
-      // 创建 UI
-      window.droneSimpleFlightUI.createUI(flightControlContainer, window.flightPathManager);
-      this.logToConsole('飞行控制 UI 已加载', 'success');
+      // 绑定"设置目标位置"按钮
+      const setTargetLocationBtn = document.getElementById('set-target-location-btn');
+      if (setTargetLocationBtn) {
+        setTargetLocationBtn.addEventListener('click', () => {
+          this.setDroneTargetLocation();
+        });
+      }
+
+      // 绑定"开始飞行"按钮
+      const startFlightBtn = document.getElementById('start-flight-btn');
+      if (startFlightBtn) {
+        startFlightBtn.addEventListener('click', () => {
+          this.startDroneFlight();
+        });
+      }
+
+      this.logToConsole('飞行控制已初始化', 'success');
+    } catch (error) {
+      console.warn('飞行控制初始化失败（可能是库文件未加载）:', error);
+      this.logToConsole('飞行控制初始化失败：' + error.message, 'warning');
     }
   }
 
@@ -301,9 +388,10 @@ class DashboardManager {
 
         // 更新对应的灯光
         const light = `light${nodeConfig.lightIndex}`;
-        await window.apiManager.changeBaseStationLight(nodeConfig.lightIndex, colorCode);
-
-        console.log(`✓ 节点 ${nodeConfig.id} 状态: ${status} → 灯光${nodeConfig.lightIndex}变为颜色${colorCode}`);
+        const lightResult = await window.apiManager.changeBaseStationLight(nodeConfig.lightIndex, colorCode);
+        if (lightResult.success) {
+          console.log(`✓ 节点 ${nodeConfig.id} 状态: ${status} → 灯光${nodeConfig.lightIndex}变为颜色${colorCode}`);
+        }
       } catch (error) {
         console.error(`检测节点 ${nodeConfig.id} 失败:`, error);
       }
@@ -318,6 +406,8 @@ class DashboardManager {
     return statusList[Math.floor(Math.random() * statusList.length)];
   }
 
+  // 初始化 CM-ZSB 与灯光映射
+  initializeCMZSBLightMapping() {
     // 配置节点信息（与检测节点一致）
     const nodeConfigs = [
       {
@@ -487,9 +577,9 @@ class DashboardManager {
         try {
           let result;
           if (lightIndex === 'all') {
-            result = await window.ueApiManager.changeBaseStationLight(0, parseInt(colorCode));
+            result = await window.apiManager.changeBaseStationLight(0, parseInt(colorCode));
           } else {
-            result = await window.ueApiManager.changeBaseStationLight(parseInt(lightIndex), parseInt(colorCode));
+            result = await window.apiManager.changeBaseStationLight(parseInt(lightIndex), parseInt(colorCode));
           }
           
           if (result.success) {
@@ -516,9 +606,9 @@ class DashboardManager {
         try {
           let result;
           if (lightIndex === 'all') {
-            result = await window.ueApiManager.blinkBaseStationLight(0, colorCode, 3, 300);
+            result = await window.apiManager.blinkBaseStationLight(0, colorCode, 3, 300);
           } else {
-            result = await window.ueApiManager.blinkBaseStationLight(
+            result = await window.apiManager.blinkBaseStationLight(
               parseInt(lightIndex), 
               colorCode, 
               3, 
@@ -882,6 +972,12 @@ class DashboardManager {
         page.classList.toggle("active", page.id === `${pageName}-content-page`);
       });
 
+    // 控制场景切换器的显示（仅在 Ray 集群页面显示）
+    const scenarioSwitcher = document.getElementById('scenario-switcher');
+    if (scenarioSwitcher) {
+      scenarioSwitcher.style.display = pageName === 'rayCluster' ? 'flex' : 'none';
+    }
+
     // 初始化Ray Cluster管理器（如果切换到rayCluster页面）
     if (pageName === 'rayCluster' && !this.rayClusterManager) {
       this.initRayClusterManager();
@@ -890,6 +986,11 @@ class DashboardManager {
     // 初始化文件传输管理器（如果切换到fileTransfer页面）
     if (pageName === 'fileTransfer' && !this.fileTransferManager) {
       this.initFileTransferManager();
+    }
+
+    // 初始化无人机控制页面
+    if (pageName === 'droneControl') {
+      this.initDroneControlPage();
     }
 
     this.logToConsole(`Switched to ${pageName} page`, "info");
@@ -1023,6 +1124,149 @@ class DashboardManager {
 
   changeViewType(viewType) {
     this.logToConsole(`View type changed to: ${viewType}`, "info");
+  }
+
+  // 自动驾驶场景视口工具方法
+  async changeAutonomousView() {
+    try {
+      this.logToConsole("Changing autonomous vehicle view...", "info");
+      
+      // 调用 API Manager 的 changeView 方法
+      if (window.apiManager) {
+        const result = await window.apiManager.changeView();
+        this.logToConsole("View changed successfully", "success");
+        return result;
+      } else {
+        this.logToConsole("API Manager not initialized", "warning");
+      }
+    } catch (error) {
+      console.error("Failed to change view:", error);
+      this.logToConsole(`Failed to change view: ${error.message}`, "error");
+    }
+  }
+
+  // 开始飞行
+  async startAutonomousFlight() {
+    try {
+      this.logToConsole("Starting autonomous vehicle flight...", "info");
+      
+      // 调用 API Manager 的 triggerDroneAction 方法（调用 Fly 函数）
+      if (window.apiManager) {
+        const result = await window.apiManager.triggerDroneAction();
+        this.logToConsole("Flight started successfully", "success");
+        return result;
+      } else {
+        this.logToConsole("API Manager not initialized", "warning");
+      }
+    } catch (error) {
+      console.error("Failed to start flight:", error);
+      this.logToConsole(`Failed to start flight: ${error.message}`, "error");
+    }
+  }
+
+  // 设置无人机目标位置
+  async setDroneTargetLocation() {
+    try {
+      const xInput = document.getElementById('target-location-x');
+      const yInput = document.getElementById('target-location-y');
+      const zInput = document.getElementById('target-location-z');
+
+      if (!xInput || !yInput || !zInput) {
+        this.logToConsole("Target location inputs not found", "error");
+        return;
+      }
+
+      const x = parseFloat(xInput.value) || 0;
+      const y = parseFloat(yInput.value) || 0;
+      const z = parseFloat(zInput.value) || 100;
+
+      this.logToConsole(`Setting target location: (${x}, ${y}, ${z})`, "info");
+
+      if (window.apiManager) {
+        const result = await window.apiManager.setDroneLocation(x, y, z);
+        if (result.success) {
+          this.logToConsole(`Target location set successfully`, "success");
+        } else {
+          this.logToConsole(`Failed to set target location: ${result.error}`, "error");
+        }
+        return result;
+      } else {
+        this.logToConsole("API Manager not initialized", "warning");
+      }
+    } catch (error) {
+      console.error("Failed to set target location:", error);
+      this.logToConsole(`Failed to set target location: ${error.message}`, "error");
+    }
+  }
+
+  // 开始无人机飞行
+  async startDroneFlight() {
+    try {
+      this.logToConsole("Starting drone flight...", "info");
+
+      if (window.apiManager) {
+        const result = await window.apiManager.triggerDroneAction();
+        if (result.success) {
+          this.logToConsole("Drone flight started successfully", "success");
+        } else {
+          this.logToConsole(`Failed to start drone flight: ${result.error}`, "error");
+        }
+        return result;
+      } else {
+        this.logToConsole("API Manager not initialized", "warning");
+      }
+    } catch (error) {
+      console.error("Failed to start drone flight:", error);
+      this.logToConsole(`Failed to start drone flight: ${error.message}`, "error");
+    }
+  }
+
+  toggleAutonomousGrid() {
+    const btn = document.getElementById("autonomous-toggle-grid");
+    const isActive = btn?.classList.contains("active");
+    
+    if (btn) {
+      btn.classList.toggle("active");
+    }
+    
+    this.logToConsole(`Grid display ${!isActive ? "enabled" : "disabled"}`, "info");
+  }
+
+  toggleAutonomousCompass() {
+    const btn = document.getElementById("autonomous-toggle-compass");
+    const isActive = btn?.classList.contains("active");
+    
+    if (btn) {
+      btn.classList.toggle("active");
+    }
+    
+    this.logToConsole(`Compass display ${!isActive ? "enabled" : "disabled"}`, "info");
+  }
+
+  resetAutonomousView() {
+    this.logToConsole("Resetting view to default...", "info");
+    
+    // 重置可以调用 changeView 多次来循环到默认视角
+    // 或者可以调用特定的重置方法（如果 UE 中实现了）
+    if (window.apiManager) {
+      window.apiManager.changeView()
+        .catch(error => {
+          console.error("Failed to reset view:", error);
+        });
+    }
+  }
+
+  toggleAutonomousFullscreen() {
+    const container = document.getElementById("vehicle-scenario-content");
+    if (!container) return;
+
+    if (!document.fullscreenElement) {
+      container.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      document.exitFullscreen();
+    }
   }
 
   deployStation() {
@@ -1419,6 +1663,307 @@ class DashboardManager {
     } catch (error) {
       this.logToConsole(`Failed to initialize File Transfer Manager: ${error.message}`, "error");
     }
+  }
+
+  // 初始化无人机控制页面
+  initDroneControlPage() {
+    if (this.droneControlInitialized) return;
+    this.droneControlInitialized = true;
+
+    // 视角切换按钮
+    const viewChangeBtn = document.getElementById('view-change-btn');
+    if (viewChangeBtn) {
+      viewChangeBtn.addEventListener('click', () => this.changeView());
+    }
+
+    // 预设位置按钮
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const location = e.currentTarget.dataset.location;
+        this.setDroneToPresetLocation(location);
+      });
+    });
+
+    // 设置位置按钮
+    const setLocationBtn = document.getElementById('drone-set-location-btn');
+    if (setLocationBtn) {
+      setLocationBtn.addEventListener('click', () => this.setDroneCustomLocation());
+    }
+
+    // 飞行按钮
+    const flyBtn = document.getElementById('drone-fly-btn');
+    if (flyBtn) {
+      flyBtn.addEventListener('click', () => this.startDroneFlight());
+    }
+
+    this.logToConsole('Drone control page initialized', 'info');
+  }
+
+  // 视角切换
+  async changeView() {
+    try {
+      if (window.ueApiManager) {
+        const result = await window.ueApiManager.changeView();
+        if (result.success) {
+          this.logToConsole('视角已切换', 'success');
+        }
+      } else {
+        this.logToConsole('视角切换 (模拟)', 'info');
+      }
+    } catch (error) {
+      this.logToConsole(`视角切换失败: ${error.message}`, 'error');
+    }
+  }
+
+  // 设置无人机到预设位置
+  async setDroneToPresetLocation(locationName) {
+    const locations = {
+      warehouse: { x: 0, y: 0, z: 100 },
+      library: { x: -850, y: -30, z: 62 },
+      dormitory: { x: 500, y: 400, z: 80 },
+      cafeteria: { x: -200, y: 300, z: 75 }
+    };
+
+    const loc = locations[locationName];
+    if (loc) {
+      document.getElementById('drone-ctrl-x').value = loc.x;
+      document.getElementById('drone-ctrl-y').value = loc.y;
+      document.getElementById('drone-ctrl-z').value = loc.z;
+      await this.setDroneCustomLocation();
+    }
+  }
+
+  // 设置无人机自定义位置
+  async setDroneCustomLocation() {
+    const x = parseFloat(document.getElementById('drone-ctrl-x')?.value) || 0;
+    const y = parseFloat(document.getElementById('drone-ctrl-y')?.value) || 0;
+    const z = parseFloat(document.getElementById('drone-ctrl-z')?.value) || 100;
+
+    try {
+      if (window.ueApiManager) {
+        const result = await window.ueApiManager.setDroneLocation(x, y, z);
+        if (result.success) {
+          this.logToConsole(`位置已设置: (${x}, ${y}, ${z})`, 'success');
+        }
+      } else {
+        this.logToConsole(`位置已设置 (模拟): (${x}, ${y}, ${z})`, 'info');
+      }
+    } catch (error) {
+      this.logToConsole(`设置位置失败: ${error.message}`, 'error');
+    }
+  }
+
+  // 开始无人机飞行
+  async startDroneFlight() {
+    try {
+      if (window.ueApiManager) {
+        const result = await window.ueApiManager.triggerDroneAction();
+        if (result.success) {
+          this.logToConsole('无人机开始飞行', 'success');
+        }
+      } else {
+        this.logToConsole('无人机开始飞行 (模拟)', 'info');
+      }
+    } catch (error) {
+      this.logToConsole(`飞行启动失败: ${error.message}`, 'error');
+    }
+  }
+
+  // 初始化自动驾驶检测功能
+  initVehicleDetection() {
+    if (this.vehicleDetectionInitialized) return;
+    this.vehicleDetectionInitialized = true;
+
+    // 开始检测按钮
+    const startBtn = document.getElementById('start-detection-btn');
+    const stopBtn = document.getElementById('stop-detection-btn');
+    const clearLogBtn = document.getElementById('clear-detection-log');
+
+    if (startBtn) {
+      startBtn.addEventListener('click', () => this.startStationDetection());
+    }
+    if (stopBtn) {
+      stopBtn.addEventListener('click', () => this.stopStationDetection());
+    }
+    if (clearLogBtn) {
+      clearLogBtn.addEventListener('click', () => this.clearDetectionLog());
+    }
+
+    // 初始化 Jet 节点模拟数据更新
+    this.startJetNodesSimulation();
+    
+    this.logToConsole('Vehicle detection initialized', 'info');
+  }
+
+  // 开始基站检测
+  async startStationDetection() {
+    const startBtn = document.getElementById('start-detection-btn');
+    const stopBtn = document.getElementById('stop-detection-btn');
+    const statusBadge = document.getElementById('detection-status-badge');
+    const progressBar = document.getElementById('detection-progress');
+    const progressText = document.getElementById('detection-progress-text');
+
+    if (startBtn) startBtn.disabled = true;
+    if (stopBtn) stopBtn.disabled = false;
+
+    this.detectionRunning = true;
+    this.addDetectionLog('开始基站检测任务', 'info');
+    
+    // 阶段1: 检测中 - 设置为红色
+    this.updateDetectionStatus('detecting', '检测中');
+    this.setJetIndicators('red');
+    this.addDetectionLog('Jet1, Jet2, Jet3 开始数据采集...', 'info');
+    await this.updateProgress(0, 30, 2000);
+
+    if (!this.detectionRunning) return;
+    
+    // 阶段2: 等待结果 - 设置为黄色
+    this.updateDetectionStatus('waiting', '等待结果');
+    this.setJetIndicators('yellow');
+    this.addDetectionLog('数据采集完成，正在分析...', 'info');
+    await this.updateProgress(30, 70, 2000);
+
+    if (!this.detectionRunning) return;
+
+    this.addDetectionLog('正在传输检测结果...', 'info');
+    await this.updateProgress(70, 95, 1500);
+
+    if (!this.detectionRunning) return;
+    
+    // 阶段3: 已到达 - 设置为绿色
+    this.updateDetectionStatus('completed', '已到达');
+    this.setJetIndicators('green');
+    this.addDetectionLog('检测任务完成，所有基站状态正常', 'success');
+    await this.updateProgress(95, 100, 500);
+
+    // 重置按钮状态
+    if (startBtn) startBtn.disabled = false;
+    if (stopBtn) stopBtn.disabled = true;
+    this.detectionRunning = false;
+  }
+
+  // 停止基站检测
+  stopStationDetection() {
+    this.detectionRunning = false;
+    const startBtn = document.getElementById('start-detection-btn');
+    const stopBtn = document.getElementById('stop-detection-btn');
+
+    if (startBtn) startBtn.disabled = false;
+    if (stopBtn) stopBtn.disabled = true;
+
+    this.updateDetectionStatus('idle', '已停止');
+    this.setJetIndicators('green');
+    this.addDetectionLog('检测任务已停止', 'warning');
+  }
+
+  // 更新检测状态
+  updateDetectionStatus(status, text) {
+    const badge = document.getElementById('detection-status-badge');
+    if (badge) {
+      badge.className = `status-badge ${status}`;
+      badge.textContent = text;
+    }
+  }
+
+  // 更新进度条
+  async updateProgress(from, to, duration) {
+    const progressBar = document.getElementById('detection-progress');
+    const progressText = document.getElementById('detection-progress-text');
+    const steps = to - from;
+    const stepDuration = duration / steps;
+
+    for (let i = from; i <= to && this.detectionRunning; i++) {
+      if (progressBar) progressBar.style.width = `${i}%`;
+      if (progressText) progressText.textContent = `${i}%`;
+      await this.delay(stepDuration);
+    }
+  }
+
+  // 设置 Jet 节点指示灯颜色
+  setJetIndicators(color) {
+    ['jet1', 'jet2', 'jet3'].forEach(jet => {
+      const indicator = document.querySelector(`#${jet}-indicator .indicator-light`);
+      if (indicator) {
+        indicator.className = `indicator-light ${color}`;
+      }
+    });
+
+    // 同时调用 UE 灯光控制（如果可用）
+    if (window.ueApiManager) {
+      const colorCode = color === 'red' ? 0 : (color === 'yellow' ? 2 : 1);
+      window.ueApiManager.changeBaseStationLight(0, colorCode).catch(err => {
+        console.log('UE light control not available:', err.message);
+      });
+    }
+  }
+
+  // 添加检测日志
+  addDetectionLog(message, type = 'info') {
+    const logContainer = document.getElementById('detection-log');
+    if (!logContainer) return;
+
+    const time = new Date().toLocaleTimeString();
+    const logEntry = document.createElement('div');
+    logEntry.className = `log-entry ${type}`;
+    logEntry.innerHTML = `
+      <span class="log-time">${time}</span>
+      <span class="log-message">${message}</span>
+    `;
+
+    // 移除初始占位符
+    const placeholder = logContainer.querySelector('.log-entry.info:first-child');
+    if (placeholder && placeholder.querySelector('.log-message').textContent === '等待开始检测...') {
+      placeholder.remove();
+    }
+
+    logContainer.appendChild(logEntry);
+    logContainer.scrollTop = logContainer.scrollHeight;
+  }
+
+  // 清除检测日志
+  clearDetectionLog() {
+    const logContainer = document.getElementById('detection-log');
+    if (logContainer) {
+      logContainer.innerHTML = `
+        <div class="log-entry info">
+          <span class="log-time">--:--:--</span>
+          <span class="log-message">等待开始检测...</span>
+        </div>
+      `;
+    }
+  }
+
+  // 启动 Jet 节点模拟数据更新
+  startJetNodesSimulation() {
+    if (this.jetSimulationInterval) return;
+
+    this.jetSimulationInterval = setInterval(() => {
+      ['jet1', 'jet2', 'jet3'].forEach(jet => {
+        // 随机波动模拟
+        const cpuBase = jet === 'jet1' ? 45 : (jet === 'jet2' ? 52 : 35);
+        const memBase = jet === 'jet1' ? 62 : (jet === 'jet2' ? 58 : 48);
+        const gpuBase = jet === 'jet1' ? 38 : (jet === 'jet2' ? 45 : 28);
+
+        const cpu = Math.min(100, Math.max(0, cpuBase + (Math.random() - 0.5) * 10));
+        const mem = Math.min(100, Math.max(0, memBase + (Math.random() - 0.5) * 8));
+        const gpu = Math.min(100, Math.max(0, gpuBase + (Math.random() - 0.5) * 12));
+
+        // 更新进度条
+        const cpuBar = document.getElementById(`${jet}-cpu`);
+        const memBar = document.getElementById(`${jet}-mem`);
+        const gpuBar = document.getElementById(`${jet}-gpu`);
+        const cpuVal = document.getElementById(`${jet}-cpu-value`);
+        const memVal = document.getElementById(`${jet}-mem-value`);
+        const gpuVal = document.getElementById(`${jet}-gpu-value`);
+
+        if (cpuBar) cpuBar.style.width = `${cpu}%`;
+        if (memBar) memBar.style.width = `${mem}%`;
+        if (gpuBar) gpuBar.style.width = `${gpu}%`;
+        if (cpuVal) cpuVal.textContent = `${Math.round(cpu)}%`;
+        if (memVal) memVal.textContent = `${Math.round(mem)}%`;
+        if (gpuVal) gpuVal.textContent = `${Math.round(gpu)}%`;
+      });
+    }, 2000);
   }
 
   delay(ms) {

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>车辆场景测试</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-item {
+            margin: 15px 0;
+            padding: 15px;
+            border-left: 4px solid #007bff;
+            background: #f8f9fa;
+        }
+        .test-item.passed {
+            border-left-color: #28a745;
+            background: #f0f9f4;
+        }
+        .test-item.failed {
+            border-left-color: #dc3545;
+            background: #f9f0f2;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .status {
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .console-log {
+            background: #222;
+            color: #0f0;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🚗 车辆场景测试套件</h1>
+        
+        <div class="test-item">
+            <h3>测试 1: HTML 结构验证</h3>
+            <button onclick="testHTMLStructure()">验证HTML结构</button>
+            <div id="test1-result" class="status"></div>
+        </div>
+
+        <div class="test-item">
+            <h3>测试 2: 场景切换功能</h3>
+            <button onclick="testSceneSwitch()">测试场景切换</button>
+            <div id="test2-result" class="status"></div>
+        </div>
+
+        <div class="test-item">
+            <h3>测试 3: 车辆场景显示</h3>
+            <button onclick="testVehicleDisplay()">测试车辆场景显示</button>
+            <div id="test3-result" class="status"></div>
+        </div>
+
+        <div class="test-item">
+            <h3>测试 4: 配送控制初始化</h3>
+            <button onclick="testDeliveryControls()">测试配送控制</button>
+            <div id="test4-result" class="status"></div>
+        </div>
+
+        <div class="test-item">
+            <h3>实时控制台</h3>
+            <div class="console-log" id="console-log"></div>
+        </div>
+    </div>
+
+    <script>
+        function log(message) {
+            const consoleLog = document.getElementById('console-log');
+            const timestamp = new Date().toLocaleTimeString();
+            consoleLog.innerHTML += `[${timestamp}] ${message}\n`;
+            consoleLog.scrollTop = consoleLog.scrollHeight;
+        }
+
+        function testHTMLStructure() {
+            const result = document.getElementById('test1-result');
+            const checks = [];
+
+            // 检查vehicle-scenario-content
+            const vehicleContent = document.querySelector('.vehicle-scenario-content');
+            checks.push({ name: 'vehicle-scenario-content元素存在', passed: !!vehicleContent });
+
+            // 检查main-content-panel
+            const mainPanel = document.querySelector('.main-content-panel');
+            checks.push({ name: 'main-content-panel元素存在', passed: !!mainPanel });
+
+            // 检查nesting - vehicle-scenario-content应该在main-content-panel内
+            if (vehicleContent && mainPanel) {
+                const isNested = mainPanel.contains(vehicleContent);
+                checks.push({ name: 'vehicle-scenario-content在main-content-panel内', passed: isNested });
+            }
+
+            // 检查properties-panel
+            const propsPanel = document.querySelector('.properties-panel');
+            checks.push({ name: 'properties-panel元素存在', passed: !!propsPanel });
+
+            // 检查车辆场景卡片
+            const flightCard = document.querySelector('.flight-control-card');
+            const stationCard = document.querySelector('.station-maintenance-card');
+            const lightCard = document.querySelector('.light-control-card');
+            
+            checks.push({ name: '飞行控制卡片存在', passed: !!flightCard });
+            checks.push({ name: '基站运维卡片存在', passed: !!stationCard });
+            checks.push({ name: '灯光控制卡片存在', passed: !!lightCard });
+
+            let html = '<ul>';
+            let allPassed = true;
+            checks.forEach(check => {
+                const status = check.passed ? '✅' : '❌';
+                const className = check.passed ? 'passed' : 'failed';
+                html += `<li class="${className}">${status} ${check.name}</li>`;
+                if (!check.passed) allPassed = false;
+            });
+            html += '</ul>';
+
+            result.innerHTML = html;
+            result.style.color = allPassed ? 'green' : 'red';
+            
+            log(`HTML结构验证: ${allPassed ? '通过' : '失败'}`);
+            if (!allPassed) {
+                checks.forEach(c => {
+                    if (!c.passed) log(`  ❌ ${c.name}`);
+                });
+            }
+        }
+
+        function testSceneSwitch() {
+            const result = document.getElementById('test2-result');
+            const vehicleContent = document.querySelector('.vehicle-scenario-content');
+            const mainContent = document.querySelector('#viewport-content-page');
+            
+            if (!vehicleContent || !mainContent) {
+                result.innerHTML = '❌ 找不到必要的HTML元素';
+                result.style.color = 'red';
+                log('场景切换测试失败: 缺少必要的HTML元素');
+                return;
+            }
+
+            // 测试切换到vehicle场景
+            vehicleContent.style.display = 'block';
+            mainContent.style.display = 'none';
+            
+            const vehicleVisible = vehicleContent.style.display !== 'none' && vehicleContent.offsetParent !== null;
+            const mainHidden = mainContent.style.display === 'none';
+
+            let html = '<ul>';
+            html += `<li>${vehicleVisible ? '✅' : '❌'} 车辆场景内容可见</li>`;
+            html += `<li>${mainHidden ? '✅' : '❌'} 无人机视口被隐藏</li>`;
+            html += '</ul>';
+
+            const allPassed = vehicleVisible && mainHidden;
+            result.innerHTML = html;
+            result.style.color = allPassed ? 'green' : 'red';
+            
+            log(`场景切换测试: ${allPassed ? '通过' : '失败'}`);
+        }
+
+        function testVehicleDisplay() {
+            const result = document.getElementById('test3-result');
+            const vehicleContent = document.querySelector('.vehicle-scenario-content');
+            
+            if (!vehicleContent) {
+                result.innerHTML = '❌ 找不到vehicle-scenario-content';
+                result.style.color = 'red';
+                log('车辆场景显示测试失败');
+                return;
+            }
+
+            // 显示vehicle-scenario-content
+            vehicleContent.style.display = 'block';
+            
+            // 检查各个卡片是否可见
+            const flightCard = vehicleContent.querySelector('.flight-control-card');
+            const stationCard = vehicleContent.querySelector('.station-maintenance-card');
+            const lightCard = vehicleContent.querySelector('.light-control-card');
+            
+            const flightVisible = flightCard && flightCard.offsetParent !== null;
+            const stationVisible = stationCard && stationCard.offsetParent !== null;
+            const lightVisible = lightCard && lightCard.offsetParent !== null;
+
+            let html = '<ul>';
+            html += `<li>${flightVisible ? '✅' : '❌'} 飞行控制卡片可见</li>`;
+            html += `<li>${stationVisible ? '✅' : '❌'} 基站运维卡片可见</li>`;
+            html += `<li>${lightVisible ? '✅' : '❌'} 灯光控制卡片可见</li>`;
+            html += '</ul>';
+
+            const allPassed = flightVisible && stationVisible && lightVisible;
+            result.innerHTML = html;
+            result.style.color = allPassed ? 'green' : 'red';
+            
+            log(`车辆场景显示测试: ${allPassed ? '通过' : '失败'}`);
+        }
+
+        function testDeliveryControls() {
+            const result = document.getElementById('test4-result');
+            
+            // 检查配送按钮
+            const deliveryButtons = document.querySelectorAll('[id*="delivery"]');
+            const sceneButtons = document.querySelectorAll('[id*="scene"]');
+            const deliveryBtns = document.querySelectorAll('.delivery-btn');
+
+            let html = '<ul>';
+            html += `<li>${deliveryButtons.length > 0 ? '✅' : '❌'} 找到${deliveryButtons.length}个配送按钮</li>`;
+            html += `<li>${sceneButtons.length > 0 ? '✅' : '❌'} 找到${sceneButtons.length}个场景按钮</li>`;
+            html += `<li>${deliveryBtns.length > 0 ? '✅' : '❌'} 找到${deliveryBtns.length}个delivery-btn元素</li>`;
+
+            // 检查DroneSimpleFlightUI类
+            if (typeof window.DroneSimpleFlightUI !== 'undefined') {
+                html += '<li>✅ DroneSimpleFlightUI类已加载</li>';
+            } else {
+                html += '<li>❌ DroneSimpleFlightUI类未定义</li>';
+            }
+
+            html += '</ul>';
+            result.innerHTML = html;
+            result.style.color = (deliveryButtons.length > 0 && sceneButtons.length > 0) ? 'green' : 'orange';
+            
+            log(`配送控制测试完成: 找到${deliveryButtons.length}个配送按钮`);
+        }
+
+        // 页面加载时自动运行所有测试
+        window.addEventListener('load', function() {
+            log('页面已加载，开始自动测试...');
+            setTimeout(() => {
+                testHTMLStructure();
+                testSceneSwitch();
+                testVehicleDisplay();
+                testDeliveryControls();
+                log('所有自动测试完成');
+            }, 500);
+        });
+    </script>
+</body>
+</html>

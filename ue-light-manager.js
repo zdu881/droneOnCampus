@@ -4,10 +4,10 @@
  * 用于控制Unreal Engine中的基站灯光（信号指示灯）
  * 支持红、绿、黄三种颜色状态显示
  * 
- * 灯光对象路径：
- * - Light 1: /Game/NewMap.NewMap:PersistentLevel.light_C_UAID_A0AD9F0755B9CFA302_2066102057
- * - Light 2: /Game/NewMap.NewMap:PersistentLevel.light_C_UAID_A0AD9F0755B9D2A302_1321381589
- * - Light 3: /Game/NewMap.NewMap:PersistentLevel.light_C_UAID_A0AD9F0755B9D2A302_1393896590
+ * 灯光对象路径（打包后 Standalone 模式）：
+ * - Light 1: /Game/NewMap/_Generated_/450VU4JLHPSITSM21TWRCZ36J.NewMap:PersistentLevel.light_C_UAID_A0AD9F0755B9D2A302_1393896590
+ * - Light 2: /Game/NewMap/_Generated_/BA1J4ULWYIRE2TCF6MZFVA30Z.NewMap:PersistentLevel.light_C_UAID_A0AD9F0755B9D2A302_1321381589
+ * - Light 3: /Game/NewMap/_Generated_/450VU4JLHPSITSM21TWRCZ36J.NewMap:PersistentLevel.light_C_UAID_A0AD9F0755B9CFA302_2066102057
  * 
  * 颜色映射：
  * - 0: Red (红) - 错误/检测中
@@ -20,25 +20,25 @@ class UELightManager {
     // UE Remote Control API 配置
     // 注意：与 api-manager.js 使用相同的 baseUrl
     this.baseUrl = "http://10.30.2.11:30010/remote/object/call";
-    this.method = "POST";  // UE Remote Control API 使用 POST 方法发送 Payload 和调用函数
+    this.method = "PUT";  // UE Remote Control API 使用 PUT 方法调用函数
     this.headers = {
       "Content-Type": "application/json"
     };
 
-    // 灯光对象路径映射
+    // 灯光对象路径映射（打包后 Standalone 模式）
     this.lights = {
       light1: {
-        path: "/Game/NewMap.NewMap:PersistentLevel.light_C_UAID_A0AD9F0755B9CFA302_2066102057",
+        path: "/Game/NewMap/_Generated_/450VU4JLHPSITSM21TWRCZ36J.NewMap:PersistentLevel.light_C_UAID_A0AD9F0755B9D2A302_1393896590",
         name: "基站灯1",
         currentColor: 1  // 默认绿色
       },
       light2: {
-        path: "/Game/NewMap.NewMap:PersistentLevel.light_C_UAID_A0AD9F0755B9D2A302_1321381589",
+        path: "/Game/NewMap/_Generated_/BA1J4ULWYIRE2TCF6MZFVA30Z.NewMap:PersistentLevel.light_C_UAID_A0AD9F0755B9D2A302_1321381589",
         name: "基站灯2",
         currentColor: 1
       },
       light3: {
-        path: "/Game/NewMap.NewMap:PersistentLevel.light_C_UAID_A0AD9F0755B9D2A302_1393896590",
+        path: "/Game/NewMap/_Generated_/450VU4JLHPSITSM21TWRCZ36J.NewMap:PersistentLevel.light_C_UAID_A0AD9F0755B9CFA302_2066102057",
         name: "基站灯3",
         currentColor: 1
       }

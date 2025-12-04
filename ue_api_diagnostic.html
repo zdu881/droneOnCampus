@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UE Remote Control API 诊断</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px 5px 5px 0;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button.danger {
+            background: #dc3545;
+        }
+        button.danger:hover {
+            background: #c82333;
+        }
+        button.success {
+            background: #28a745;
+        }
+        button.success:hover {
+            background: #218838;
+        }
+        .output {
+            background: #222;
+            color: #0f0;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 10px 0;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .param-group {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+        input, select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 5px 5px 5px 0;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px 0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 UE Remote Control API 诊断工具</h1>
+        
+        <!-- 连接状态 -->
+        <div class="test-section">
+            <h3>📊 连接状态</h3>
+            <div id="connection-status" class="status info">检查中...</div>
+            <button onclick="checkConnection()">检查连接</button>
+            <button onclick="testAPI()">测试API</button>
+            <div id="connection-output" class="output"></div>
+        </div>
+
+        <!-- 无人机控制 -->
+        <div class="test-section">
+            <h3>🚁 无人机控制</h3>
+            <div class="param-group">
+                <label>设置无人机位置</label>
+                <div>
+                    X: <input type="number" id="drone-x" value="-850" />
+                    Y: <input type="number" id="drone-y" value="-30" />
+                    Z: <input type="number" id="drone-z" value="62" />
+                    <button onclick="setDroneLocation()" class="success">设置位置</button>
+                </div>
+            </div>
+            <div class="param-group">
+                <label>配送任务</label>
+                <div>
+                    从: <select id="from-location">
+                        <option value="Campus_Gate">校门</option>
+                        <option value="Library">图书馆</option>
+                        <option value="Cafeteria">食堂</option>
+                    </select>
+                    到: <select id="to-location">
+                        <option value="Library">图书馆</option>
+                        <option value="Cafeteria">食堂</option>
+                        <option value="Dormitory">宿舍</option>
+                    </select>
+                    <button onclick="startDelivery()" class="success">开始配送</button>
+                </div>
+            </div>
+            <div id="drone-output" class="output"></div>
+        </div>
+
+        <!-- 灯光控制 -->
+        <div class="test-section">
+            <h3>💡 灯光控制</h3>
+            <div class="param-group">
+                <label>灯光选择</label>
+                <select id="light-index">
+                    <option value="0">全部灯光</option>
+                    <option value="1">灯光 1</option>
+                    <option value="2">灯光 2</option>
+                    <option value="3">灯光 3</option>
+                </select>
+            </div>
+            <div class="param-group">
+                <label>颜色</label>
+                <button onclick="setLightColor(1)" class="success">绿色 (正常)</button>
+                <button onclick="setLightColor(0)" class="danger">红色 (错误)</button>
+                <button onclick="setLightColor(2)">黄色 (警告)</button>
+            </div>
+            <div class="param-group">
+                <button onclick="testLightBlink()">测试闪烁</button>
+                <button onclick="testLightSequence()">测试序列</button>
+            </div>
+            <div id="light-output" class="output"></div>
+        </div>
+
+        <!-- 系统信息 -->
+        <div class="test-section">
+            <h3>ℹ️ 系统信息</h3>
+            <button onclick="showSystemInfo()">显示系统信息</button>
+            <button onclick="showAPIStatus()">显示API状态</button>
+            <div id="system-output" class="output"></div>
+        </div>
+    </div>
+
+    <script>
+        function log(elementId, message, type = 'log') {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = {
+                'log': '[LOG]',
+                'error': '[ERROR]',
+                'success': '[SUCCESS]',
+                'warn': '[WARN]'
+            }[type] || '[INFO]';
+            
+            element.innerHTML += `${timestamp} ${prefix} ${message}\n`;
+            element.scrollTop = element.scrollHeight;
+        }
+
+        function clearLog(elementId) {
+            document.getElementById(elementId).innerHTML = '';
+        }
+
+        function showStatus(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            const status = {
+                'success': '✅ 成功',
+                'error': '❌ 失败',
+                'info': 'ℹ️ 信息'
+            }[type];
+            
+            element.innerHTML = `<div class="status ${type}">${status}: ${message}</div>`;
+        }
+
+        async function checkConnection() {
+            clearLog('connection-output');
+            log('connection-output', '检查UE Remote Control API连接...', 'log');
+
+            try {
+                if (!window.ueApiManager) {
+                    showStatus('connection-status', 'ueApiManager未初始化', 'error');
+                    log('connection-output', 'ERROR: ueApiManager对象未定义', 'error');
+                    return;
+                }
+
+                log('connection-output', `API基础URL: ${window.ueApiManager.baseUrl}`, 'log');
+                log('connection-output', `请求方法: ${window.ueApiManager.method}`, 'log');
+                
+                // 测试与API的连接
+                const response = await fetch(window.ueApiManager.baseUrl, {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok || response.status === 405) { // 405 是OPTIONS请求通常返回的
+                    showStatus('connection-status', '✅ 连接成功，API服务器在线', 'success');
+                    log('connection-output', 'API服务器响应正常', 'success');
+                } else {
+                    showStatus('connection-status', `❌ API返回状态码: ${response.status}`, 'error');
+                    log('connection-output', `HTTP状态码: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                showStatus('connection-status', '❌ 无法连接到API服务器', 'error');
+                log('connection-output', `错误: ${error.message}`, 'error');
+                log('connection-output', '确保UE应用正在运行且Remote Control API已启用', 'warn');
+            }
+        }
+
+        async function testAPI() {
+            clearLog('connection-output');
+            log('connection-output', '执行API功能测试...', 'log');
+
+            try {
+                if (!window.ueApiManager) {
+                    log('connection-output', 'ERROR: ueApiManager未初始化', 'error');
+                    return;
+                }
+
+                // 测试getDronePosition
+                log('connection-output', '\n=== 测试1: 获取无人机位置 ===', 'log');
+                const posResult = await window.ueApiManager.getDronePosition();
+                log('connection-output', `结果: ${JSON.stringify(posResult)}`, posResult.success ? 'success' : 'error');
+
+                // 测试getSystemStatus
+                log('connection-output', '\n=== 测试2: 获取系统状态 ===', 'log');
+                const sysResult = await window.ueApiManager.getSystemStatus();
+                log('connection-output', `结果: ${JSON.stringify(sysResult)}`, sysResult.success ? 'success' : 'error');
+
+                // 测试changeView
+                log('connection-output', '\n=== 测试3: 变更摄像机视角 ===', 'log');
+                const viewResult = await window.ueApiManager.changeView();
+                log('connection-output', `结果: ${JSON.stringify(viewResult)}`, viewResult.success ? 'success' : 'error');
+
+            } catch (error) {
+                log('connection-output', `异常: ${error.message}`, 'error');
+            }
+        }
+
+        async function setDroneLocation() {
+            clearLog('drone-output');
+            const x = parseFloat(document.getElementById('drone-x').value);
+            const y = parseFloat(document.getElementById('drone-y').value);
+            const z = parseFloat(document.getElementById('drone-z').value);
+
+            log('drone-output', `设置无人机位置: (${x}, ${y}, ${z})`, 'log');
+
+            try {
+                const result = await window.ueApiManager.setDroneLocation(x, y, z);
+                log('drone-output', `结果: ${JSON.stringify(result)}`, result.success ? 'success' : 'error');
+            } catch (error) {
+                log('drone-output', `错误: ${error.message}`, 'error');
+            }
+        }
+
+        async function startDelivery() {
+            clearLog('drone-output');
+            const from = document.getElementById('from-location').value;
+            const to = document.getElementById('to-location').value;
+
+            log('drone-output', `开始配送: ${from} → ${to}`, 'log');
+
+            try {
+                const result = await window.ueApiManager.startDelivery(from, to);
+                log('drone-output', `结果: ${JSON.stringify(result)}`, result.success ? 'success' : 'error');
+            } catch (error) {
+                log('drone-output', `错误: ${error.message}`, 'error');
+            }
+        }
+
+        async function setLightColor(colorCode) {
+            clearLog('light-output');
+            const lightIndex = parseInt(document.getElementById('light-index').value);
+            const colorName = { 0: '红色', 1: '绿色', 2: '黄色' }[colorCode];
+
+            log('light-output', `设置灯光 ${lightIndex === 0 ? '全部' : lightIndex} 为 ${colorName}`, 'log');
+
+            try {
+                const result = await window.ueApiManager.changeBaseStationLight(lightIndex, colorCode);
+                log('light-output', `结果: ${JSON.stringify(result)}`, result.success ? 'success' : 'error');
+            } catch (error) {
+                log('light-output', `错误: ${error.message}`, 'error');
+            }
+        }
+
+        async function testLightBlink() {
+            clearLog('light-output');
+            const lightIndex = parseInt(document.getElementById('light-index').value);
+
+            log('light-output', `测试灯光 ${lightIndex === 0 ? '全部' : lightIndex} 闪烁...`, 'log');
+
+            try {
+                const result = await window.ueApiManager.blinkBaseStationLight(lightIndex, 0, 3, 500);
+                log('light-output', `结果: ${JSON.stringify(result)}`, result.success ? 'success' : 'error');
+            } catch (error) {
+                log('light-output', `错误: ${error.message}`, 'error');
+            }
+        }
+
+        async function testLightSequence() {
+            clearLog('light-output');
+            log('light-output', '测试灯光序列点亮...', 'log');
+
+            try {
+                for (let i = 1; i <= 3; i++) {
+                    log('light-output', `点亮灯光 ${i}...`, 'log');
+                    await window.ueApiManager.changeBaseStationLight(i, 0); // 红色
+                    await new Promise(r => setTimeout(r, 500));
+                    await window.ueApiManager.changeBaseStationLight(i, 1); // 绿色
+                    await new Promise(r => setTimeout(r, 500));
+                }
+                log('light-output', '序列完成', 'success');
+            } catch (error) {
+                log('light-output', `错误: ${error.message}`, 'error');
+            }
+        }
+
+        function showSystemInfo() {
+            clearLog('system-output');
+            
+            if (!window.ueApiManager) {
+                log('system-output', 'ueApiManager未初始化', 'error');
+                return;
+            }
+
+            log('system-output', '=== UE API管理器信息 ===', 'log');
+            log('system-output', `API基础URL: ${window.ueApiManager.baseUrl}`, 'log');
+            log('system-output', `请求方法: ${window.ueApiManager.method}`, 'log');
+            log('system-output', `无人机Actor路径: ${window.ueApiManager.droneActorPath}`, 'log');
+            log('system-output', `关卡脚本Actor路径: ${window.ueApiManager.levelScriptActorPath}`, 'log');
+            
+            log('system-output', '\n=== 预定义位置 ===', 'log');
+            Object.entries(window.ueApiManager.locations).forEach(([name, pos]) => {
+                log('system-output', `${name}: (${pos.x}, ${pos.y}, ${pos.z})`, 'log');
+            });
+
+            log('system-output', '\n=== 灯光路径 ===', 'log');
+            const lightPaths = window.ueApiManager.getBaseStationLightPaths();
+            Object.entries(lightPaths).forEach(([name, path]) => {
+                log('system-output', `${name}: ${path}`, 'log');
+            });
+        }
+
+        function showAPIStatus() {
+            clearLog('system-output');
+            
+            const checks = [
+                { name: 'ueApiManager', check: () => !!window.ueApiManager },
+                { name: 'apiManager', check: () => !!window.apiManager },
+                { name: 'dashboardManager', check: () => !!window.dashboardManager },
+                { name: 'PixelStreaming', check: () => !!window.PixelStreaming },
+                { name: 'DroneSimpleFlightUI', check: () => !!window.DroneSimpleFlightUI }
+            ];
+
+            log('system-output', '=== 全局对象状态 ===', 'log');
+            checks.forEach(item => {
+                const status = item.check() ? '✅ 已加载' : '❌ 未加载';
+                log('system-output', `${item.name}: ${status}`, item.check() ? 'success' : 'error');
+            });
+
+            // 检查window对象中的所有自定义属性
+            log('system-output', '\n=== Window对象中的自定义对象 ===', 'log');
+            const customObjects = Object.keys(window).filter(key => 
+                window[key] && typeof window[key] === 'object' && 
+                !window[key].window && // 排除window自身
+                key !== 'document' && 
+                key !== 'location' &&
+                key !== 'navigator'
+            );
+            
+            customObjects.slice(0, 10).forEach(key => {
+                log('system-output', `- ${key}`, 'log');
+            });
+        }
+
+        // 页面加载时自动检查
+        window.addEventListener('load', function() {
+            log('connection-output', '页面已加载，准备进行诊断...', 'log');
+            setTimeout(() => {
+                checkConnection();
+            }, 500);
+        });
+    </script>
+</body>
+</html>

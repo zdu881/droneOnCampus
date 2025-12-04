@@ -7,12 +7,11 @@ class UnrealEngineAPIManager {
       "Content-Type": "application/json",
     };
 
-    // 运行时路径配置 - 使用关卡蓝图路径（推荐）
-    // PIE模式路径: /Game/UEDPIE_0_NewMap.NewMap:PersistentLevel.NewMap_C_3
-    // 打包后路径: /Game/NewMap.NewMap:PersistentLevel.NewMap_C_3
-    this.droneActorPath = "/Game/UEDPIE_0_NewMap.NewMap:PersistentLevel.NewMap_C_3"; // 关卡蓝图路径
-    this.levelScriptActorPath =
-      "/Game/UEDPIE_0_NewMap.NewMap:PersistentLevel.NewMap_C_3"; // 关卡蓝图路径
+    // 运行时路径配置
+    // 无人机Actor路径（打包后）
+    this.droneActorPath = "/Game/NewMap.NewMap:PersistentLevel.FbxScene_Drone_C_UAID_107C61AAC641276C02_1958446408";
+    // 关卡蓝图路径（打包后）
+    this.levelScriptActorPath = "/Game/NewMap.NewMap:PersistentLevel.NewMap_C_3";
 
     // 预定义的位置坐标
     this.locations = {
@@ -31,9 +30,14 @@ class UnrealEngineAPIManager {
       parameters: parameters,
     };
 
+    // 判断是否为灯光相关操作（这些可能不存在）
+    const isLightOperation = functionName === "ChangeColorAPI";
+
     try {
-      console.log(`调用函数 '${functionName}' 在对象: ${objectPath}`);
-      console.log("发送参数:", parameters);
+      if (!isLightOperation) {
+        console.log(`调用函数 '${functionName}' 在对象: ${objectPath}`);
+        console.log("发送参数:", parameters);
+      }
 
       const response = await fetch(this.baseUrl, {
         method: this.method,  // 使用 PUT 方法（UE官方规范）
@@ -41,34 +45,47 @@ class UnrealEngineAPIManager {
         body: JSON.stringify(payload),
       });
 
-      console.log(`响应状态码: ${response.status}`);
+      if (!isLightOperation) {
+        console.log(`响应状态码: ${response.status}`);
+      }
 
       if (response.ok) {
-        console.log("请求成功!");
+        if (!isLightOperation) {
+          console.log("请求成功!");
+        }
         try {
           const responseData = await response.json();
-          console.log("响应内容:", responseData);
+          if (!isLightOperation) {
+            console.log("响应内容:", responseData);
+          }
           return { success: true, data: responseData };
         } catch (e) {
           const responseText = await response.text();
-          console.log("响应内容(非JSON):", responseText);
+          if (!isLightOperation) {
+            console.log("响应内容(非JSON):", responseText);
+          }
           return { success: true, data: responseText };
         }
       } else {
         const errorText = await response.text();
-        console.error(`请求失败，状态码: ${response.status}`);
-        console.error("错误内容:", errorText);
+        if (!isLightOperation) {
+          console.error(`请求失败，状态码: ${response.status}`);
+          console.error("错误内容:", errorText);
+        }
         return { success: false, error: errorText };
       }
     } catch (error) {
-      console.error("请求过程中发生错误:", error);
+      if (!isLightOperation) {
+        console.error("请求过程中发生错误:", error);
+      }
       return { success: false, error: error.message };
     }
   }
 
-  // 设置无人机目标位置 - 更新函数名为SetLocation
+  // 设置无人机目标位置 - 使用 SetTargetLocation
   async setDroneLocation(x, y, z) {
-    return await this.sendRequest(this.droneActorPath, "SetLocation", {
+    // 优先使用 SetTargetLocation，它更符合"目标位置"的语义
+    return await this.sendRequest(this.droneActorPath, "SetTargetLocation", {
       X: x,
       Y: y,
       Z: z,
@@ -285,12 +302,13 @@ class UnrealEngineAPIManager {
 
   // ==================== 基站灯光控制方法 ====================
   
-  // 基站灯光对象路径（根据UE API规范）
+  // 基站灯光对象路径（打包后 Standalone 模式）
   getBaseStationLightPaths() {
     return {
-      light1: "/Game/NewMap.NewMap:PersistentLevel.light_C_UAID_A0AD9F0755B9CFA302_2066102057",
-      light2: "/Game/NewMap.NewMap:PersistentLevel.light_C_UAID_A0AD9F0755B9D2A302_1321381589",
-      light3: "/Game/NewMap.NewMap:PersistentLevel.light_C_UAID_A0AD9F0755B9D2A302_1393896590"
+      // 打包后 Standalone 模式的灯光对象路径
+      light1: "/Game/NewMap/_Generated_/450VU4JLHPSITSM21TWRCZ36J.NewMap:PersistentLevel.light_C_UAID_A0AD9F0755B9D2A302_1393896590",
+      light2: "/Game/NewMap/_Generated_/BA1J4ULWYIRE2TCF6MZFVA30Z.NewMap:PersistentLevel.light_C_UAID_A0AD9F0755B9D2A302_1321381589",
+      light3: "/Game/NewMap/_Generated_/450VU4JLHPSITSM21TWRCZ36J.NewMap:PersistentLevel.light_C_UAID_A0AD9F0755B9CFA302_2066102057"
     };
   }
 
@@ -298,36 +316,20 @@ class UnrealEngineAPIManager {
   // lightIndex: 1, 2, 3 (单个灯) 或 0 (全部灯)
   // colorCode: 0=红, 1=绿, 2=黄
   async changeBaseStationLight(lightIndex, colorCode) {
-    const lightPaths = this.getBaseStationLightPaths();
+    const paths = this.getBaseStationLightPaths();
+    const lightsToChange = lightIndex === 0 
+      ? [paths.light1, paths.light2, paths.light3] 
+      : [paths[`light${lightIndex}`]];
     
-    if (lightIndex === 0) {
-      // 改变所有灯光
-      const results = [];
-      for (let i = 1; i <= 3; i++) {
-        const result = await this.sendRequest(
-          lightPaths[`light${i}`],
-          "ChangeColorAPI",
-          { Active: colorCode }
-        );
+    const results = [];
+    for (const path of lightsToChange) {
+      if (path) {
+        const result = await this.sendRequest(path, "ChangeColorAPI", { Active: colorCode });
         results.push(result);
       }
-      return { 
-        success: results.every(r => r.success), 
-        results: results 
-      };
-    } else if (lightIndex >= 1 && lightIndex <= 3) {
-      // 改变单个灯光
-      return await this.sendRequest(
-        lightPaths[`light${lightIndex}`],
-        "ChangeColorAPI",
-        { Active: colorCode }
-      );
-    } else {
-      return { 
-        success: false, 
-        error: "无效的灯光索引，应该是0-3" 
-      };
     }
+    
+    return results.length === 1 ? results[0] : { success: results.every(r => r.success), results };
   }
 
   // 设置基站灯光为绿色（正常状态）
@@ -398,4 +400,4 @@ class UnrealEngineAPIManager {
 }
 
 // 创建全局实例
-window.ueApiManager = new UnrealEngineAPIManager();
+window.apiManager = new UnrealEngineAPIManager();

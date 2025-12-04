@@ -2,7 +2,8 @@
 class CastRayIntegration {
     constructor() {
         this.websocket = null;
-        this.apiBase = 'http://localhost:8000';
+        // 使用 window.appConfig 中的 CastRay 配置（主要服务）
+        this.apiBase = (window && window.appConfig && window.appConfig.castrayApiBase) ? window.appConfig.castrayApiBase : 'http://10.30.2.11:8000';
         this.reconnectAttempts = 0;
         this.maxReconnectAttempts = 5;
         this.init();
@@ -57,7 +58,11 @@ class CastRayIntegration {
 
     connectWebSocket() {
         try {
-            this.websocket = new WebSocket('ws://localhost:8000/ws');
+            // 使用 window.appConfig.castrayWsUrl，如果不存在则 fallback 到 CastRay 地址
+            const wsUrl = (window && window.appConfig && window.appConfig.castrayWsUrl) 
+                ? window.appConfig.castrayWsUrl 
+                : 'ws://10.30.2.11:8000/ws';
+            this.websocket = new WebSocket(wsUrl);
             
             this.websocket.onopen = () => {
                 console.log('CastRay WebSocket 连接已建立');
@@ -86,7 +91,7 @@ class CastRayIntegration {
                 console.error('CastRay WebSocket 错误:', error);
             };
         } catch (error) {
-            console.error('创建 WebSocket 连接失败:', error);
+            console.error('创建 CastRay WebSocket 连接失败:', error);
             this.scheduleReconnect();
         }
     }
@@ -94,7 +99,7 @@ class CastRayIntegration {
     scheduleReconnect() {
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
             setTimeout(() => {
-                console.log(`尝试重新连接 WebSocket (${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})`);
+                console.log(`尝试重新连接 CastRay WebSocket (${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})`);
                 this.reconnectAttempts++;
                 this.connectWebSocket();
             }, 5000);

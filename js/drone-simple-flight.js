@@ -16,82 +16,74 @@ class DroneSimpleFlightUI {
     this.pathManager = pathManager;
 
     const html = `
-      <div class="simple-flight-card">
-        <div class="card-header">
-          <h3>🚁 无人机飞行控制</h3>
-        </div>
-        
-        <div class="card-content">
-          <!-- 起点设置 -->
-          <div class="flight-section">
-            <h4>📍 起点设置</h4>
-            <div class="coordinate-inputs">
-              <div class="coord-input-small">
-                <label>X:</label>
-                <input type="number" id="start-x" value="0" placeholder="X">
-              </div>
-              <div class="coord-input-small">
-                <label>Y:</label>
-                <input type="number" id="start-y" value="0" placeholder="Y">
-              </div>
-              <div class="coord-input-small">
-                <label>Z:</label>
-                <input type="number" id="start-z" value="100" placeholder="Z">
-              </div>
-            </div>
+      <!-- 起点设置 -->
+      <div class="flight-section" style="margin-bottom: 15px;">
+        <label style="font-weight: bold; display: block; margin-bottom: 8px;">📍 起点设置</label>
+        <div class="coordinate-inputs" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+          <div class="coord-input-small">
+            <label style="font-size: 12px;">X:</label>
+            <input type="number" id="start-x" value="0" placeholder="X" style="width: 100%; padding: 6px; box-sizing: border-box;">
           </div>
-
-          <!-- 终点设置 -->
-          <div class="flight-section">
-            <h4>🎯 终点设置</h4>
-            <div class="coordinate-inputs">
-              <div class="coord-input-small">
-                <label>X:</label>
-                <input type="number" id="target-x" value="100" placeholder="X">
-              </div>
-              <div class="coord-input-small">
-                <label>Y:</label>
-                <input type="number" id="target-y" value="100" placeholder="Y">
-              </div>
-              <div class="coord-input-small">
-                <label>Z:</label>
-                <input type="number" id="target-z" value="120" placeholder="Z">
-              </div>
-            </div>
+          <div class="coord-input-small">
+            <label style="font-size: 12px;">Y:</label>
+            <input type="number" id="start-y" value="0" placeholder="Y" style="width: 100%; padding: 6px; box-sizing: border-box;">
           </div>
-
-          <!-- 预设位置 -->
-          <div class="flight-section">
-            <h4>⚡ 快速预设</h4>
-            <select id="preset-locations" class="form-control">
-              <option value="">-- 选择预设位置 --</option>
-              <option value="library">图书馆 (0, 0, 100) → (-850, -30, 62)</option>
-              <option value="dorm">宿舍 (0, 0, 100) → (500, 400, 80)</option>
-              <option value="canteen">食堂 (0, 0, 100) → (-200, 300, 75)</option>
-            </select>
-          </div>
-
-          <!-- 路径信息 -->
-          <div class="flight-info-box">
-            <div id="flight-path-info">未设置路径</div>
-          </div>
-
-          <!-- 控制按钮 -->
-          <div class="flight-buttons">
-            <button id="start-flight-btn" class="btn-primary">
-              <i class="fas fa-play"></i> 开始飞行
-            </button>
-            <button id="stop-flight-btn" class="btn-danger" disabled>
-              <i class="fas fa-stop"></i> 停止
-            </button>
-          </div>
-
-          <!-- 飞行状态 -->
-          <div class="flight-state-box" style="display: none;">
-            <div class="status-label">飞行状态:</div>
-            <div id="flight-status" class="status-value">待飞行</div>
+          <div class="coord-input-small">
+            <label style="font-size: 12px;">Z:</label>
+            <input type="number" id="start-z" value="100" placeholder="Z" style="width: 100%; padding: 6px; box-sizing: border-box;">
           </div>
         </div>
+      </div>
+
+      <!-- 终点设置 -->
+      <div class="flight-section" style="margin-bottom: 15px;">
+        <label style="font-weight: bold; display: block; margin-bottom: 8px;">🎯 终点设置</label>
+        <div class="coordinate-inputs" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+          <div class="coord-input-small">
+            <label style="font-size: 12px;">X:</label>
+            <input type="number" id="target-x" value="100" placeholder="X" style="width: 100%; padding: 6px; box-sizing: border-box;">
+          </div>
+          <div class="coord-input-small">
+            <label style="font-size: 12px;">Y:</label>
+            <input type="number" id="target-y" value="100" placeholder="Y" style="width: 100%; padding: 6px; box-sizing: border-box;">
+          </div>
+          <div class="coord-input-small">
+            <label style="font-size: 12px;">Z:</label>
+            <input type="number" id="target-z" value="120" placeholder="Z" style="width: 100%; padding: 6px; box-sizing: border-box;">
+          </div>
+        </div>
+      </div>
+
+      <!-- 预设位置 -->
+      <div class="flight-section" style="margin-bottom: 15px;">
+        <label style="font-weight: bold; display: block; margin-bottom: 8px;">⚡ 快速预设</label>
+        <select id="preset-locations" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+          <option value="">-- 选择预设位置 --</option>
+          <option value="library">图书馆 (0, 0, 100) → (-850, -30, 62)</option>
+          <option value="dorm">宿舍 (0, 0, 100) → (500, 400, 80)</option>
+          <option value="canteen">食堂 (0, 0, 100) → (-200, 300, 75)</option>
+        </select>
+      </div>
+
+      <!-- 路径信息 -->
+      <div class="flight-info-box" style="background: #f5f5f5; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 13px; border-left: 3px solid #2196F3;">
+        <div id="flight-path-info" style="color: #666;">未设置路径</div>
+      </div>
+
+      <!-- 控制按钮 -->
+      <div class="flight-buttons" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px;">
+        <button id="start-flight-btn" class="action-btn primary-btn" style="padding: 10px;">
+          <i class="fas fa-play"></i> 开始飞行
+        </button>
+        <button id="stop-flight-btn" class="action-btn" style="padding: 10px; background: #f44336; display: none;">
+          <i class="fas fa-stop"></i> 停止飞行
+        </button>
+      </div>
+
+      <!-- 飞行状态 -->
+      <div class="flight-state-box" style="display: none; padding: 10px; background: #e3f2fd; border-left: 3px solid #2196F3; border-radius: 4px; margin-top: 10px;">
+        <div class="status-label" style="font-size: 12px; color: #666;">飞行状态:</div>
+        <div id="flight-status" style="font-weight: bold; color: #2196F3; margin-top: 4px;">待飞行</div>
       </div>
     `;
 

@@ -316,7 +316,8 @@ class VehicleScenarioManager {
     };
 
     try {
-      const response = await fetch("http://localhost:5000/api/agent/decision", {
+      const agentUrl = (window && window.appConfig && window.appConfig.vehicleAgentUrl) ? window.appConfig.vehicleAgentUrl : "http://10.30.2.11:5000/api/agent/decision";
+      const response = await fetch(agentUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestData),
@@ -347,7 +348,8 @@ class VehicleScenarioManager {
   async updateNetworkConfig(targetMEC) {
     // 调用网络配置更新API
     try {
-      const response = await fetch("http://localhost:5000/api/network/config", {
+      const networkUrl = (window && window.appConfig && window.appConfig.vehicleAgentUrl) ? window.appConfig.vehicleAgentUrl.replace('/api/agent/decision', '/api/network/config') : "http://10.30.2.11:5000/api/network/config";
+      const response = await fetch(networkUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

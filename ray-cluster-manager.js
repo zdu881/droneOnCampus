@@ -1,14 +1,14 @@
 /**
- * Ray Cluster Manager for droneOnCampus Dashboard
- * 专为dashboard集成优化的Ray集群管理器
+ * CastRay Cluster Manager for droneOnCampus Dashboard
+ * 专为dashboard集成优化的CastRay集群管理器
  */
 
 class RayClusterManager {
     constructor() {
-        // 优先使用 window.appConfig.castrayApiBase，其次使用 CastRay 默认地址
+        // 优先使用 window.appConfig.castrayApiBase（CastRay API，主要服务），其次使用默认地址
         try {
             const cfg = (window && window.appConfig) ? window.appConfig : {};
-            this.backendUrl = cfg.castrayApiBase || 'http://10.30.2.11:8001';
+            this.backendUrl = cfg.castrayApiBase || 'http://10.30.2.11:8000';
         } catch (e) {
             this.backendUrl = 'http://10.30.2.11:8000';
         }
@@ -30,7 +30,8 @@ class RayClusterManager {
 
     // 初始化管理器
     async initialize() {
-        console.log('Initializing Ray Cluster Manager...');
+        console.log('Initializing CastRay Cluster Manager...');
+        console.log('[CastRay] Backend URL:', this.backendUrl);
         
         // 初始化UI
         this.initializeUI();
@@ -117,11 +118,16 @@ class RayClusterManager {
     // 建立WebSocket连接
     connectWebSocket() {
         try {
-            const wsUrl = this.backendUrl.replace('http', 'ws') + '/ws';
+            // 优先使用 window.appConfig.castrayWsUrl，否则从 backendUrl 转换
+            let wsUrl = (window && window.appConfig && window.appConfig.castrayWsUrl)
+                ? window.appConfig.castrayWsUrl
+                : (this.backendUrl.replace('http', 'ws') + '/ws');
+            
+            console.log('[CastRay] Connecting to WebSocket:', wsUrl);
             this.websocket = new WebSocket(wsUrl);
 
             this.websocket.onopen = () => {
-                console.log('[Ray] WebSocket connected to Ray cluster');
+                console.log('[CastRay] WebSocket connected:', wsUrl);
                 this.isConnected = true;
                 this.reconnectAttempts = 0;
                 this.updateConnectionStatus('connected');
@@ -179,12 +185,16 @@ class RayClusterManager {
     // 获取集群数据
     async fetchClusterData() {
         try {
-            const response = await fetch(`${this.backendUrl}/api/ray-dashboard`);
+            const apiUrl = `${this.backendUrl}/api/ray-dashboard`;
+            console.log('[CastRay] Fetching cluster data from:', apiUrl);
+            
+            const response = await fetch(apiUrl);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             
             const result = await response.json();
+            console.log('[CastRay] Cluster data received:', result);
             // /api/ray-dashboard 返回 {data: {nodes: [], summary: {}}}
             if (result.data) {
                 this.updateClusterData(result.data);
@@ -195,7 +205,7 @@ class RayClusterManager {
             
         } catch (error) {
             console.error('Error fetching cluster data:', error);
-            this.showEmptyState('无法连接到Ray集群');
+            this.showEmptyState('无法连接到CastRay集群');
         }
     }
 
@@ -252,38 +262,28 @@ class RayClusterManager {
         const aliveNodesEl = document.getElementById('alive-nodes-value');
         if (aliveNodesEl) aliveNodesEl.textContent = this.clusterData.aliveNodes;
         
-        // 更新 CPU 使用
+        // 更新 CPU 使用 - 仅显示百分比
         const cpuUsageEl = document.getElementById('cpu-usage-value');
-        const cpuPercentEl = document.getElementById('cpu-usage-percent');
         if (cpuUsageEl) {
-            cpuUsageEl.textContent = `${this.clusterData.usedCpus.toFixed(0)} / ${this.clusterData.totalCpus.toFixed(0)}`;
-        }
-        if (cpuPercentEl) {
             const cpuPercent = this.clusterData.totalCpus > 0 
-                ? (this.clusterData.usedCpus / this.clusterData.totalCpus * 100).toFixed(1) 
+                ? (this.clusterData.usedCpus / this.clusterData.totalCpus * 100).toFixed(0) 
                 : 0;
-            cpuPercentEl.textContent = `${cpuPercent}%`;
+            cpuUsageEl.textContent = `${cpuPercent}%`;
         }
         
-        // 更新内存使用
+        // 更新内存使用 - 仅显示百分比
         const memUsageEl = document.getElementById('memory-usage-value');
-        const memPercentEl = document.getElementById('memory-usage-percent');
         if (memUsageEl) {
-            const usedGB = (this.clusterData.usedMemory / 1073741824).toFixed(0);
-            const totalGB = (this.clusterData.totalMemory / 1073741824).toFixed(0);
-            memUsageEl.textContent = `${usedGB} / ${totalGB} GB`;
-        }
-        if (memPercentEl) {
             const memPercent = this.clusterData.totalMemory > 0 
-                ? (this.clusterData.usedMemory / this.clusterData.totalMemory * 100).toFixed(1) 
+                ? (this.clusterData.usedMemory / this.clusterData.totalMemory * 100).toFixed(0) 
                 : 0;
-            memPercentEl.textContent = `${memPercent}%`;
+            memUsageEl.textContent = `${memPercent}%`;
         }
         
         // 更新 GPU 资源
         const gpuUsageEl = document.getElementById('gpu-usage-value');
         if (gpuUsageEl) {
-            gpuUsageEl.textContent = `${this.clusterData.totalGpus || 0} 个`;
+            gpuUsageEl.textContent = `${this.clusterData.totalGpus || 0}`;
         }
         
         // 更新节点计数徽章
