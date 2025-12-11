@@ -925,7 +925,7 @@ class DashboardManager {
   }
 
   async pollDetectionStatus(taskId) {
-    const maxAttempts = 120; // 120秒超时
+    const maxAttempts = 60; // 60次轮询 × 1秒 = 总时间拉长到约60秒 (1分钟)
     let attempts = 0;
     let cloudProcessingDetected = false;
     let lastProgress = 0;
@@ -976,10 +976,11 @@ class DashboardManager {
 
         attempts++;
         if (attempts < maxAttempts) {
-          // 1秒后再次轮询
+          // 延迟 1000ms (1秒) 后再次轮询
+          // 总轮询时间 = 60次 × 1秒 ≈ 60秒 (1分钟)
           setTimeout(poll, 1000);
         } else {
-          throw new Error('检测超时 (120秒)');
+          throw new Error('检测超时 (60秒)');
         }
 
       } catch (error) {
