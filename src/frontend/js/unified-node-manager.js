@@ -7,8 +7,8 @@ class UnifiedNodeManager {
         this.unifiedNodes = new Map(); // Key: Ray节点ID, Value: 统一节点数据
         // 支持从全局配置读取 API 地址（在 dashboard.html 中可定义 window.appConfig）
         const cfg = (window && window.appConfig) ? window.appConfig : {};
-        this.rayApiBase = cfg.rayApiBase || 'http://10.30.2.11:8000';  // CM-ZSB/Ray API
-        this.castrayApiBase = cfg.castrayApiBase || 'http://10.30.2.11:8001'; // CastRay 后端
+        this.rayApiBase = cfg.rayApiBase || 'http://10.30.2.11:28823';  // CastRay 内嵌服务
+        this.castrayApiBase = cfg.castrayApiBase || 'http://10.30.2.11:28823'; // CastRay 后端
         this.updateInterval = null;
         this.isInitialized = false;
         

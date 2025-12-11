@@ -1,0 +1,75 @@
+{
+  "name": "pixel-stream-receiver",
+  "version": "1.0.0",
+  "description": "Electron 像素流接收应用 - 自动检测无人机飞行状态并接收像素流",
+  "main": "main.js",
+  "author": "DroneOnCampus",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --debug",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win --publish never",
+    "build:win-exe": "electron-builder --win portable --publish never",
+    "build:win-msi": "electron-builder --win nsis --publish never",
+    "pack": "electron-builder --win --dir",
+    "dist": "electron-builder --win"
+  },
+  "dependencies": {
+    "ws": "^8.14.0"
+  },
+  "devDependencies": {
+    "electron": "^27.0.0",
+    "electron-builder": "^24.6.4"
+  },
+  "build": {
+    "appId": "com.droneoncampus.pixel-stream-receiver",
+    "productName": "无人机像素流接收器",
+    "directories": {
+      "buildResources": "assets"
+    },
+    "files": [
+      "main.js",
+      "src/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "certificateFile": null,
+      "certificatePassword": null,
+      "signingHashAlgorithms": [
+        "sha256"
+      ],
+      "sign": "./customSign.js"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "无人机像素流接收器",
+      "installerIcon": null,
+      "uninstallerIcon": null,
+      "installerHeaderIcon": null,
+      "installerSidebar": null,
+      "uninstallerSidebar": null
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}.exe"
+    }
+  }
+}

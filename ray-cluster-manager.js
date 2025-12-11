@@ -5,12 +5,12 @@
 
 class RayClusterManager {
     constructor() {
-        // 优先使用 window.appConfig.castrayApiBase（CastRay API，主要服务），其次使用默认地址
+        // 优先使用 window.appConfig.castrayApiBase（CastRay 内嵌服务，端口 28823），其次使用默认地址
         try {
             const cfg = (window && window.appConfig) ? window.appConfig : {};
-            this.backendUrl = cfg.castrayApiBase || 'http://10.30.2.11:8000';
+            this.backendUrl = cfg.castrayApiBase || 'http://10.30.2.11:28823';
         } catch (e) {
-            this.backendUrl = 'http://10.30.2.11:8000';
+            this.backendUrl = 'http://10.30.2.11:28823';
         }
         this.websocket = null;
         this.isConnected = false;

@@ -2,8 +2,8 @@
 class CastRayIntegration {
     constructor() {
         this.websocket = null;
-        // 使用 window.appConfig 中的 CastRay 配置（主要服务）
-        this.apiBase = (window && window.appConfig && window.appConfig.castrayApiBase) ? window.appConfig.castrayApiBase : 'http://10.30.2.11:8000';
+        // 使用 window.appConfig 中的 CastRay 配置（内嵌服务，端口 28823）
+        this.apiBase = (window && window.appConfig && window.appConfig.castrayApiBase) ? window.appConfig.castrayApiBase : 'http://10.30.2.11:28823';
         this.reconnectAttempts = 0;
         this.maxReconnectAttempts = 5;
         this.init();
@@ -58,10 +58,10 @@ class CastRayIntegration {
 
     connectWebSocket() {
         try {
-            // 使用 window.appConfig.castrayWsUrl，如果不存在则 fallback 到 CastRay 地址
+            // 使用 window.appConfig.castrayWsUrl，如果不存在则 fallback 到 CastRay 内嵌服务地址
             const wsUrl = (window && window.appConfig && window.appConfig.castrayWsUrl) 
                 ? window.appConfig.castrayWsUrl 
-                : 'ws://10.30.2.11:8000/ws';
+                : 'ws://10.30.2.11:28823/ws';
             this.websocket = new WebSocket(wsUrl);
             
             this.websocket.onopen = () => {

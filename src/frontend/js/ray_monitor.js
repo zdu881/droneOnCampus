@@ -1,5 +1,5 @@
 // Ray集群API配置 - 支持从 window.appConfig 注入
-const defaultRayBase = (window && window.appConfig && window.appConfig.rayApiBase) ? window.appConfig.rayApiBase : 'http://10.30.2.11:8000';
+const defaultRayBase = (window && window.appConfig && window.appConfig.rayApiBase) ? window.appConfig.rayApiBase : 'http://10.30.2.11:28823';
 const RAY_API_BASE = defaultRayBase;
 const UNIFIED_NODES_API = `${RAY_API_BASE}/api/nodes/unified`;
 const LEGACY_UNIFIED_API = `${RAY_API_BASE}/`; // 旧API回退点

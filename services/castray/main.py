@@ -1118,7 +1118,7 @@ async def get_detection_status(task_id: str):
 
 async def _run_detection_task(task_id: str, node_id: str, mode: str, data_source: str):
     """
-    后台执行检测任务
+    后台执行检测任务，支持本地和云处理
     """
     try:
         task = detection_tasks[task_id]
@@ -1141,7 +1141,7 @@ async def _run_detection_task(task_id: str, node_id: str, mode: str, data_source
         await asyncio.sleep(1.5)
         task["progress"] = 60
         task["status"] = "analyzing"
-        task["message"] = "正在进行推理分析..."
+        task["message"] = "正在进行本地推理分析..."
         logger.info(f"Task {task_id}: Running inference...")
         
         # 步骤4: 生成结果 (1秒)
@@ -1165,10 +1165,14 @@ async def _run_detection_task(task_id: str, node_id: str, mode: str, data_source
                 "inference_time": 2350,
                 "node_id": node_id,
                 "detection_mode": mode,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
+                # 云处理特征信息
+                "cloud_processing": False,
+                "cloud_processing_samples": 0
             }
         else:
-            # 自动检测结果
+            # 自动检测结果 - 模拟可能需要云处理的情况
+            # 如果低置信度样本 > 0，则标记为可能需要云处理
             results = {
                 "total_samples": 100,
                 "high_confidence": 85,
@@ -1177,7 +1181,12 @@ async def _run_detection_task(task_id: str, node_id: str, mode: str, data_source
                 "inference_time": 4870,
                 "node_id": node_id,
                 "detection_mode": mode,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
+                # 云处理特征信息 (根据低置信度判断)
+                "cloud_processing": 15 > 0,  # 如果有低置信度样本
+                "cloud_processing_samples": 15 if 15 > 0 else 0,
+                "cloud_upload_time_ms": 1250 if 15 > 0 else 0,
+                "cloud_processing_time_ms": 3500 if 15 > 0 else 0
             }
         
         task["progress"] = 100
@@ -1188,6 +1197,7 @@ async def _run_detection_task(task_id: str, node_id: str, mode: str, data_source
         task["completed_at"] = datetime.now().isoformat()
         
         logger.info(f"Task {task_id}: Detection completed successfully")
+        logger.info(f"Task {task_id}: Cloud processing = {results.get('cloud_processing')}, Samples = {results.get('cloud_processing_samples')}")
         
     except Exception as e:
         logger.error(f"Task {task_id}: Detection error - {e}")
@@ -1195,8 +1205,192 @@ async def _run_detection_task(task_id: str, node_id: str, mode: str, data_source
         if task:
             task["status"] = "error"
             task["error"] = str(e)
+            task["message"] = f"检测出错: {str(e)}"
+            task["results"] = {
+                "error_detail": str(e),
+                "failure_stage": "detection_processing",
+                "suggested_action": "请检查服务连接或数据格式"
+            }
+
+
+@app.post("/api/station-maintenance/detect-error-test")
+async def start_detection_error_test(request_data: dict):
+    """
+    启动基站运维检测的特殊错误测试模式
+    用于演示红色告警状态和错误处理流程
+    
+    参数:
+        node_id: 要检测的节点ID
+        error_type: 错误类型 ('cloud_rejection', 'service_error', 'timeout', 'network_error')
+    """
+    import uuid
+    
+    try:
+        node_id = request_data.get('node_id', 'test-node')
+        error_type = request_data.get('error_type', 'cloud_rejection')
+        
+        # 生成任务ID
+        task_id = str(uuid.uuid4())[:8]
+        
+        # 初始化任务状态
+        detection_tasks[task_id] = {
+            "task_id": task_id,
+            "node_id": node_id,
+            "mode": "error_test",
+            "data_source": "test",
+            "status": "initializing",
+            "progress": 0,
+            "message": "正在启动错误测试...",
+            "started_at": datetime.now().isoformat(),
+            "completed": False,
+            "results": None,
+            "error": None
+        }
+        
+        # 异步运行错误测试
+        asyncio.create_task(_run_detection_error_test(task_id, node_id, error_type))
+        
+        logger.info(f"Error test task started: {task_id} on node {node_id}, error_type={error_type}")
+        
+        return {
+            "task_id": task_id,
+            "status": "started",
+            "message": f"错误测试任务已启动 (类型: {error_type})"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error test startup error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+async def _run_detection_error_test(task_id: str, node_id: str, error_type: str):
+    """
+    后台执行检测错误测试任务
+    模拟各种失败场景以演示红色告警
+    """
+    try:
+        task = detection_tasks[task_id]
+        
+        # 步骤1: 初始化
+        await asyncio.sleep(0.5)
+        task["progress"] = 10
+        task["status"] = "initializing"
+        task["message"] = "正在初始化CM-ZSB服务..."
+        logger.info(f"Error test {task_id}: Initializing...")
+        
+        # 步骤2: 本地处理
+        await asyncio.sleep(1)
+        task["progress"] = 30
+        task["status"] = "processing"
+        task["message"] = "正在进行本地数据处理..."
+        logger.info(f"Error test {task_id}: Local processing...")
+        
+        # 步骤3: 云处理阶段 (这是错误发生的地方)
+        await asyncio.sleep(1.5)
+        task["progress"] = 70
+        task["status"] = "cloud_processing"
+        task["message"] = "正在准备云端处理..."
+        logger.info(f"Error test {task_id}: Preparing cloud processing...")
+        
+        # 步骤4: 模拟特定的错误类型
+        await asyncio.sleep(1)
+        
+        # 错误映射
+        error_configs = {
+            'cloud_rejection': {
+                'error': '云服务拒绝处理: 低置信度样本数量超过阈值',
+                'error_detail': '云端AI服务评估认为样本质量不符合处理标准(平均置信度 < 0.7)',
+                'failure_stage': 'cloud_inference',
+                'suggested_action': '请重新采集更高质量的样本数据',
+                'cloud_processing_samples': 25,
+                'cloud_upload_time_ms': 2100,
+                'cloud_rejection_reason': 'LOW_CONFIDENCE_THRESHOLD'
+            },
+            'service_error': {
+                'error': '云端服务出错: 处理过程中发生内部错误',
+                'error_detail': '云端AI服务处理失败 (Error Code: 5001)',
+                'failure_stage': 'cloud_processing',
+                'suggested_action': '请稍后重试或联系技术支持',
+                'cloud_processing_samples': 20,
+                'cloud_upload_time_ms': 1800,
+                'cloud_error_code': '5001',
+                'cloud_error_message': 'Internal Server Error'
+            },
+            'timeout': {
+                'error': '云端处理超时: 等待云服务响应超过设定时间',
+                'error_detail': '云端推理服务响应超时 (超过30秒)',
+                'failure_stage': 'cloud_processing_timeout',
+                'suggested_action': '请检查网络连接或稍后重试',
+                'cloud_processing_samples': 0,
+                'cloud_upload_time_ms': 2200
+            },
+            'network_error': {
+                'error': '网络错误: 无法连接到云端服务',
+                'error_detail': '网络连接失败 - 无法连接到云端服务器',
+                'failure_stage': 'cloud_upload',
+                'suggested_action': '请检查网络连接',
+                'cloud_processing_samples': 0
+            }
+        }
+        
+        error_config = error_configs.get(error_type, error_configs['cloud_rejection'])
+        
+        # 生成错误结果
+        task["progress"] = 100
+        task["status"] = "error"
+        task["message"] = f"测试错误: {error_type}"
+        task["error"] = error_config['error']
+        task["completed"] = True
+        task["completed_at"] = datetime.now().isoformat()
+        
+        # 详细结果
+        task["results"] = {
+            "total_samples": 50,
+            "high_confidence": 25,
+            "low_confidence": 25,
+            "confidence_threshold": 0.9,
+            "inference_time": 2100,
+            "node_id": node_id,
+            "detection_mode": "error_test",
+            "timestamp": datetime.now().isoformat(),
+            # 错误信息
+            "error_detail": error_config.get('error_detail', ''),
+            "failure_stage": error_config.get('failure_stage', ''),
+            "suggested_action": error_config.get('suggested_action', ''),
+            # 云处理信息
+            "cloud_processing": True,
+            "cloud_processing_samples": error_config.get('cloud_processing_samples', 0),
+            "cloud_upload_time_ms": error_config.get('cloud_upload_time_ms', 0),
+            "cloud_processing_time_ms": 0,  # 失败，所以没有处理时间
+            # 额外的错误类型特定信息
+            "cloud_rejection_reason": error_config.get('cloud_rejection_reason'),
+            "cloud_error_code": error_config.get('cloud_error_code'),
+            "cloud_error_message": error_config.get('cloud_error_message')
+        }
+        
+        logger.error(f"Error test {task_id}: Test error simulated - {error_config['error']}")
+        
+    except Exception as e:
+        logger.error(f"Error test {task_id}: Unexpected error - {e}")
+        task = detection_tasks.get(task_id)
+        if task:
+            task["status"] = "error"
+            task["error"] = f"测试执行错误: {str(e)}"
+            task["completed"] = True
+            task["message"] = f"测试出错: {str(e)}"
+            task["results"] = {
+                "error_detail": str(e),
+                "failure_stage": "test_execution",
+                "suggested_action": "请重新启动测试"
+            }
+
             task["completed"] = True
             task["message"] = f"检测出错: {str(e)}"
+            task["results"] = {
+                "error_detail": str(e),
+                "failure_stage": "detection_processing",
+                "suggested_action": "请检查服务连接或数据格式"
+            }
 
 
 if __name__ == '__main__':

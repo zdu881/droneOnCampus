@@ -37,9 +37,9 @@ class StationLightMappingManager {
    * 初始化节点配置
    * @param {Array} nodes - 节点配置数组
    * 示例: [
-   *   { nodeId: 'node-1', lightIndex: 1, checkUrl: 'http://10.30.2.11:8000/health' },
-   *   { nodeId: 'node-2', lightIndex: 2, checkUrl: 'http://10.30.2.12:8000/health' },
-   *   { nodeId: 'node-3', lightIndex: 3, checkUrl: 'http://10.30.2.13:8000/health' }
+   *   { nodeId: 'node-1', lightIndex: 1, checkUrl: 'http://10.30.2.11:28823/health' },
+   *   { nodeId: 'node-2', lightIndex: 2, checkUrl: 'http://10.30.2.12:28823/health' },
+   *   { nodeId: 'node-3', lightIndex: 3, checkUrl: 'http://10.30.2.13:28823/health' }
    * ]
    */
   initializeNodes(nodes) {

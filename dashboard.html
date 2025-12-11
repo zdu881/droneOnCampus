@@ -307,21 +307,9 @@
                   </div>
                   <div class="card-content">
                     <div class="view-buttons-grid">
-                      <button class="view-btn" id="view-change-btn" title="切换视角">
+                      <button class="view-btn" id="view-change-btn" title="在不同视角间切换">
                         <i class="fas fa-sync-alt"></i>
                         <span>切换视角</span>
-                      </button>
-                      <button class="view-btn" id="view-top-btn" title="俯视图">
-                        <i class="fas fa-arrow-down"></i>
-                        <span>俯视图</span>
-                      </button>
-                      <button class="view-btn" id="view-follow-btn" title="跟随视角">
-                        <i class="fas fa-crosshairs"></i>
-                        <span>跟随</span>
-                      </button>
-                      <button class="view-btn" id="view-fpv-btn" title="第一人称">
-                        <i class="fas fa-eye"></i>
-                        <span>FPV</span>
                       </button>
                     </div>
                   </div>
@@ -381,12 +369,6 @@
                         <button class="action-btn success-btn" id="drone-fly-btn">
                           <i class="fas fa-play"></i> 开始飞行
                         </button>
-                        <button class="action-btn warning-btn" id="drone-hover-btn">
-                          <i class="fas fa-pause"></i> 悬停
-                        </button>
-                        <button class="action-btn danger-btn" id="drone-return-btn">
-                          <i class="fas fa-home"></i> 返航
-                        </button>
                       </div>
                     </div>
                   </div>
@@ -400,28 +382,12 @@
                   <div class="card-content">
                     <div class="status-grid">
                       <div class="status-item">
-                        <span class="status-label">位置 X:</span>
-                        <span class="status-value" id="drone-status-x">--</span>
-                      </div>
-                      <div class="status-item">
-                        <span class="status-label">位置 Y:</span>
-                        <span class="status-value" id="drone-status-y">--</span>
-                      </div>
-                      <div class="status-item">
-                        <span class="status-label">高度 Z:</span>
-                        <span class="status-value" id="drone-status-z">--</span>
-                      </div>
-                      <div class="status-item">
-                        <span class="status-label">电池:</span>
-                        <span class="status-value" id="drone-status-battery">--%</span>
-                      </div>
-                      <div class="status-item">
-                        <span class="status-label">速度:</span>
-                        <span class="status-value" id="drone-status-speed">-- m/s</span>
-                      </div>
-                      <div class="status-item">
-                        <span class="status-label">状态:</span>
+                        <span class="status-label">飞行状态:</span>
                         <span class="status-value status-standby" id="drone-status-state">待机</span>
+                      </div>
+                      <div class="status-item">
+                        <span class="status-label">连接状态:</span>
+                        <span class="status-value status-connected" id="drone-status-connection">已连接</span>
                       </div>
                     </div>
                   </div>
@@ -1108,161 +1074,6 @@
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 右侧属性面板 -->
-        <div class="properties-panel">
-          <div class="properties-header">
-            <h3>属性与控制</h3>
-            <button class="collapse-btn" id="collapse-properties">
-              <i class="fas fa-chevron-right"></i>
-            </button>
-          </div>
-
-          <div class="panel-content-wrapper">
-            <!-- 场景树 -->
-            <div class="scene-tree">
-              <div class="tree-header">
-                <i class="fas fa-sitemap"></i>
-                <span>场景对象</span>
-              </div>
-              <div class="tree-content" id="scene-tree-content">
-                <!-- 场景对象将由JavaScript动态生成 -->
-              </div>
-            </div>
-
-            <!-- 对象属性与控制 -->
-            <div class="object-properties">
-              <div class="properties-header-alt">
-                <i class="fas fa-sliders-h"></i>
-                <span>属性与控制</span>
-              </div>
-              <div class="properties-content" id="properties-content">
-                <!-- 默认显示 -->
-                <div class="control-section active" id="default-controls">
-                  <p class="placeholder-text">
-                    在场景对象中选择一个项目以查看其属性和可用操作。
-                  </p>
-                </div>
-
-                <!-- 配送控制 -->
-                <div class="control-section" id="delivery-controls">
-                  <h4>配送任务</h4>
-                  <div class="delivery-routes">
-                    <div class="route-item">
-                      <button
-                        class="delivery-btn"
-                        data-from="Campus_Gate"
-                        data-to="Library"
-                      >
-                        <i class="fas fa-route"></i>
-                        <div class="route-info">
-                          <span class="route-name">校门 → 图书馆</span>
-                          <span class="route-distance">~850m</span>
-                        </div>
-                      </button>
-                    </div>
-                    <div class="route-item">
-                      <button
-                        class="delivery-btn"
-                        data-from="Library"
-                        data-to="Cafeteria"
-                      >
-                        <i class="fas fa-route"></i>
-                        <div class="route-info">
-                          <span class="route-name">图书馆 → 食堂</span>
-                          <span class="route-distance">~620m</span>
-                        </div>
-                      </button>
-                    </div>
-                    <div class="route-item">
-                      <button
-                        class="delivery-btn"
-                        data-from="Cafeteria"
-                        data-to="Dormitory"
-                      >
-                        <i class="fas fa-route"></i>
-                        <div class="route-info">
-                          <span class="route-name">食堂 → 宿舍</span>
-                          <span class="route-distance">~440m</span>
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 摄像头控制 -->
-                <div class="control-section" id="camera-controls">
-                  <h4>摄像头预设</h4>
-                  <div class="camera-presets">
-                    <button class="camera-btn" data-view="overview">
-                      <i class="fas fa-eye"></i>
-                      <span>全景视角</span>
-                    </button>
-                    <button class="camera-btn" data-view="tracking">
-                      <i class="fas fa-crosshairs"></i>
-                      <span>跟踪视角</span>
-                    </button>
-                    <button class="camera-btn" data-view="close-up">
-                      <i class="fas fa-search-plus"></i>
-                      <span>近距离视角</span>
-                    </button>
-                    <button class="camera-btn" data-view="fpv">
-                      <i class="fas fa-eye-slash"></i>
-                      <span>第一人称视角</span>
-                    </button>
-                  </div>
-                </div>
-
-                <!-- 基站管理 -->
-                <div class="control-section" id="station-controls">
-                  <h4>基站部署</h4>
-                  <div class="station-controls">
-                    <div class="station-type-selector">
-                      <label>基站类型:</label>
-                      <select id="station-type">
-                        <option value="charging">🔋 充电基站</option>
-                        <option value="communication">📡 通信基站</option>
-                        <option value="weather">🌡️ 气象站</option>
-                        <option value="security">🛡️ 安全基站</option>
-                      </select>
-                    </div>
-                    <div class="position-inputs">
-                      <input type="number" id="station-x" placeholder="X坐标" />
-                      <input type="number" id="station-y" placeholder="Y坐标" />
-                      <input type="number" id="station-z" placeholder="Z坐标" />
-                      <input
-                        type="text"
-                        id="station-name"
-                        placeholder="基站名称"
-                      />
-                    </div>
-                    <button
-                      class="action-btn primary-btn"
-                      id="deploy-station-btn"
-                    >
-                      <i class="fas fa-plus"></i>
-                      部署基站
-                    </button>
-                  </div>
-                  <div class="stations-list" id="stations-list">
-                    <!-- 基站列表将动态生成 -->
-                  </div>
-                </div>
-
-                <!-- 节点选择卡片 - 右侧属性面板 -->
-                <div class="control-section" id="node-selection-controls" style="display: none;">
-                  <h4>选择检测节点</h4>
-                  <div class="nodes-grid" id="detection-nodes-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <!-- 节点将动态生成 -->
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
               </div>
             </div>
           </div>

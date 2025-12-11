@@ -13,8 +13,8 @@ class FileTransferManager {
     };
     this.currentTab = 'active-transfers';
     
-    // API基础URL - 使用全局appConfig配置（CastRay服务运行在8000端口）
-    this.baseURL = (window.appConfig && window.appConfig.castrayApiBase) || 'http://10.30.2.11:8000';
+    // API基础URL - 使用全局appConfig配置（CastRay 内嵌服务在 28823 端口）
+    this.baseURL = (window.appConfig && window.appConfig.castrayApiBase) || 'http://10.30.2.11:28823';
     
     // 虚拟节点配置
     this.virtualNodes = [

@@ -124,14 +124,6 @@ class DashboardManager {
         this.changeViewType(e.target.value);
       });
     }
-
-    // 属性面板折叠
-    const collapseBtn = document.getElementById("collapse-properties");
-    if (collapseBtn) {
-      collapseBtn.addEventListener("click", () => {
-        this.togglePropertiesPanel();
-      });
-    }
   }
 
   setupToolbarButtons() {
@@ -427,11 +419,6 @@ class DashboardManager {
     this.logToConsole("Simulation stopped", "info");
   }
 
-  togglePropertiesPanel() {
-    const panel = document.querySelector(".properties-panel");
-    panel?.classList.toggle("collapsed");
-  }
-
   initializeDataUpdates() {
     // 实时数据更新
     this.updateInterval = setInterval(() => {
@@ -595,105 +582,6 @@ class DashboardManager {
     if (consoleOutput) {
       consoleOutput.innerHTML = "";
       this.logToConsole("Console cleared", "info");
-    }
-  }
-
-  loadSceneTree() {
-    const treeContent = document.getElementById("scene-tree-content");
-    if (!treeContent) return;
-
-    const sceneData = [
-      {
-        id: "drone-1",
-        name: "Drone Alpha",
-        icon: "fa-drone",
-        type: "delivery",
-      },
-      {
-        id: "camera-main",
-        name: "Main Camera",
-        icon: "fa-video",
-        type: "camera",
-      },
-      {
-        id: "base-stations",
-        name: "Base Stations",
-        icon: "fa-broadcast-tower",
-        type: "group",
-        children: this.stations.map((s) => ({
-          id: s.id,
-          name: s.name,
-          icon: "fa-satellite-dish",
-          type: "station",
-        })),
-      },
-      {
-        id: "environment",
-        name: "Environment",
-        icon: "fa-cloud-sun",
-        type: "environment",
-      },
-    ];
-
-    treeContent.innerHTML = this.buildTreeHtml(sceneData);
-    this.addTreeEventListeners();
-  }
-
-  buildTreeHtml(nodes, depth = 0) {
-    return nodes
-      .map(
-        (node) => `
-      <div class="tree-item" data-node-id="${node.id}" data-node-type="${
-          node.type
-        }" style="--depth: ${depth * 20}px">
-        ${
-          node.children
-            ? `<i class="fas fa-chevron-down tree-item-toggle"></i>`
-            : '<span class="tree-item-icon-placeholder"></span>'
-        }
-        <i class="fas ${node.icon} tree-item-icon"></i>
-        <span>${node.name}</span>
-      </div>
-      ${node.children ? this.buildTreeHtml(node.children, depth + 1) : ""}
-    `
-      )
-      .join("");
-  }
-
-  addTreeEventListeners() {
-    document.querySelectorAll(".tree-item").forEach((item) => {
-      item.addEventListener("click", (e) => {
-        const target = e.currentTarget;
-        const nodeId = target.dataset.nodeId;
-        const nodeType = target.dataset.nodeType;
-
-        // Handle selection style
-        document
-          .querySelectorAll(".tree-item")
-          .forEach((i) => i.classList.remove("selected"));
-        target.classList.add("selected");
-
-        this.selectedObjectId = nodeId;
-        this.showObjectControls(nodeType);
-      });
-    });
-  }
-
-  showObjectControls(objectType) {
-    // Hide all control sections first
-    document
-      .querySelectorAll(".object-properties .control-section")
-      .forEach((section) => {
-        section.classList.remove("active");
-      });
-
-    // Show the relevant control section
-    const controlSection = document.getElementById(`${objectType}-controls`);
-    if (controlSection) {
-      controlSection.classList.add("active");
-    } else {
-      // Show default if no specific control found
-      document.getElementById("default-controls").classList.add("active");
     }
   }
 

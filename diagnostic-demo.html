@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>诊断模块 LED 指示灯演示</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        /* LED 指示灯样式 */
+        .indicator-group {
+            display: flex;
+            justify-content: space-around;
+            margin: 30px 0;
+        }
+
+        .jet-indicator {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .indicator-light {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px solid #ddd;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .indicator-light.green {
+            background: radial-gradient(circle at 30% 30%, #90EE90, #00AA00);
+            box-shadow: 0 0 20px #00AA00, inset -2px -2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .indicator-light.yellow {
+            background: radial-gradient(circle at 30% 30%, #FFFF99, #FFCC00);
+            box-shadow: 0 0 20px #FFCC00, inset -2px -2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .indicator-light.red {
+            background: radial-gradient(circle at 30% 30%, #FF6B6B, #CC0000);
+            box-shadow: 0 0 20px #CC0000, inset -2px -2px 5px rgba(0, 0, 0, 0.3);
+            animation: pulse-red 1s infinite;
+        }
+
+        @keyframes pulse-red {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .jet-label {
+            font-weight: bold;
+            color: #333;
+            font-size: 0.9em;
+        }
+
+        .jet-status {
+            font-size: 0.8em;
+            color: #666;
+            text-align: center;
+            min-height: 20px;
+        }
+
+        /* 按钮样式 */
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .btn-success {
+            background: #10B981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-warning {
+            background: #F59E0B;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #D97706;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 158, 11, 0.4);
+        }
+
+        .btn-danger {
+            background: #EF4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #DC2626;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-primary {
+            background: #3B82F6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1D4ED8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6B7280;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4B5563;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(107, 114, 128, 0.4);
+        }
+
+        .button-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        /* 日志样式 */
+        .log-container {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .log-entry {
+            padding: 5px;
+            margin: 3px 0;
+            border-left: 3px solid #ddd;
+            padding-left: 10px;
+        }
+
+        .log-entry.info {
+            border-left-color: #3B82F6;
+            color: #3B82F6;
+        }
+
+        .log-entry.success {
+            border-left-color: #10B981;
+            color: #10B981;
+        }
+
+        .log-entry.warning {
+            border-left-color: #F59E0B;
+            color: #F59E0B;
+        }
+
+        .log-entry.error {
+            border-left-color: #EF4444;
+            color: #EF4444;
+        }
+
+        .log-time {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        /* 测试说明 */
+        .instructions {
+            background: #E0F2FE;
+            border-left: 4px solid #0284C7;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            color: #0C4A6E;
+        }
+
+        .instructions h3 {
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin: 5px 0;
+        }
+
+        /* 测试场景按钮 */
+        .test-scenarios {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .scenario-btn {
+            padding: 15px;
+            text-align: left;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .scenario-btn:hover {
+            border-color: #667eea;
+            background: #F3F4F6;
+        }
+
+        .scenario-btn strong {
+            display: block;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .scenario-btn small {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        /* 进度显示 */
+        .progress-info {
+            margin: 15px 0;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8em;
+        }
+
+        .responsive-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .main-panel {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .test-scenarios {
+                grid-template-columns: 1fr;
+            }
+
+            .button-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .state-history {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .state-item {
+            padding: 5px;
+            font-size: 0.9em;
+            border-bottom: 1px solid #eee;
+        }
+
+        .state-item:last-child {
+            border-bottom: none;
+        }
+
+        .state-timestamp {
+            color: #999;
+            margin-right: 10px;
+        }
+
+        .state-label {
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 3px;
+            background: #667eea;
+            color: white;
+            font-size: 0.8em;
+            display: inline-block;
+            margin: 0 5px;
+        }
+
+        /* 统计面板样式 */
+        .stats-panel {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        /* 高级选项 */
+        .advanced-options {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .advanced-options h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+
+        .option-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+            cursor: pointer;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+        }
+
+        /* 快速操作 */
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .quick-btn {
+            padding: 8px 12px;
+            font-size: 0.85em;
+            border: 1px solid #ddd;
+            background: white;
+            color: #667eea;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .quick-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        /* 详细信息面板 */
+        .details-panel {
+            background: #f0f4f8;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .details-panel.show {
+            display: block;
+        }
+
+        .detail-item {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .detail-value {
+            color: #333;
+            word-break: break-all;
+        }
+
+        /* 颜色映射表 */
+        .color-mapping-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+
+        .color-mapping-table th,
+        .color-mapping-table td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        .color-mapping-table th {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+
+        .color-mapping-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        .color-sample {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid #ddd;
+        }
+
+        .color-sample.green {
+            background: #10b981;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+
+        .color-sample.yellow {
+            background: #f59e0b;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+        }
+
+        .color-sample.red {
+            background: #ef4444;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+        }
+
+        @media (max-width: 768px) {
+            .stats-panel {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .option-group {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-flask"></i> 诊断模块 LED 指示灯演示</h1>
+            <p>测试三色指示灯状态转换和错误告警功能</p>
+        </div>
+
+        <div class="card instructions">
+            <h3><i class="fas fa-lightbulb"></i> 使用说明</h3>
+            <ul>
+                <li><strong>正常流程</strong>: 绿色(待命) → 黄色(本地处理) → 黄色(云端处理) → 绿色(完成) 或 红色(错误)</li>
+                <li><strong>错误告警</strong>: 立即切换至红色指示灯并闪烁，显示详细错误信息</li>
+                <li><strong>日志记录</strong>: 每次状态转换都会记录时间戳、处理阶段、云处理特征和错误信息</li>
+                <li><strong>演示模式</strong>: 点击下方按钮可演示不同的处理流程和错误场景</li>
+            </ul>
+        </div>
+
+        <div class="main-panel">
+            <!-- 左侧: 指示灯显示 -->
+            <div class="card">
+                <h2><i class="fas fa-lightbulb"></i> LED 指示灯状态</h2>
+                
+                <div class="indicator-group">
+                    <div class="jet-indicator">
+                        <div class="indicator-light green" id="jet1-indicator"></div>
+                        <div class="jet-label">基站 1</div>
+                        <div class="jet-status" id="jet1-status">待命</div>
+                    </div>
+                    <div class="jet-indicator">
+                        <div class="indicator-light green" id="jet2-indicator"></div>
+                        <div class="jet-label">基站 2</div>
+                        <div class="jet-status" id="jet2-status">待命</div>
+                    </div>
+                    <div class="jet-indicator">
+                        <div class="indicator-light green" id="jet3-indicator"></div>
+                        <div class="jet-label">基站 3</div>
+                        <div class="jet-status" id="jet3-status">待命</div>
+                    </div>
+                </div>
+
+                <div class="progress-info" id="progress-info" style="display: none;">
+                    <div>进度: <span id="progress-percent">0</span>%</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill" style="width: 0%">0%</div>
+                    </div>
+                    <div style="margin-top: 10px; font-size: 0.9em;" id="progress-message"></div>
+                </div>
+
+                <div class="state-history" id="state-history">
+                    <div class="state-item" style="color: #999;">状态转换历史将显示在此</div>
+                </div>
+            </div>
+
+            <!-- 右侧: 控制按钮和测试场景 -->
+            <div class="card">
+                <h2><i class="fas fa-gamepad"></i> 测试场景</h2>
+                
+                <div class="test-scenarios">
+                    <button class="scenario-btn" onclick="demoSuccessFlow()">
+                        <strong>✓ 正常完成</strong>
+                        <small>绿 → 黄(本地) → 黄(云) → 绿</small>
+                    </button>
+                    <button class="scenario-btn" onclick="demoLocalError()">
+                        <strong>✗ 本地处理错误</strong>
+                        <small>绿 → 黄(本地) → 红</small>
+                    </button>
+                    <button class="scenario-btn" onclick="demoCloudRejection()">
+                        <strong>✗ 云服务拒绝</strong>
+                        <small>绿 → 黄 → 黄(云) → 红</small>
+                    </button>
+                    <button class="scenario-btn" onclick="demoNetworkError()">
+                        <strong>✗ 网络错误</strong>
+                        <small>绿 → 黄 → 红</small>
+                    </button>
+                </div>
+
+                <div class="button-group" style="margin-top: 20px;">
+                    <button class="btn-primary" onclick="resetIndicators()">
+                        <i class="fas fa-redo"></i> 重置指示灯
+                    </button>
+                    <button class="btn-secondary" onclick="clearLog()">
+                        <i class="fas fa-trash"></i> 清除日志
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部: 详细日志 -->
+        <div class="card">
+            <h2><i class="fas fa-list"></i> 处理日志</h2>
+            <div class="log-container" id="log-container">
+                <div class="log-entry info">
+                    <span class="log-time">[系统]</span>
+                    <span class="log-message">演示系统已就绪，点击上方场景按钮开始测试</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 统计面板 -->
+        <div class="card">
+            <h2><i class="fas fa-chart-bar"></i> 处理统计</h2>
+            <div class="stats-panel">
+                <div class="stat-card">
+                    <div class="stat-label">总处理次数</div>
+                    <div class="stat-value" id="stat-total">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">成功完成</div>
+                    <div class="stat-value" id="stat-success">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">错误数量</div>
+                    <div class="stat-value" id="stat-errors">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">平均耗时</div>
+                    <div class="stat-value" id="stat-avgtime">0ms</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 高级功能 -->
+        <div class="card">
+            <h2><i class="fas fa-sliders-h"></i> 高级选项</h2>
+            
+            <div class="advanced-options">
+                <h3><i class="fas fa-cog"></i> 模拟设置</h3>
+                <div class="option-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="cloud-process-enabled" checked>
+                        <span>启用云处理模拟</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="random-errors" checked>
+                        <span>随机错误注入</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="verbose-logging">
+                        <span>详细日志输出</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="api-integration">
+                        <span>API 集成模式</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <button class="quick-btn" onclick="exportLog()">
+                    <i class="fas fa-download"></i> 导出日志
+                </button>
+                <button class="quick-btn" onclick="toggleDetails()">
+                    <i class="fas fa-info-circle"></i> 显示详情
+                </button>
+                <button class="quick-btn" onclick="testColorMapping()">
+                    <i class="fas fa-palette"></i> 测试颜色映射
+                </button>
+                <button class="quick-btn" onclick="runAutoTest()">
+                    <i class="fas fa-robot"></i> 自动测试
+                </button>
+            </div>
+
+            <!-- 详细信息面板 -->
+            <div class="details-panel" id="details-panel">
+                <div class="detail-item">
+                    <div class="detail-label">系统状态:</div>
+                    <div class="detail-value" id="detail-status">就绪</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">当前模式:</div>
+                    <div class="detail-value" id="detail-mode">演示模式</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">API 连接:</div>
+                    <div class="detail-value" id="detail-api">未连接</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">最后操作:</div>
+                    <div class="detail-value" id="detail-last-op">无</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">处理时间范围:</div>
+                    <div class="detail-value" id="detail-time-range">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 颜色映射参考 -->
+        <div class="card">
+            <h2><i class="fas fa-palette"></i> 颜色映射参考</h2>
+            <table class="color-mapping-table">
+                <thead>
+                    <tr>
+                        <th>状态</th>
+                        <th>颜色</th>
+                        <th>UE 代码</th>
+                        <th>含义</th>
+                        <th>说明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>initializing</td>
+                        <td><span class="color-sample green"></span> 绿色</td>
+                        <td>1</td>
+                        <td>初始化</td>
+                        <td>系统准备就绪，等待任务</td>
+                    </tr>
+                    <tr>
+                        <td>local_processing</td>
+                        <td><span class="color-sample yellow"></span> 黄色</td>
+                        <td>2</td>
+                        <td>本地处理中</td>
+                        <td>执行本地 CM-ZSB 推理</td>
+                    </tr>
+                    <tr>
+                        <td>cloud_processing</td>
+                        <td><span class="color-sample yellow"></span> 黄色</td>
+                        <td>2</td>
+                        <td>云端处理中</td>
+                        <td>上传至云端进行处理</td>
+                    </tr>
+                    <tr>
+                        <td>completed</td>
+                        <td><span class="color-sample green"></span> 绿色</td>
+                        <td>1</td>
+                        <td>完成</td>
+                        <td>所有处理已完成</td>
+                    </tr>
+                    <tr>
+                        <td>error</td>
+                        <td><span class="color-sample red"></span> 红色</td>
+                        <td>0</td>
+                        <td>错误</td>
+                        <td>发生错误，需要处理</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 全局状态管理
+        // ==========================================
+        const DEMO_STATE = {
+            stats: {
+                total: 0,
+                success: 0,
+                errors: 0,
+                totalTime: 0,
+                times: []
+            },
+            currentTask: null,
+            startTime: null,
+            detailsVisible: false,
+            apiConnected: false
+        };
+
+        // ==========================================
+        // 日志记录系统
+        // ==========================================
+        function addLog(message, type = 'info') {
+            const logContainer = document.getElementById('log-container');
+            const time = new Date().toLocaleTimeString('zh-CN');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.innerHTML = `
+                <span class="log-time">[${time}]</span>
+                <span class="log-message">${message}</span>
+            `;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+
+            // 详细日志选项
+            if (document.getElementById('verbose-logging').checked) {
+                console.log(`[${type.toUpperCase()}] ${message}`);
+            }
+        }
+
+        // ==========================================
+        // 统计更新
+        // ==========================================
+        function updateStats() {
+            document.getElementById('stat-total').textContent = DEMO_STATE.stats.total;
+            document.getElementById('stat-success').textContent = DEMO_STATE.stats.success;
+            document.getElementById('stat-errors').textContent = DEMO_STATE.stats.errors;
+            
+            if (DEMO_STATE.stats.times.length > 0) {
+                const avgTime = Math.round(DEMO_STATE.stats.totalTime / DEMO_STATE.stats.times.length);
+                document.getElementById('stat-avgtime').textContent = avgTime + 'ms';
+            }
+        }
+
+        function recordTaskTime(duration) {
+            DEMO_STATE.stats.total++;
+            DEMO_STATE.stats.times.push(duration);
+            DEMO_STATE.stats.totalTime += duration;
+            updateStats();
+        }
+
+        function recordSuccess() {
+            DEMO_STATE.stats.success++;
+            updateStats();
+        }
+
+        function recordError() {
+            DEMO_STATE.stats.errors++;
+            updateStats();
+        }
+
+        // ==========================================
+        // 状态转换系统
+        // ==========================================
+        function setIndicatorState(state, info = '') {
+            const stateMap = {
+                'initializing': { color: 'green', label: '待命', ueColor: 1 },
+                'local_processing': { color: 'yellow', label: '本地处理', ueColor: 2 },
+                'cloud_processing': { color: 'yellow', label: '云端处理', ueColor: 2 },
+                'completed': { color: 'green', label: '完成', ueColor: 1 },
+                'error': { color: 'red', label: '错误', ueColor: 0 }
+            };
+
+            const stateInfo = stateMap[state] || { color: 'green', label: state, ueColor: 1 };
+            const timestamp = new Date().toLocaleTimeString('zh-CN');
+
+            // 更新指示灯
+            ['jet1', 'jet2', 'jet3'].forEach(jet => {
+                const light = document.getElementById(`${jet}-indicator`);
+                const status = document.getElementById(`${jet}-status`);
+                if (light) {
+                    light.className = `indicator-light ${stateInfo.color}`;
+                }
+                if (status) {
+                    status.textContent = stateInfo.label;
+                }
+            });
+
+            // 添加日志
+            let logMsg = `指示灯切换: ${stateInfo.label}`;
+            if (info) logMsg += ` - ${info}`;
+            addLog(logMsg, state === 'error' ? 'error' : 'info');
+
+            // 记录状态转换历史
+            addStateHistory(timestamp, state, stateInfo.label, info);
+
+            // API 集成模式
+            if (document.getElementById('api-integration').checked && window.apiManager) {
+                try {
+                    window.apiManager.changeBaseStationLight(0, stateInfo.ueColor);
+                } catch (e) {
+                    if (document.getElementById('verbose-logging').checked) {
+                        console.warn('API 调用失败:', e.message);
+                    }
+                }
+            }
+
+            // 更新详情面板
+            document.getElementById('detail-status').textContent = stateInfo.label;
+            document.getElementById('detail-last-op').textContent = `${timestamp} - ${logMsg}`;
+        }
+
+        function addStateHistory(timestamp, state, label, info) {
+            const history = document.getElementById('state-history');
+            const item = document.createElement('div');
+            item.className = 'state-item';
+            item.innerHTML = `
+                <span class="state-timestamp">${timestamp}</span>
+                <span class="state-label">${label}</span>
+                ${info ? `<span style="color: #666;">${info}</span>` : ''}
+            `;
+            history.appendChild(item);
+            history.scrollTop = history.scrollHeight;
+        }
+
+        // ==========================================
+        // 进度控制
+        // ==========================================
+        async function updateProgress(from, to, duration, message = '') {
+            const progressInfo = document.getElementById('progress-info');
+            progressInfo.style.display = 'block';
+            
+            const fill = document.getElementById('progress-fill');
+            const percent = document.getElementById('progress-percent');
+            const msgEl = document.getElementById('progress-message');
+            
+            const steps = to - from;
+            const stepDuration = duration / steps;
+
+            for (let i = from; i <= to; i++) {
+                fill.style.width = `${i}%`;
+                percent.textContent = i;
+                fill.textContent = `${i}%`;
+                if (message) msgEl.textContent = message;
+                await new Promise(r => setTimeout(r, stepDuration));
+            }
+        }
+
+        async function delay(ms) {
+            return new Promise(r => setTimeout(r, ms));
+        }
+
+        // ==========================================
+        // 演示场景
+        // ==========================================
+
+        // 场景 1: 正常完成
+        async function demoSuccessFlow() {
+            const startTime = Date.now();
+            addLog('开始演示: 正常完成流程', 'info');
+            resetIndicators();
+
+            // 初始化
+            setIndicatorState('initializing', '准备检测...');
+            await updateProgress(0, 20, 1000, '初始化中');
+            addLog('CM-ZSB 服务初始化完成');
+
+            await delay(500);
+
+            // 本地处理
+            setIndicatorState('local_processing', '开始本地推理');
+            await updateProgress(20, 60, 2000, '本地数据处理中');
+            addLog('加载数据完成: 100 个样本');
+            addLog('本地推理完成: 高置信度 85, 低置信度 15');
+            addLog('本地处理耗时: 2100ms', 'success');
+
+            await delay(500);
+
+            // 云处理
+            if (document.getElementById('cloud-process-enabled').checked) {
+                setIndicatorState('cloud_processing', '检测到低置信度样本，准备云处理');
+                await updateProgress(60, 85, 1500, '云端处理中');
+                addLog('云端上传: 15 个样本', 'warning');
+                addLog('云端处理耗时: 3500ms');
+                addLog('云端推理结果已接收');
+            } else {
+                await updateProgress(60, 85, 1000, '处理中');
+            }
+
+            await delay(500);
+
+            // 完成
+            setIndicatorState('completed', '所有处理完成');
+            await updateProgress(85, 100, 1000, '完成');
+            addLog('检测任务完成', 'success');
+            addLog('结果: 总样本=100, 高置信=85, 低置信=15', 'success');
+            
+            const duration = Date.now() - startTime;
+            recordTaskTime(duration);
+            recordSuccess();
+            addLog(`总耗时: ${duration}ms`, 'success');
+        }
+
+        // 场景 2: 本地处理错误
+        async function demoLocalError() {
+            const startTime = Date.now();
+            addLog('开始演示: 本地处理错误', 'error');
+            resetIndicators();
+
+            setIndicatorState('initializing', '准备检测');
+            await updateProgress(0, 30, 1500, '初始化中');
+            addLog('CM-ZSB 服务初始化完成');
+
+            await delay(500);
+
+            setIndicatorState('local_processing', '开始本地推理');
+            await updateProgress(30, 50, 1000, '本地处理中');
+
+            await delay(500);
+
+            // 错误发生
+            setIndicatorState('error', '本地推理过程中出错');
+            await updateProgress(50, 55, 500, '处理中断');
+            addLog('错误类型: LOCAL_PROCESS_ERROR', 'error');
+            addLog('本地推理出错: 样本预处理失败', 'error');
+            addLog('错误详情: 样本数据格式不正确或损坏', 'error');
+            addLog('建议: 请检查数据源或重新采集样本', 'warning');
+            
+            const duration = Date.now() - startTime;
+            recordTaskTime(duration);
+            recordError();
+            addLog(`耗时: ${duration}ms`, 'warning');
+        }
+
+        // 场景 3: 云服务拒绝
+        async function demoCloudRejection() {
+            const startTime = Date.now();
+            addLog('开始演示: 云服务拒绝', 'error');
+            resetIndicators();
+
+            setIndicatorState('initializing', '准备检测');
+            await updateProgress(0, 25, 1500, '初始化');
+            addLog('CM-ZSB 服务初始化完成');
+
+            await delay(500);
+
+            setIndicatorState('local_processing', '本地推理');
+            await updateProgress(25, 65, 2000, '本地处理');
+            addLog('本地推理完成: 高置信度 25, 低置信度 25');
+            addLog('检测到 25 个低置信度样本, 需要云处理');
+
+            await delay(500);
+
+            if (document.getElementById('cloud-process-enabled').checked) {
+                setIndicatorState('cloud_processing', '上传至云端处理');
+                await updateProgress(65, 75, 1000, '云上传');
+                addLog('云端上传: 25 个样本', 'warning');
+                addLog('云端处理耗时: 2100ms');
+
+                await delay(500);
+            }
+
+            // 云服务拒绝
+            setIndicatorState('error', '云服务拒绝处理');
+            addLog('错误类型: CLOUD_REJECTION', 'error');
+            addLog('云服务拒绝: 低置信度样本数量超过阈值', 'error');
+            addLog('错误代码: CLOUD_REJECTION (置信度 < 0.7)', 'error');
+            addLog('建议: 请重新采集更高质量的样本数据', 'warning');
+            
+            const duration = Date.now() - startTime;
+            recordTaskTime(duration);
+            recordError();
+            addLog(`耗时: ${duration}ms`, 'warning');
+        }
+
+        // 场景 4: 网络错误
+        async function demoNetworkError() {
+            const startTime = Date.now();
+            addLog('开始演示: 网络连接错误', 'error');
+            resetIndicators();
+
+            setIndicatorState('initializing', '准备检测');
+            await updateProgress(0, 30, 1500, '初始化');
+            addLog('CM-ZSB 服务初始化完成');
+
+            await delay(500);
+
+            setIndicatorState('local_processing', '本地推理');
+            await updateProgress(30, 60, 2000, '本地处理');
+            addLog('本地推理完成: 高置信度 80, 低置信度 20');
+
+            await delay(500);
+
+            if (document.getElementById('cloud-process-enabled').checked) {
+                setIndicatorState('cloud_processing', '准备云端处理');
+                await updateProgress(60, 65, 800, '准备云上传');
+
+                await delay(500);
+            }
+
+            // 网络错误
+            setIndicatorState('error', '网络连接失败');
+            addLog('错误类型: NETWORK_ERROR', 'error');
+            addLog('网络错误: 无法连接到云端服务器', 'error');
+            addLog('错误详情: 连接超时 (30000ms) - 请检查网络连接', 'error');
+            addLog('建议: 检查网络设置或稍后重试', 'warning');
+            
+            const duration = Date.now() - startTime;
+            recordTaskTime(duration);
+            recordError();
+            addLog(`耗时: ${duration}ms`, 'warning');
+        }
+
+        // ==========================================
+        // 高级功能
+        // ==========================================
+
+        // 重置指示灯
+        function resetIndicators() {
+            ['jet1', 'jet2', 'jet3'].forEach(jet => {
+                const light = document.getElementById(`${jet}-indicator`);
+                const status = document.getElementById(`${jet}-status`);
+                if (light) {
+                    light.className = 'indicator-light green';
+                }
+                if (status) {
+                    status.textContent = '待命';
+                }
+            });
+            
+            const progressInfo = document.getElementById('progress-info');
+            if (progressInfo) {
+                progressInfo.style.display = 'none';
+            }
+            
+            addLog('指示灯已重置为待命状态', 'info');
+        }
+
+        // 清除日志
+        function clearLog() {
+            const logContainer = document.getElementById('log-container');
+            logContainer.innerHTML = '<div class="log-entry info"><span class="log-time">[系统]</span><span class="log-message">日志已清除</span></div>';
+            addLog('日志已清除', 'info');
+        }
+
+        // 导出日志
+        function exportLog() {
+            const logContainer = document.getElementById('log-container');
+            const logs = Array.from(logContainer.querySelectorAll('.log-entry'))
+                .map(entry => entry.textContent)
+                .join('\n');
+
+            const stats = `
+════════════════════════════════════════
+诊断模块演示 - 日志导出
+时间: ${new Date().toLocaleString('zh-CN')}
+════════════════════════════════════════
+
+【统计信息】
+总处理次数: ${DEMO_STATE.stats.total}
+成功完成: ${DEMO_STATE.stats.success}
+错误数量: ${DEMO_STATE.stats.errors}
+平均耗时: ${DEMO_STATE.stats.total > 0 ? Math.round(DEMO_STATE.stats.totalTime / DEMO_STATE.stats.total) : 0}ms
+
+════════════════════════════════════════
+【详细日志】
+════════════════════════════════════════
+
+${logs}
+            `;
+
+            const blob = new Blob([stats], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `diagnostic-log-${Date.now()}.txt`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            addLog('日志已导出', 'success');
+        }
+
+        // 显示/隐藏详情
+        function toggleDetails() {
+            const panel = document.getElementById('details-panel');
+            DEMO_STATE.detailsVisible = !DEMO_STATE.detailsVisible;
+            panel.classList.toggle('show');
+            
+            if (DEMO_STATE.detailsVisible) {
+                addLog('详情面板已显示', 'info');
+            } else {
+                addLog('详情面板已隐藏', 'info');
+            }
+        }
+
+        // 测试颜色映射
+        async function testColorMapping() {
+            addLog('开始颜色映射测试', 'info');
+            resetIndicators();
+
+            const colors = [
+                { state: 'initializing', name: '绿色' },
+                { state: 'local_processing', name: '黄色' },
+                { state: 'cloud_processing', name: '黄色' },
+                { state: 'completed', name: '绿色' },
+                { state: 'error', name: '红色' }
+            ];
+
+            for (const color of colors) {
+                setIndicatorState(color.state, `测试 ${color.name}`);
+                addLog(`颜色映射测试: ${color.state} → ${color.name}`, 'info');
+                await delay(800);
+            }
+
+            resetIndicators();
+            addLog('颜色映射测试完成', 'success');
+        }
+
+        // 自动测试
+        async function runAutoTest() {
+            addLog('开始自动测试流程', 'info');
+            addLog('将依次执行所有演示场景...', 'warning');
+
+            const scenarios = [
+                { name: '正常完成', func: demoSuccessFlow },
+                { name: '本地错误', func: demoLocalError },
+                { name: '云服务拒绝', func: demoCloudRejection },
+                { name: '网络错误', func: demoNetworkError }
+            ];
+
+            for (const scenario of scenarios) {
+                addLog(`————————————————————————————————————`, 'info');
+                addLog(`执行场景: ${scenario.name}`, 'warning');
+                addLog(`————————————————————————————————————`, 'info');
+                
+                await scenario.func();
+                await delay(2000);
+            }
+
+            addLog('自动测试完成', 'success');
+            addLog(`汇总: 总次数=${DEMO_STATE.stats.total}, 成功=${DEMO_STATE.stats.success}, 错误=${DEMO_STATE.stats.errors}`, 'success');
+        }
+
+        // ==========================================
+        // 页面初始化
+        // ==========================================
+        window.addEventListener('load', () => {
+            addLog('诊断演示系统启动完成', 'success');
+            addLog('系统版本: 1.2 | 支持 API 集成、自动测试、日志导出', 'info');
+            addLog('点击上方的测试场景按钮开始演示', 'info');
+            
+            // 检查 API 连接
+            if (window.apiManager) {
+                DEMO_STATE.apiConnected = true;
+                document.getElementById('detail-api').textContent = '已连接';
+                addLog('API Manager 已连接', 'success');
+            }
+
+            // 检查 dashboard-manager
+            if (window.dashboardManager) {
+                addLog('Dashboard Manager 已加载', 'info');
+            }
+
+            updateStats();
+        });
+
+        // API 集成模式变化时的处理
+        document.addEventListener('DOMContentLoaded', () => {
+            const apiCheckbox = document.getElementById('api-integration');
+            if (apiCheckbox) {
+                apiCheckbox.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        if (!DEMO_STATE.apiConnected) {
+                            addLog('警告: API 未连接，API 集成模式可能不可用', 'warning');
+                        } else {
+                            addLog('API 集成模式已启用', 'success');
+                        }
+                    } else {
+                        addLog('API 集成模式已禁用', 'info');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

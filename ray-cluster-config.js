@@ -1,10 +1,10 @@
 // CastRay 后端服务配置
 const CASTRAY_CONFIG = {
-    // CastRay 后端服务地址
-    API_BASE: 'http://10.30.2.11:8000',
+    // CastRay 内嵌服务地址（端口 28823）
+    API_BASE: 'http://10.30.2.11:28823',
     
     // WebSocket 连接地址
-    WS_URL: 'ws://10.30.2.11:8000/ws',
+    WS_URL: 'ws://10.30.2.11:28823/ws',
     
     // API 端点
     ENDPOINTS: {

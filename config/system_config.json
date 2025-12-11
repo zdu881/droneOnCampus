@@ -2,7 +2,8 @@
   "system": {
     "name": "CastRay + DroneOnCampus Integrated System",
     "version": "1.0.0",
-    "description": "Ray集群监控 + CastRay分布式消息系统 + 无人机校园配送仿真"
+    "description": "Ray集群监控 + CastRay分布式消息系统 + 无人机校园配送仿真",
+    "ue_program_version": "v1.2"
   },
   "services": {
     "rayoutput": {

@@ -74,7 +74,27 @@ class UnrealEngineAPIManager {
 
   // 触发无人机动作 - 更新函数名为Fly
   async triggerDroneAction() {
-    return await this.sendRequest(this.droneActorPath, "Fly", {});
+    const result = await this.sendRequest(this.droneActorPath, "Fly", {});
+    
+    // 【新增】同步更新 Dashboard API 的飞行状态，供 Electron 应用检测
+    if (result.success) {
+      try {
+        // 注意: 使用 10.30.2.11 而不是 localhost，以便 Electron 应用也能访问
+        await fetch('http://10.30.2.11:8000/api/drone/status', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            isFlying: true,
+            status: 'flying'
+          })
+        });
+        console.log('✅ Dashboard API 飞行状态已更新');
+      } catch (err) {
+        console.warn('⚠️ 无法更新 Dashboard API 飞行状态:', err.message);
+      }
+    }
+    
+    return result;
   }
 
   // 改变摄像头视角 (对应 changeview.py)
@@ -108,7 +128,27 @@ class UnrealEngineAPIManager {
     }
 
     // 使用Fly函数而不是Action
-    return await this.sendRequest(this.droneActorPath, "Fly", {});
+    const flyResult = await this.sendRequest(this.droneActorPath, "Fly", {});
+    
+    // 【新增】同步更新 Dashboard API 的飞行状态，供 Electron 应用检测
+    if (flyResult.success) {
+      try {
+        // 注意: 使用 10.30.2.11 而不是 localhost，以便 Electron 应用也能访问
+        await fetch('http://10.30.2.11:8000/api/drone/status', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            isFlying: true,
+            status: 'flying'
+          })
+        });
+        console.log('✅ Dashboard API 飞行状态已更新');
+      } catch (err) {
+        console.warn('⚠️ 无法更新 Dashboard API 飞行状态:', err.message);
+      }
+    }
+    
+    return flyResult;
   }
 
   // 更新运行时路径（当PIE重启时需要调用）
@@ -237,13 +277,25 @@ class UnrealEngineAPIManager {
   }
 
   // 获取无人机状态 (新增)
+  // 注意: GetDroneStatus 函数在当前 UE 版本中不可用
   async getDroneStatus() {
-    return await this.sendRequest(this.droneActorPath, "GetDroneStatus", {});
+    console.warn('getDroneStatus 不可用 - UE 中未实现此函数');
+    return { 
+      success: false, 
+      error: 'GetDroneStatus 函数在当前 UE 版本中不可用',
+      isFlying: false 
+    };
   }
 
   // 获取无人机当前位置
+  // 注意: GetPosition 函数在当前 UE 版本中不可用
   async getDronePosition() {
-    return await this.sendRequest(this.droneActorPath, "GetPosition", {});
+    console.warn('getDronePosition 不可用 - UE 中未实现此函数');
+    return { 
+      success: false, 
+      error: 'GetPosition 函数在当前 UE 版本中不可用',
+      position: { x: 0, y: 0, z: 0 }
+    };
   }
 
   // 获取信号质量信息
@@ -256,12 +308,13 @@ class UnrealEngineAPIManager {
   }
 
   // 设置车辆位置 (Vehicle Scenario)
+  // 注意: SetVehicleLocation 函数在当前 UE 版本中不可用
   async setVehiclePosition(x, y, z = 0) {
-    return await this.sendRequest(this.droneActorPath, "SetVehicleLocation", {
-      X: x,
-      Y: y,
-      Z: z,
-    });
+    console.warn('setVehiclePosition 不可用 - UE 中未实现此函数');
+    return { 
+      success: false, 
+      error: 'SetVehicleLocation 函数在当前 UE 版本中不可用'
+    };
   }
 
   // 启动车辆移动 (Vehicle Scenario)
@@ -276,8 +329,13 @@ class UnrealEngineAPIManager {
   }
 
   // 获取车辆状态 (Vehicle Scenario)
+  // 注意: GetVehicleStatus 函数在当前 UE 版本中不可用
   async getVehicleStatus() {
-    return await this.sendRequest(this.droneActorPath, "GetVehicleStatus", {});
+    console.warn('getVehicleStatus 不可用 - UE 中未实现此函数');
+    return { 
+      success: false, 
+      error: 'GetVehicleStatus 函数在当前 UE 版本中不可用'
+    };
   }
 
   // 简单的连通性检测，用于 dashboard-manager 的 testConnection 调用
