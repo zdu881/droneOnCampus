@@ -52,6 +52,11 @@ class DashboardManager {
     // 设置初始状态
     this.updateConnectionStatus("connecting");
 
+    // 初始化飞行状态监控
+    this.droneFlightMonitor = null;
+    this.isDroneFlying = false;
+    this.flightStatusCheckInterval = null;
+
     console.log("Dashboard Manager initialized");
     this.logToConsole("Dashboard Manager initialized", "info");
   }
@@ -65,15 +70,15 @@ class DashboardManager {
     // UE Remote Control API
     window.appConfig.ueRemoteControlUrl = window.appConfig.ueRemoteControlUrl || 'http://10.30.2.11:30010';
     
-    // CastRay Backend API（主要服务，端口 8000 - 支持 REST API 和 WebSocket）
-    window.appConfig.castrayApiBase = window.appConfig.castrayApiBase || 'http://10.30.2.11:8000';
+    // CastRay Backend API（内嵌服务，端口 28823 - 支持 REST API 和 WebSocket）
+    window.appConfig.castrayApiBase = window.appConfig.castrayApiBase || 'http://10.30.2.11:28823';
     
-    // CastRay WebSocket（端口 8000/ws）
-    window.appConfig.castrayWsUrl = window.appConfig.castrayWsUrl || 'ws://10.30.2.11:8000/ws';
+    // CastRay WebSocket（端口 28823/ws）
+    window.appConfig.castrayWsUrl = window.appConfig.castrayWsUrl || 'ws://10.30.2.11:28823/ws';
     
-    // Ray/CM-ZSB API（备用方案，仅用于预测功能，端口 8000）
-    window.appConfig.rayApiBase = window.appConfig.rayApiBase || 'http://10.30.2.11:8000';
-    window.appConfig.wsUrl = window.appConfig.wsUrl || 'ws://10.30.2.11:8000/ws';
+    // Ray/CM-ZSB API（内嵌 CastRay 服务，端口 28823）
+    window.appConfig.rayApiBase = window.appConfig.rayApiBase || 'http://10.30.2.11:28823';
+    window.appConfig.wsUrl = window.appConfig.wsUrl || 'ws://10.30.2.11:28823/ws';
     
     // Vehicle Agent (可选，本地部署，端口 5000)
     window.appConfig.vehicleAgentUrl = window.appConfig.vehicleAgentUrl || 'http://10.30.2.11:5000/api/agent/decision';
@@ -201,14 +206,6 @@ class DashboardManager {
     if (autonomousFullscreenBtn) {
       autonomousFullscreenBtn.addEventListener("click", () => {
         this.toggleAutonomousFullscreen();
-      });
-    }
-
-    // 属性面板折叠
-    const collapseBtn = document.getElementById("collapse-properties");
-    if (collapseBtn) {
-      collapseBtn.addEventListener("click", () => {
-        this.togglePropertiesPanel();
       });
     }
   }
@@ -343,9 +340,9 @@ class DashboardManager {
     // 节点检测配置
     this.nodeDetectionConfig = {
       nodes: [
-        { id: 'node-1', url: 'http://10.30.2.11:8000/node1/status', lightIndex: 1 },
-        { id: 'node-2', url: 'http://10.30.2.11:8000/node2/status', lightIndex: 2 },
-        { id: 'node-3', url: 'http://10.30.2.11:8000/node3/status', lightIndex: 3 }
+        { id: 'node-1', url: 'http://10.30.2.11:28823/node1/status', lightIndex: 1 },
+        { id: 'node-2', url: 'http://10.30.2.11:28823/node2/status', lightIndex: 2 },
+        { id: 'node-3', url: 'http://10.30.2.11:28823/node3/status', lightIndex: 3 }
       ],
       statusToColorMap: {
         'idle': 1,        // 绿色 - 正常/空闲
@@ -413,17 +410,17 @@ class DashboardManager {
       {
         nodeId: 'node-1',
         lightIndex: 1,
-        checkUrl: 'http://10.30.2.11:8000/health' // CM-ZSB 或应用的健康检查端点
+        checkUrl: 'http://10.30.2.11:28823/health' // CastRay 内嵌服务的健康检查端点
       },
       {
         nodeId: 'node-2',
         lightIndex: 2,
-        checkUrl: 'http://10.30.2.12:8000/health'
+        checkUrl: 'http://10.30.2.12:28823/health'
       },
       {
         nodeId: 'node-3',
         lightIndex: 3,
-        checkUrl: 'http://10.30.2.13:8000/health'
+        checkUrl: 'http://10.30.2.13:28823/health'
       }
     ];
 
@@ -766,10 +763,116 @@ class DashboardManager {
     this.runDetectionTask(mode);
   }
 
+  // 启动错误测试模式 (演示红色告警)
+  startDetectionErrorTest(errorType = 'cloud_rejection') {
+    if (!this.selectedDetectionNode) {
+      this.logToConsole('请先选择检测节点', 'warning');
+      return;
+    }
+
+    // 显示进度区域，隐藏结果
+    const progressArea = document.querySelector('.detection-progress-area');
+    const resultsArea = document.querySelector('.detection-results-area');
+    
+    if (progressArea) progressArea.style.display = 'flex';
+    if (resultsArea) resultsArea.style.display = 'none';
+
+    // 重置进度条
+    const progressFill = document.querySelector('.progress-fill');
+    const progressPercent = document.querySelector('.progress-percent');
+    const progressMessage = document.getElementById('progress-message');
+    
+    if (progressFill) progressFill.style.width = '0%';
+    if (progressPercent) progressPercent.textContent = '0%';
+    if (progressMessage) progressMessage.textContent = '正在启动错误测试...';
+
+    // 清除日志
+    this.clearDetectionLog();
+    this.addDetectionLog(`*** 错误测试模式已启动 ***`, 'warning');
+    this.addDetectionLog(`错误类型: ${this.getErrorTypeLabel(errorType)}`);
+    this.addDetectionLog(`此模式用于演示红色告警和错误处理流程`, 'info');
+
+    // 调用错误测试API
+    this.runDetectionErrorTest(errorType);
+  }
+
+  // 获取错误类型的人类可读标签
+  getErrorTypeLabel(errorType) {
+    const labels = {
+      'cloud_rejection': '云服务拒绝 - 低置信度样本',
+      'service_error': '云服务内部错误',
+      'timeout': '云处理超时',
+      'network_error': '网络连接错误'
+    };
+    return labels[errorType] || errorType;
+  }
+
+  async runDetectionErrorTest(errorType) {
+    try {
+      const nodeId = this.selectedDetectionNode;
+      const url = 'http://10.30.2.11:28823/api/station-maintenance/detect-error-test';
+      
+      // 切换到初始化状态
+      this.setJetIndicators('initializing', '准备错误测试...');
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          node_id: nodeId,
+          error_type: errorType
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const taskId = data.task_id;
+
+      this.logToConsole(`错误测试任务已启动 (Task ID: ${taskId})`, 'info');
+      this.addDetectionLog(`任务ID: ${taskId}`, 'info');
+      
+      // 切换到本地处理状态
+      this.setJetIndicators('local_processing', '开始本地数据处理...');
+      
+      // 开始轮询检测状态
+      this.pollDetectionStatus(taskId);
+
+    } catch (error) {
+      this.logToConsole(`错误测试启动失败: ${error.message}`, 'error');
+      this.addDetectionLog(`启动错误: ${error.message}`, 'error');
+      this.setJetIndicators('error', `启动异常: ${error.message}`);
+      
+      // 显示错误结果
+      const resultsArea = document.querySelector('.detection-results-area');
+      const progressArea = document.querySelector('.detection-progress-area');
+      const resultStatus = document.querySelector('.result-status');
+      
+      if (progressArea) progressArea.style.display = 'none';
+      if (resultsArea) {
+        resultsArea.style.display = 'flex';
+        if (resultStatus) {
+          resultStatus.classList.remove('success');
+          resultStatus.classList.add('error');
+          resultStatus.textContent = '✗ 测试失败';
+        }
+      }
+    }
+  }
+
   async runDetectionTask(mode) {
     try {
       const nodeId = this.selectedDetectionNode;
-      const url = 'http://10.30.2.11:8000/api/station-maintenance/detect';
+      const url = 'http://10.30.2.11:28823/api/station-maintenance/detect';
+      
+      // 切换到初始化状态
+      this.setJetIndicators('initializing', '准备开始检测...');
+      this.addDetectionLog(`检测模式: ${mode === 'auto' ? '自动模式(实时数据)' : '示例模式'}`);
+      this.addDetectionLog(`目标节点: ${nodeId}`);
 
       const response = await fetch(url, {
         method: 'POST',
@@ -791,12 +894,18 @@ class DashboardManager {
       const taskId = data.task_id;
 
       this.logToConsole(`检测任务已启动 (Task ID: ${taskId})`, 'info');
-
+      this.addDetectionLog(`任务ID: ${taskId}`, 'info');
+      
+      // 切换到本地处理状态
+      this.setJetIndicators('local_processing', '开始本地数据处理...');
+      
       // 开始轮询检测状态
       this.pollDetectionStatus(taskId);
 
     } catch (error) {
       this.logToConsole(`检测启动失败: ${error.message}`, 'error');
+      this.addDetectionLog(`启动错误: ${error.message}`, 'error');
+      this.setJetIndicators('error', `启动异常: ${error.message}`);
       
       // 显示错误结果
       const resultsArea = document.querySelector('.detection-results-area');
@@ -818,10 +927,12 @@ class DashboardManager {
   async pollDetectionStatus(taskId) {
     const maxAttempts = 120; // 120秒超时
     let attempts = 0;
+    let cloudProcessingDetected = false;
+    let lastProgress = 0;
 
     const poll = async () => {
       try {
-        const url = `http://10.30.2.11:8000/api/station-maintenance/status/${taskId}`;
+        const url = `http://10.30.2.11:28823/api/station-maintenance/status/${taskId}`;
         const response = await fetch(url);
         
         if (!response.ok) {
@@ -830,8 +941,27 @@ class DashboardManager {
 
         const status = await response.json();
 
+        // 检查是否开启了云处理 (根据后端返回的标志或根据进度判断)
+        if (status.results && status.results.cloud_processing && !cloudProcessingDetected) {
+          cloudProcessingDetected = true;
+          this.setJetIndicators('cloud_processing', '云端处理中...');
+          this.addDetectionLog(`检测到云处理请求: 低置信度样本=${status.results.low_confidence || 0}`, 'warning');
+          this.addDetectionLog(`云端服务: 准备上传样本进行云端推理`, 'info');
+        }
+
+        // 检查是否有处理状态更新
+        if (status.processing_info) {
+          this.addDetectionLog(`处理进度: ${status.processing_info}`, 'info');
+        }
+
         // 更新进度条和消息
         this.updateDetectionProgress(status);
+
+        // 记录进度变化
+        if (status.progress && status.progress > lastProgress) {
+          this.addDetectionLog(`本地处理进度: ${status.progress}%`, 'info');
+          lastProgress = status.progress;
+        }
 
         // 检查是否完成
         if (status.completed) {
@@ -839,16 +969,22 @@ class DashboardManager {
           return;
         }
 
+        // 检查是否有错误
+        if (status.error) {
+          throw new Error(status.error);
+        }
+
         attempts++;
         if (attempts < maxAttempts) {
           // 1秒后再次轮询
           setTimeout(poll, 1000);
         } else {
-          throw new Error('检测超时');
+          throw new Error('检测超时 (120秒)');
         }
 
       } catch (error) {
         this.logToConsole(`轮询失败: ${error.message}`, 'error');
+        this.addDetectionLog(`轮询异常: ${error.message}`, 'error');
         this.showDetectionError(error.message);
       }
     };
@@ -891,22 +1027,61 @@ class DashboardManager {
     const progressArea = document.querySelector('.detection-progress-area');
     const resultsArea = document.querySelector('.detection-results-area');
     const resultStatus = document.querySelector('.result-status');
+    const results = status.results || {};
 
     if (progressArea) progressArea.style.display = 'none';
     if (resultsArea) resultsArea.style.display = 'flex';
 
-    if (resultStatus && status.error) {
-      resultStatus.classList.remove('success');
-      resultStatus.classList.add('error');
-      resultStatus.textContent = '✗ 检测异常';
-    } else if (resultStatus) {
+    // 检查是否有错误
+    if (status.error) {
+      // 错误状态
+      if (resultStatus) {
+        resultStatus.classList.remove('success');
+        resultStatus.classList.add('error');
+        resultStatus.textContent = '✗ 检测异常';
+      }
+      
+      // 设置红色告警指示灯
+      this.setJetIndicators('error', `检测失败: ${status.error}`);
+      this.addDetectionLog(`检测失败: ${status.error}`, 'error');
+      
+      // 详细错误信息
+      if (results.error_detail) {
+        this.addDetectionLog(`错误详情: ${results.error_detail}`, 'error');
+      }
+      if (results.failure_stage) {
+        this.addDetectionLog(`失败阶段: ${results.failure_stage}`, 'error');
+      }
+      if (results.suggested_action) {
+        this.addDetectionLog(`建议操作: ${results.suggested_action}`, 'warning');
+      }
+      
+      this.logToConsole(`检测失败: ${status.error}`, 'error');
+      return;
+    }
+
+    // 成功状态
+    if (resultStatus) {
       resultStatus.classList.remove('error');
       resultStatus.classList.add('success');
       resultStatus.textContent = '✓ 检测完成';
     }
+    
+    // 切换到完成状态 (绿色)
+    this.setJetIndicators('completed', '检测成功完成');
+    
+    // 记录云处理特征信息
+    if (results.cloud_processing) {
+      this.addDetectionLog(`云处理结果: ${results.cloud_processing_samples || 0}个样本已云端处理`, 'success');
+      if (results.cloud_upload_time_ms) {
+        this.addDetectionLog(`云上传耗时: ${results.cloud_upload_time_ms}ms`, 'info');
+      }
+      if (results.cloud_processing_time_ms) {
+        this.addDetectionLog(`云处理耗时: ${results.cloud_processing_time_ms}ms`, 'info');
+      }
+    }
 
     // 更新结果显示
-    const results = status.results || {};
     const totalSamples = document.getElementById('result-total-samples');
     const highConfidence = document.getElementById('result-high-confidence');
     const lowConfidence = document.getElementById('result-low-confidence');
@@ -917,6 +1092,10 @@ class DashboardManager {
     if (lowConfidence) lowConfidence.textContent = results.low_confidence || 0;
     if (inferenceTime) inferenceTime.textContent = `${results.inference_time || 0}ms`;
 
+    // 记录总结信息
+    this.addDetectionLog(`统计信息: 总样本=${results.total_samples}, 高置信=${results.high_confidence}, 低置信=${results.low_confidence}`, 'success');
+    this.addDetectionLog(`本地推理耗时: ${results.inference_time || 0}ms`, 'success');
+    
     this.logToConsole('检测完成', 'success');
   }
 
@@ -934,6 +1113,11 @@ class DashboardManager {
         resultStatus.textContent = '✗ 检测失败';
       }
     }
+    
+    // 设置红色告警
+    this.setJetIndicators('error', `系统错误: ${errorMessage}`);
+    this.addDetectionLog(`系统错误: ${errorMessage}`, 'error');
+    this.addDetectionLog(`请检查服务连接或重启应用`, 'warning');
   }
 
   resetDetectionUI() {
@@ -1014,6 +1198,9 @@ class DashboardManager {
           this.updateConnectionStatus("connected");
           this.logToConsole("Successfully connected to UE", "success");
           this.isConnected = true;
+          
+          // ✨ 连接成功后，启动飞行状态监控
+          this.startDroneFlightMonitoring();
         } else {
           throw new Error(result.error || "Connection failed");
         }
@@ -1022,10 +1209,16 @@ class DashboardManager {
         this.updateConnectionStatus("connected");
         this.logToConsole("Connected to UE (simulation mode)", "success");
         this.isConnected = true;
+        
+        // 启动飞行监控
+        this.startDroneFlightMonitoring();
       }
     } catch (error) {
       this.updateConnectionStatus("disconnected");
       this.logToConsole(`Connection failed: ${error.message}`, "error");
+      
+      // 连接失败，停止飞行监控
+      this.stopDroneFlightMonitoring();
     }
   }
 
@@ -1366,11 +1559,6 @@ class DashboardManager {
     this.logToConsole("Simulation stopped", "info");
   }
 
-  togglePropertiesPanel() {
-    const panel = document.querySelector(".properties-panel");
-    panel?.classList.toggle("collapsed");
-  }
-
   initializeDataUpdates() {
     // 实时数据更新
     this.updateInterval = setInterval(() => {
@@ -1537,105 +1725,6 @@ class DashboardManager {
     }
   }
 
-  loadSceneTree() {
-    const treeContent = document.getElementById("scene-tree-content");
-    if (!treeContent) return;
-
-    const sceneData = [
-      {
-        id: "drone-1",
-        name: "Drone Alpha",
-        icon: "fa-drone",
-        type: "delivery",
-      },
-      {
-        id: "camera-main",
-        name: "Main Camera",
-        icon: "fa-video",
-        type: "camera",
-      },
-      {
-        id: "base-stations",
-        name: "Base Stations",
-        icon: "fa-broadcast-tower",
-        type: "group",
-        children: this.stations.map((s) => ({
-          id: s.id,
-          name: s.name,
-          icon: "fa-satellite-dish",
-          type: "station",
-        })),
-      },
-      {
-        id: "environment",
-        name: "Environment",
-        icon: "fa-cloud-sun",
-        type: "environment",
-      },
-    ];
-
-    treeContent.innerHTML = this.buildTreeHtml(sceneData);
-    this.addTreeEventListeners();
-  }
-
-  buildTreeHtml(nodes, depth = 0) {
-    return nodes
-      .map(
-        (node) => `
-      <div class="tree-item" data-node-id="${node.id}" data-node-type="${
-          node.type
-        }" style="--depth: ${depth * 20}px">
-        ${
-          node.children
-            ? `<i class="fas fa-chevron-down tree-item-toggle"></i>`
-            : '<span class="tree-item-icon-placeholder"></span>'
-        }
-        <i class="fas ${node.icon} tree-item-icon"></i>
-        <span>${node.name}</span>
-      </div>
-      ${node.children ? this.buildTreeHtml(node.children, depth + 1) : ""}
-    `
-      )
-      .join("");
-  }
-
-  addTreeEventListeners() {
-    document.querySelectorAll(".tree-item").forEach((item) => {
-      item.addEventListener("click", (e) => {
-        const target = e.currentTarget;
-        const nodeId = target.dataset.nodeId;
-        const nodeType = target.dataset.nodeType;
-
-        // Handle selection style
-        document
-          .querySelectorAll(".tree-item")
-          .forEach((i) => i.classList.remove("selected"));
-        target.classList.add("selected");
-
-        this.selectedObjectId = nodeId;
-        this.showObjectControls(nodeType);
-      });
-    });
-  }
-
-  showObjectControls(objectType) {
-    // Hide all control sections first
-    document
-      .querySelectorAll(".object-properties .control-section")
-      .forEach((section) => {
-        section.classList.remove("active");
-      });
-
-    // Show the relevant control section
-    const controlSection = document.getElementById(`${objectType}-controls`);
-    if (controlSection) {
-      controlSection.classList.add("active");
-    } else {
-      // Show default if no specific control found
-      document.getElementById("default-controls").classList.add("active");
-    }
-  }
-
   // 初始化Ray Cluster管理器
   initRayClusterManager() {
     try {
@@ -1703,15 +1792,38 @@ class DashboardManager {
   async changeView() {
     try {
       if (window.ueApiManager) {
+        // 诊断：记录对象路径信息
+        console.warn('🎬 尝试调用 changeView()');
+        console.log('📍 当前使用的 levelScriptActorPath:', window.ueApiManager.levelScriptActorPath);
+        
         const result = await window.ueApiManager.changeView();
-        if (result.success) {
-          this.logToConsole('视角已切换', 'success');
+        console.log('📝 API 返回结果:', result);
+        
+        // 检查是否成功（success === true）
+        if (result && result.success === true) {
+          this.logToConsole('✅ 视角已切换！', 'success');
+          console.log('🎯 视角切换成功，UE 程序已收到命令');
+        } else if (result && result.error) {
+          // 对象不存在 - 显示有用的错误信息
+          if (result.error.includes('does not exist')) {
+            this.logToConsole('⚠️ 错误：对象路径在当前 UE 程序中不存在。请检查 UE 版本或蓝图配置。', 'warning');
+            console.error('对象路径错误:', result.error);
+          } else {
+            this.logToConsole(`❌ 视角切换失败: ${result.error}`, 'error');
+            console.error('详细错误:', result.error);
+          }
+        } else {
+          // 未预期的响应格式
+          this.logToConsole('⚠️ 视角切换：收到意外的响应格式', 'warning');
+          console.warn('意外的响应:', result);
         }
       } else {
-        this.logToConsole('视角切换 (模拟)', 'info');
+        this.logToConsole('ℹ️ 视角切换 (模拟 - UE API 未初始化)', 'info');
+        console.warn('⚠️ window.ueApiManager 未初始化，无法调用实际的 UE API');
       }
     } catch (error) {
-      this.logToConsole(`视角切换失败: ${error.message}`, 'error');
+      this.logToConsole(`❌ 视角切换异常: ${error.message}`, 'error');
+      console.error('异常详情:', error);
     }
   }
 
@@ -1750,22 +1862,6 @@ class DashboardManager {
       }
     } catch (error) {
       this.logToConsole(`设置位置失败: ${error.message}`, 'error');
-    }
-  }
-
-  // 开始无人机飞行
-  async startDroneFlight() {
-    try {
-      if (window.ueApiManager) {
-        const result = await window.ueApiManager.triggerDroneAction();
-        if (result.success) {
-          this.logToConsole('无人机开始飞行', 'success');
-        }
-      } else {
-        this.logToConsole('无人机开始飞行 (模拟)', 'info');
-      }
-    } catch (error) {
-      this.logToConsole(`飞行启动失败: ${error.message}`, 'error');
     }
   }
 
@@ -1879,22 +1975,78 @@ class DashboardManager {
     }
   }
 
-  // 设置 Jet 节点指示灯颜色
-  setJetIndicators(color) {
+  // 设置 Jet 节点指示灯颜色和状态（增强版本）
+  setJetIndicators(colorOrState, additionalInfo = null) {
+    // Jet1/2/3 对应基站灯 0/1/2
+    const jetToLightMap = { 'jet1': 0, 'jet2': 1, 'jet3': 2 };
+    
+    // 状态映射到颜色和说明
+    const stateMapping = {
+      'initializing': { color: 'green', label: '绿色(正常)', ueColor: 1 },
+      'local_processing': { color: 'yellow', label: '黄色(本地处理中)', ueColor: 2 },
+      'cloud_processing': { color: 'yellow', label: '黄色(云端处理中)', ueColor: 2 },
+      'completed': { color: 'green', label: '绿色(完成)', ueColor: 1 },
+      'error': { color: 'red', label: '红色(错误)', ueColor: 0 },
+      // 向后兼容: 直接颜色名称
+      'red': { color: 'red', label: '红色(错误)', ueColor: 0 },
+      'yellow': { color: 'yellow', label: '黄色(处理中)', ueColor: 2 },
+      'green': { color: 'green', label: '绿色(正常)', ueColor: 1 }
+    };
+    
+    // 获取映射信息
+    const stateInfo = stateMapping[colorOrState];
+    if (!stateInfo) {
+      console.error(`Unknown state/color: ${colorOrState}`);
+      return;
+    }
+    
+    const { color, label, ueColor } = stateInfo;
+    const timestamp = new Date().toLocaleTimeString('zh-CN');
+    
+    // 更新指示灯
     ['jet1', 'jet2', 'jet3'].forEach(jet => {
+      // 更新前端指示灯
       const indicator = document.querySelector(`#${jet}-indicator .indicator-light`);
       if (indicator) {
         indicator.className = `indicator-light ${color}`;
       }
+
+      // 同时控制 UE 内对应的基站灯
+      if (window.apiManager) {
+        const lightIndex = jetToLightMap[jet];
+        window.apiManager.changeBaseStationLight(lightIndex, ueColor).catch(err => {
+          console.log(`UE light ${lightIndex} control failed:`, err.message);
+        });
+      }
     });
 
-    // 同时调用 UE 灯光控制（如果可用）
-    if (window.ueApiManager) {
-      const colorCode = color === 'red' ? 0 : (color === 'yellow' ? 2 : 1);
-      window.ueApiManager.changeBaseStationLight(0, colorCode).catch(err => {
-        console.log('UE light control not available:', err.message);
-      });
+    // 生成日志消息
+    let logMessage = `[${timestamp}] 基站指示灯已切换为: ${label}`;
+    if (additionalInfo) {
+      logMessage += ` - ${additionalInfo}`;
     }
+    
+    // 根据状态类型决定日志级别
+    let logLevel = 'info';
+    if (colorOrState.includes('error')) {
+      logLevel = 'error';
+    } else if (colorOrState.includes('processing')) {
+      logLevel = 'warning';
+    } else if (colorOrState === 'completed') {
+      logLevel = 'success';
+    }
+    
+    this.addDetectionLog(logMessage, logLevel);
+    
+    // 记录状态转换到内部追踪
+    if (!this.detectionStateHistory) {
+      this.detectionStateHistory = [];
+    }
+    this.detectionStateHistory.push({
+      state: colorOrState,
+      timestamp: timestamp,
+      info: additionalInfo
+    });
   }
 
   // 添加检测日志
@@ -1964,6 +2116,117 @@ class DashboardManager {
         if (gpuVal) gpuVal.textContent = `${Math.round(gpu)}%`;
       });
     }, 2000);
+  }
+
+  // 【核心】启动无人机飞行状态实时监控
+  startDroneFlightMonitoring() {
+    if (this.flightStatusCheckInterval) {
+      console.log('⚠️ Flight monitoring already running');
+      return;
+    }
+
+    console.log('🎯 Starting drone flight status monitoring...');
+    this.logToConsole('Starting drone flight monitoring', 'info');
+
+    // 每 500ms 检查一次飞行状态
+    this.flightStatusCheckInterval = setInterval(async () => {
+      try {
+        if (window.apiManager) {
+          const result = await window.apiManager.isUAVFlying();
+          
+          if (result.success) {
+            const nowFlying = result.isFlying;
+            
+            // 状态变化时触发事件
+            if (nowFlying && !this.isDroneFlying) {
+              this.isDroneFlying = true;
+              console.log('✈️ DRONE FLIGHT STARTED');
+              this.logToConsole('✈️ Drone flight started', 'success');
+              this.broadcastFlightEvent('started', result);
+            } else if (!nowFlying && this.isDroneFlying) {
+              this.isDroneFlying = false;
+              console.log('🛑 DRONE FLIGHT STOPPED');
+              this.logToConsole('🛑 Drone flight stopped', 'info');
+              this.broadcastFlightEvent('stopped', result);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error checking flight status:', error);
+      }
+    }, 500); // 检查间隔：500ms
+  }
+
+  // 停止飞行状态监控
+  stopDroneFlightMonitoring() {
+    if (this.flightStatusCheckInterval) {
+      clearInterval(this.flightStatusCheckInterval);
+      this.flightStatusCheckInterval = null;
+      console.log('🎯 Flight monitoring stopped');
+      this.logToConsole('Flight monitoring stopped', 'info');
+    }
+  }
+
+  // 广播飞行事件（可发送至 WebSocket、Electron 应用等）
+  broadcastFlightEvent(eventType, data = {}) {
+    // 事件 1: 发送至全局窗口事件
+    const event = new CustomEvent(`drone:flight:${eventType}`, {
+      detail: {
+        type: eventType,
+        timestamp: Date.now(),
+        data: data
+      }
+    });
+    window.dispatchEvent(event);
+
+    // 事件 2: 如果有 WebSocket 连接，发送远程事件
+    if (window.wsManager) {
+      try {
+        window.wsManager.send({
+          type: 'drone:flight:event',
+          event: eventType,
+          data: data,
+          timestamp: Date.now()
+        });
+      } catch (error) {
+        console.warn('Failed to send WebSocket event:', error);
+      }
+    }
+
+    // 事件 3: 显示通知
+    this.showFlightNotification(eventType);
+  }
+
+  // 显示飞行状态通知
+  showFlightNotification(eventType) {
+    const message = eventType === 'started' 
+      ? '🚁 无人机开始飞行' 
+      : '🛬 无人机停止飞行';
+    
+    this.logToConsole(message, eventType === 'started' ? 'success' : 'info');
+
+    // 可选: 添加页面通知
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: ${eventType === 'started' ? '#10b981' : '#f97316'};
+      color: white;
+      padding: 15px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 10000;
+      font-weight: 600;
+      animation: slideIn 0.3s ease-out;
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+      notification.style.animation = 'slideOut 0.3s ease-out';
+      setTimeout(() => notification.remove(), 300);
+    }, 3000);
   }
 
   delay(ms) {
