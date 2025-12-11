@@ -1,0 +1,792 @@
+' ============================================
+' DRONE ON CAMPUS - SYSTEM ARCHITECTURE
+' PlantUML Diagrams
+' ============================================
+
+@startuml System_Overview
+!include <C4/C4_Container>
+!define AWSPUML https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v14.0/dist
+!include AWSPUML/ApplicationIntegration/APIGateway.puml
+!include AWSPUML/Compute/EC2.puml
+!include AWSPUML/Database/DynamoDB.puml
+
+title System Architecture Overview - Drone on Campus
+
+System_Boundary(c1, "Client Layer") {
+    Container(web_dashboard, "Dashboard", "Web Browser", "React/Vue Frontend UI")
+    Container(electron_app, "Electron App", "Windows Desktop", "Pixel Stream Receiver")
+    Container(cli_tools, "CLI Tools", "Command Line", "System Control Scripts")
+}
+
+System_Boundary(c2, "API & Services Layer") {
+    Container(api_server, "API Server", "Node.js:8000", "REST API & Business Logic")
+    Container(file_server, "File Server", "Node.js:8081", "Static Files & Transfers")
+    Container(notification, "Notification Manager", "Node.js", "Alert & WebSocket Service")
+}
+
+System_Boundary(c3, "Simulation & Streaming") {
+    Container(ue5_app, "UE5 Program", "Unreal Engine 5", "Drone Simulation & Pixel Streaming")
+    Container(pixel_stream, "Pixel Streaming Server", "HTTP:80", "Video Encoder & WebRTC")
+}
+
+System_Boundary(c4, "Distributed Computing") {
+    Container(ray_cluster, "Ray Cluster", "Distributed Computing", "Task Execution & Data Processing")
+    Container(ray_storage, "Ray Object Store", "Distributed Storage", "Shared Memory & Caching")
+}
+
+System_Boundary(c5, "Data & Storage") {
+    Container(file_storage, "File Storage", "Local Filesystem", "Upload/Download Repository")
+    Container(config_db, "Configuration", "JSON Files", "System Settings")
+    Container(logs, "Logging System", "File System", "Error & Audit Logs")
+}
+
+' Relationships
+web_dashboard --> api_server : HTTP/REST
+web_dashboard --> file_server : HTTP
+electron_app --> api_server : Polling (500ms)
+electron_app --> pixel_stream : WebRTC Stream
+cli_tools --> api_server : HTTP/Shell Scripts
+
+api_server --> ue5_app : Remote Control (Port:30010)
+api_server --> file_storage : Upload/Download
+api_server --> notification : Event Emit
+api_server --> ray_cluster : Task Submit
+api_server --> logs : Log Events
+api_server --> config_db : Read Config
+
+notification --> web_dashboard : WebSocket Push
+notification --> electron_app : IPC Events
+notification --> logs : Alert Log
+
+ue5_app --> pixel_stream : Video Frames
+ue5_app --> api_server : Status Updates
+
+ray_cluster --> ray_storage : Data Access
+ray_cluster --> logs : Job Logs
+
+@enduml
+
+
+@startuml Component_Architecture
+!define COMP_COLOR #E1F5FE
+
+title Component Architecture - Detailed View
+
+package "Frontend Layer" {
+    component [Dashboard UI] as dashboard
+    component [Electron Renderer] as electron_renderer
+    database "Local Config" as local_config
+}
+
+package "API Server Layer" {
+    component [Express Server] as express
+    component [API Manager] as api_mgr
+    component [UE API Manager] as ue_api_mgr
+    component [File Transfer Manager] as file_mgr
+    component [Station Manager] as station_mgr
+    component [Ray Cluster Manager] as ray_mgr
+    component [Notification Manager] as notif_mgr
+}
+
+package "UE5 Simulation" {
+    component [Drone Actor] as drone_actor
+    component [Level Blueprint] as level_bp
+    component [Lighting System] as lighting
+    component [Pixel Streaming] as pixel_stream
+}
+
+package "Storage & Data" {
+    database "File Repository" as file_repo
+    database "System Config" as sys_config
+    database "Logs & Metrics" as logs_db
+}
+
+package "Distributed Computing" {
+    component [Ray Head Node] as ray_head
+    component [Ray Workers] as ray_workers
+    component [Task Scheduler] as task_sched
+}
+
+' Connections
+dashboard -.-> api_mgr : REST API
+dashboard --> local_config : Read/Write
+electron_renderer -.-> api_mgr : Polling
+electron_renderer --> pixel_stream : Display Stream
+
+express --> api_mgr
+express --> ue_api_mgr
+express --> file_mgr
+express --> station_mgr
+express --> ray_mgr
+express --> notif_mgr
+
+api_mgr --> ue_api_mgr : Delegate
+ue_api_mgr --> drone_actor : Remote Call
+ue_api_mgr --> level_bp : Object Access
+
+file_mgr --> file_repo : CRUD
+station_mgr --> lighting : Control
+ray_mgr --> ray_head : Submit Jobs
+ray_mgr --> logs_db : Log
+
+notif_mgr --> dashboard : WebSocket
+notif_mgr --> electron_renderer : IPC
+notif_mgr --> logs_db : Audit Log
+
+drone_actor --> pixel_stream : Render
+pixel_stream -.-> electron_renderer : Stream
+
+sys_config --> express : Load Config
+logs_db --> express : Append Logs
+
+@enduml
+
+
+@startuml Data_Flow_Flight_Start
+title Data Flow - Flight Start Sequence
+
+participant "User" as user
+participant "Dashboard" as dash
+participant "API Server" as api
+participant "Electron App" as electron
+participant "UE5 Program" as ue5
+participant "Pixel Stream" as stream
+
+user -> dash : Click "Start Flight"
+activate dash
+
+dash -> api : PUT /api/drone/status\n{isFlying: true}
+activate api
+api -> api : Update internal state
+api --> dash : HTTP 200 OK
+deactivate api
+
+dash -> ue5 : POST /remote/object/call\nfunction: "Fly"
+activate ue5
+ue5 -> ue5 : Execute Fly() Blueprint
+ue5 --> api : Status Update
+ue5 --> dash : Response
+deactivate ue5
+
+electron -> api : GET /api/drone/status\n(every 500ms)
+note right of electron
+  Polling for status changes
+end note
+activate api
+api --> electron : {isFlying: true}
+deactivate api
+
+electron -> electron : Detect state change
+electron -> stream : Load iframe\nhttp://10.30.2.11:80
+activate stream
+
+stream -> stream : Wait for user click
+electron -> stream : Auto-click start button\n(simulated)
+
+stream -> stream : Begin video encoding
+stream --> electron : Video stream (WebRTC)
+deactivate stream
+
+electron -> electron : Display in window
+deactivate electron
+
+deactivate dash
+
+@enduml
+
+
+@startuml Error_Alert_Flow
+title Error & Alert Detection Flow
+
+participant "System Component" as component
+participant "Error Detector" as detector
+participant "Alert Manager" as manager
+participant "Dashboard" as dashboard
+participant "Electron App" as electron
+participant "Log System" as logs
+
+component -> detector : Error/Event Occurs
+activate detector
+
+alt Severity == CRITICAL
+    detector -> manager : Create CRITICAL Alert
+    manager -> logs : Log Alert
+    manager -> dashboard : WebSocket Push (Red)
+    manager -> electron : IPC Alert
+    manager -> manager : Email Notification
+    manager -> detector : Set Recovery Mode
+else Severity == WARNING
+    detector -> manager : Create WARNING Alert
+    manager -> logs : Log Alert
+    manager -> dashboard : WebSocket Push (Yellow)
+    manager -> electron : IPC Alert
+else Severity == INFO
+    detector -> manager : Create INFO Alert
+    manager -> logs : Log Alert
+    manager -> dashboard : WebSocket Push (Blue)
+end
+
+deactivate detector
+
+dashboard -> manager : User Acknowledge
+manager -> logs : Record Acknowledgement
+manager -> manager : Update Status
+
+@enduml
+
+
+@startuml File_Transfer_Flow
+title File Transfer Architecture
+
+actor "User" as user
+participant "Client App" as client
+participant "API Server" as server
+participant "Storage Backend" as storage
+
+user -> client : Select File
+activate client
+client -> client : Validate File
+client -> client : Calculate Checksum
+client -> client : Split into Chunks\n(5MB each)
+
+loop For each chunk
+    client -> server : POST /api/files/upload\nchunk data + checksum
+    activate server
+    server -> server : Validate chunk
+    server -> server : Store in temp location
+    server -> storage : Write chunk
+    activate storage
+    storage --> server : Chunk stored
+    deactivate storage
+    server -> server : Verify checksum
+    server --> client : HTTP 200 + progress
+    deactivate server
+end
+
+client -> server : POST /api/files/upload/finalize
+activate server
+server -> server : Reassemble chunks
+server -> server : Final verification
+server -> storage : Move to permanent location
+storage --> server : Success
+server -> server : Update database
+server --> client : HTTP 200 + file_id
+deactivate server
+
+client -> client : Display success
+deactivate client
+
+note right of storage
+  Concurrent downloads supported
+  Resume from failed uploads
+  Bandwidth throttling available
+end note
+
+@enduml
+
+
+@startuml UE5_Remote_Control_API
+title UE5 Remote Control API Architecture
+
+rectangle "UE5 Program" {
+    component [Remote Control API\n(Port:30010)] as rc_api
+    component [Actor Lookup] as actor_lookup
+    component [Level Blueprint] as level_bp
+    component [Drone Actor] as drone
+    component [Camera Manager] as camera
+    component [Light Manager] as lights
+}
+
+package "Available Objects" {
+    component [NewMap_C_2] as map_obj
+    component [Drone_Pawn] as drone_pawn
+    component [LightActor_1..N] as light_actors
+}
+
+package "Callable Functions" {
+    frame "Drone Control" {
+        component [Fly()] as fn_fly
+        component [Land()] as fn_land
+        component [SetLocation(x,y,z)] as fn_set_loc
+    }
+    frame "View Control" {
+        component [ChangeView()] as fn_view
+        component [SetCameraPosition(x,y,z)] as fn_set_cam
+    }
+    frame "Station Control" {
+        component [SetLightColor(r,g,b)] as fn_light_color
+        component [SetLightIntensity(val)] as fn_light_intensity
+    }
+}
+
+package "Request Format" {
+    card "HTTP POST" {
+        card "/remote/object/call" {
+            card "Headers:\nContent-Type: application/json" as headers
+            card "Body:\n{\n  objectPath: \"/Game/Map.Map:Level.Actor_C\",\n  functionName: \"FunctionName\",\n  parameters: {...}\n}" as body
+        }
+    }
+}
+
+rc_api --> actor_lookup
+actor_lookup --> map_obj
+map_obj --> level_bp
+level_bp --> drone
+level_bp --> camera
+level_bp --> lights
+
+drone --> fn_fly
+drone --> fn_land
+drone --> fn_set_loc
+camera --> fn_view
+camera --> fn_set_cam
+lights --> fn_light_color
+lights --> fn_light_intensity
+
+headers -down-> rc_api
+body -down-> rc_api
+
+@enduml
+
+
+@startuml Ray_Cluster_Integration
+title Ray Cluster Integration Architecture
+
+package "Ray Cluster" {
+    component [Head Node] as head
+    component [Dashboard UI] as ray_dash
+    component [Object Store] as obj_store
+    
+    package "Worker Nodes" {
+        component [Worker 1] as worker1
+        component [Worker 2] as worker2
+        component [Worker N] as workern
+    }
+    
+    package "Distributed Services" {
+        component [Actor Manager] as actor_mgr
+        component [Task Scheduler] as task_sched
+        component [Job Monitor] as job_monitor
+    }
+}
+
+package "Application Integration" {
+    component [Ray Cluster Manager\n(dashboard-manager.js)] as app_mgr
+    component [Remote Function\nSubmitter] as func_submit
+}
+
+package "Data Processing" {
+    component [Data Pipeline] as pipeline
+    component [ML Model Inference] as ml_model
+    component [Analytics Engine] as analytics
+}
+
+head --> obj_store
+head --> task_sched
+head --> actor_mgr
+head --> ray_dash
+
+task_sched --> worker1
+task_sched --> worker2
+task_sched --> workern
+
+actor_mgr --> worker1
+actor_mgr --> worker2
+actor_mgr --> workern
+
+app_mgr -.-> func_submit
+func_submit --> head
+func_submit --> task_sched
+
+pipeline --> obj_store
+ml_model --> obj_store
+analytics --> obj_store
+
+worker1 --> pipeline
+worker2 --> ml_model
+workern --> analytics
+
+@enduml
+
+
+@startuml System_States_And_Transitions
+title System State Machine - Drone Flight Control
+
+state SystemStates {
+    state Idle {
+        entry / API: isFlying = false
+        exit / Prepare resources
+    }
+    
+    state TakingOff {
+        entry / Call UE5 Fly()
+        entry / Start visual indicators
+    }
+    
+    state Flying {
+        entry / Update position tracking
+        entry / Start pixel stream
+        entry / Enable position control
+    }
+    
+    state Landing {
+        entry / Call UE5 Land()
+        entry / Disable position control
+    }
+    
+    state Error {
+        entry / Log error
+        entry / Notify user
+        entry / Highlight alert
+    }
+}
+
+[*] --> Idle
+
+Idle --> TakingOff : User clicks\n"Start Flight"\n(API: isFlying=true)
+
+TakingOff --> Flying : Altitude reached\nAPI status updated
+
+Flying --> Landing : User clicks\n"Land" OR\nAuto-land triggered
+
+Flying --> Error : Connection lost\nOR\nObject not found
+
+Landing --> Idle : Landed\n(API: isFlying=false)
+
+Error --> Idle : User clicks\n"Reset"\nOR\nAuto-recovery
+
+TakingOff --> Error : Takeoff failed
+Flying --> Flying : Position changed\n(via control)
+
+note right of Flying
+  - Electron polling active (500ms)
+  - Pixel stream active
+  - User controls enabled
+end note
+
+@enduml
+
+
+@startuml Electron_App_Architecture
+title Electron Application - IPC & Process Architecture
+
+package "Main Process" {
+    component [main.js] as main_js
+    component [Drone Monitor] as drone_monitor
+    component [Stream Manager] as stream_mgr
+    component [IPC Handler] as ipc_handler
+}
+
+package "Renderer Process" {
+    component [renderer.js] as renderer_js
+    component [StreamUI Class] as stream_ui
+    component [HTML\n(index.html)] as html
+}
+
+package "Preload Script" {
+    component [preload.js] as preload_js
+}
+
+package "External APIs" {
+    component [Dashboard API\n(10.30.2.11:8000)] as api
+    component [Pixel Stream\n(10.30.2.11:80)] as pixel_api
+}
+
+drone_monitor --> api : GET /api/drone/status\n(every 500ms)
+drone_monitor --> main_js : Emit flight:started\nevent
+
+main_js --> ipc_handler
+ipc_handler --> renderer_js : IPC: stream:status
+
+renderer_js --> stream_ui
+stream_ui --> html
+stream_ui --> pixel_api : Load iframe
+
+preload_js -.-> html : Expose API
+preload_js -.-> renderer_js : Context bridge
+
+stream_mgr --> pixel_api
+main_js --> stream_mgr
+
+note right of drone_monitor
+  Monitors isFlying status
+  Auto-detects flight start
+  Triggers stream activation
+end note
+
+note right of stream_ui
+  startDisplayingStream():
+  - Create iframe
+  - Load pixel stream
+  - Auto-click "Start" button
+end note
+
+@enduml
+
+
+@startuml Notification_System
+title Alert & Notification System Architecture
+
+package "Detection Layer" {
+    component [API Health Check] as check_api
+    component [UE5 Connector] as check_ue5
+    component [File Transfer Monitor] as check_file
+    component [Ray Cluster Monitor] as check_ray
+    component [Station Component Monitor] as check_station
+}
+
+package "Alert Manager" {
+    component [Error Classifier] as classifier
+    component [Severity Determiner] as severity
+    component [Alert Generator] as alert_gen
+}
+
+package "Notification Channels" {
+    component [WebSocket Publisher] as websocket
+    component [IPC Sender] as ipc_sender
+    component [Email Service] as email
+    component [Log Writer] as log_writer
+    component [Sound Alert] as sound
+}
+
+package "Target Receivers" {
+    component [Dashboard] as dash_recv
+    component [Electron App] as electron_recv
+    component [User Email] as user_email
+    component [Log Files] as log_files
+    component [System Speaker] as speaker
+}
+
+check_api --> classifier
+check_ue5 --> classifier
+check_file --> classifier
+check_ray --> classifier
+check_station --> classifier
+
+classifier --> severity
+
+alt severity == CRITICAL
+    severity --> alert_gen : Red Alert
+    alert_gen --> websocket
+    alert_gen --> ipc_sender
+    alert_gen --> email
+    alert_gen --> log_writer
+    alert_gen --> sound
+else severity == WARNING
+    severity --> alert_gen : Yellow Alert
+    alert_gen --> websocket
+    alert_gen --> ipc_sender
+    alert_gen --> log_writer
+else severity == INFO
+    severity --> alert_gen : Blue Alert
+    alert_gen --> websocket
+    alert_gen --> log_writer
+end
+
+websocket --> dash_recv
+ipc_sender --> electron_recv
+email --> user_email
+log_writer --> log_files
+sound --> speaker
+
+@enduml
+
+
+@startuml Performance_Monitoring
+title System Performance Metrics & Monitoring
+
+card "Dashboard API" {
+    card "Response Time" {
+        card "Target: < 100ms (p95)"
+        card "Actual: Measured"
+    }
+    card "Throughput" {
+        card "Requests/sec"
+        card "Concurrent users"
+    }
+}
+
+card "Pixel Streaming" {
+    card "Latency" {
+        card "Target: 100-200ms"
+        card "Bandwidth: Adaptive"
+    }
+    card "Quality" {
+        card "Resolution: 1920x1080"
+        card "FPS: 30-60"
+    }
+}
+
+card "Electron App" {
+    card "Polling" {
+        card "Interval: 500ms"
+        card "CPU usage: < 5%"
+    }
+    card "Memory" {
+        card "Initial: ~150MB"
+        card "Peak: ~300MB"
+    }
+}
+
+card "File Transfer" {
+    card "Speed" {
+        card "Network dependent"
+        card "Resume capability"
+    }
+    card "Reliability" {
+        card "Checksum verification"
+        card "Retry mechanism"
+    }
+}
+
+card "Ray Cluster" {
+    card "Task Execution" {
+        card "Queue latency: < 100ms"
+        card "Worker utilization: 80-95%"
+    }
+    card "Storage" {
+        card "Object store: < 1s access"
+        card "Network: Optimized"
+    }
+}
+
+card "System Health" {
+    card "Error Rate" {
+        card "Target: < 0.1%"
+        card "Alert threshold: 1%"
+    }
+    card "Availability" {
+        card "Target: 99.5%"
+        card "SLA: 99%"
+    }
+}
+
+@enduml
+
+
+@startuml Network_Topology
+!define SUBNETCOLOR #E3F2FD
+
+rectangle "Campus Network" #FFFFFF {
+    rectangle SUBNETCOLOR "Subnet 10.30.2.0/24" {
+        node "Linux Server\n10.30.2.11" as linux_server {
+            component "Dashboard\nFrontend (8081)" as dash_fe
+            component "API Server\n(8000)" as api_port
+            component "File Storage" as file_storage_node
+            component "Logging System" as logging_node
+        }
+        
+        node "UE5 Program\n10.30.2.11" as ue5_server {
+            component "Remote Control\nAPI (30010)" as ue5_api
+            component "Pixel Streaming\n(80)" as pixel_streaming
+        }
+        
+        node "Ray Cluster\n(Optional)" as ray_cluster_node {
+            component "Head Node\n(6379, 8265)" as ray_head
+            component "Worker Nodes" as ray_workers
+        }
+        
+        node "Windows Client\n10.30.2.XX" as windows_client {
+            component "Electron App" as electron
+            component "Web Browser" as browser
+        }
+        
+        node "Other Clients\n10.30.2.XX" as other_clients {
+            component "CLI Tools" as cli
+            component "Monitoring Tools" as mon_tools
+        }
+    }
+}
+
+linux_server "Port 8000" --> windows_client : HTTP/REST\nAPI Polling
+linux_server "Port 8081" --> browser : HTTP\nDashboard
+linux_server "Port 8000" --> electron : HTTP\nStatus Updates
+ue5_server "Port 30010" --> api_port : Remote API Calls
+ue5_server "Port 80" --> electron : WebRTC\nPixel Stream
+ue5_server "Port 80" --> windows_client : HTTP\nStream Page
+ray_cluster_node -.-> api_port : Task Submission
+linux_server -.-> ray_cluster_node : Cluster Access
+other_clients --> api_port : Management
+
+@enduml
+
+
+@startuml Deployment_Architecture
+title Deployment Architecture - Development to Production
+
+package "Development Environment" {
+    node "Dev Linux Server" {
+        card "API Server (debug)" as dev_api
+        card "File Storage" as dev_storage
+        card "Hot Reload Enabled" as dev_reload
+    }
+    node "UE5 Instance (debug)" {
+        card "Pixel Streaming" as dev_stream
+        card "Logs Output" as dev_logs
+    }
+}
+
+package "Staging Environment" {
+    node "Staging Server" {
+        card "API Server (release)" as stage_api
+        card "Load Balancer" as stage_lb
+        card "Health Check" as stage_health
+    }
+    node "UE5 Instance (packaged)" {
+        card "Optimized Streaming" as stage_stream
+        card "Performance Monitoring" as stage_perf
+    }
+}
+
+package "Production Environment" {
+    node "Production Cluster" {
+        card "API Server 1" as prod_api1
+        card "API Server 2" as prod_api2
+        card "Load Balancer" as prod_lb
+        card "Database Replication" as prod_db
+    }
+    node "UE5 Instances (Redundant)" {
+        card "Primary Streaming" as prod_stream1
+        card "Failover Streaming" as prod_stream2
+        card "Auto-scaling" as prod_scale
+    }
+    node "Ray Cluster" {
+        card "3x Head Nodes (HA)" as prod_ray_head
+        card "10+ Worker Nodes" as prod_ray_workers
+        card "Object Store (Distributed)" as prod_ray_store
+    }
+    node "Storage Backend" {
+        card "SSD Storage (RAID)" as prod_storage
+        card "Backup System" as prod_backup
+        card "Cloud Sync (S3)" as prod_cloud
+    }
+}
+
+dev_api -.-> stage_api : Deploy
+stage_api -.-> prod_api1
+stage_api -.-> prod_api2
+stage_lb --> prod_api1
+stage_lb --> prod_api2
+prod_api1 --> prod_db
+prod_api2 --> prod_db
+
+dev_stream -.-> stage_stream : Deploy
+stage_stream -.-> prod_stream1
+stage_stream -.-> prod_stream2
+
+dev_reload -.-> stage_health
+stage_health -.-> prod_scale
+
+note bottom of prod_api1
+  High Availability Setup:
+  - Active-Active Load Balancing
+  - Database Replication
+  - Automatic Failover
+  - Health Checks Every 10s
+end note
+
+@enduml
+
+' ============================================
+' END OF ARCHITECTURE DIAGRAMS
+' ============================================
