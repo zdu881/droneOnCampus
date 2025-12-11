@@ -1,0 +1,405 @@
+' ============================================
+' DRONE ON CAMPUS - SYSTEM ARCHITECTURE (FIXED)
+' PlantUML Diagrams - Compatible Version
+' ============================================
+
+@startuml System_Overview
+!theme plain
+skinparam backgroundColor #FEFEFE
+
+title System Architecture Overview - Drone on Campus
+
+package "Client Layer" {
+  interface Dashboard
+  interface "Electron App"
+  interface "CLI Tools"
+}
+
+package "API & Services" {
+  interface "API Server\n:8000"
+  interface "File Server\n:8081"
+  interface "Notification"
+}
+
+package "Simulation & Streaming" {
+  interface "UE5 Program"
+  interface "Pixel Stream\n:80"
+}
+
+package "Computing" {
+  interface "Ray Cluster"
+  interface "Object Store"
+}
+
+package "Storage" {
+  database "Files"
+  database "Config"
+  database "Logs"
+}
+
+Dashboard -.-> "API Server\n:8000" : HTTP
+"Electron App" -.-> "API Server\n:8000" : Poll 500ms
+"Electron App" -.-> "Pixel Stream\n:80" : WebRTC
+"API Server\n:8000" -.-> "UE5 Program" : Port 30010
+"API Server\n:8000" --> "Notification"
+"Notification" -.-> Dashboard
+"Notification" -.-> "Electron App"
+"UE5 Program" --> "Pixel Stream\n:80"
+"API Server\n:8000" --> Files
+"API Server\n:8000" --> Config
+"API Server\n:8000" --> Logs
+
+@enduml
+
+
+@startuml Data_Flow_Flight_Start
+title Flight Start Sequence
+
+participant User
+participant Dashboard
+participant "API Server"
+participant Electron
+participant "UE5 Program"
+participant "Pixel Stream"
+
+User -> Dashboard: Click "Start Flight"
+Dashboard -> "API Server": PUT /api/drone/status
+note right: {isFlying: true}
+"API Server" --> Dashboard: HTTP 200
+
+Dashboard -> "UE5 Program": POST /remote/object/call
+note right: function: "Fly"
+"UE5 Program" -> "UE5 Program": Execute Fly()
+
+Electron -> "API Server": GET /api/drone/status
+note right: Every 500ms
+"API Server" --> Electron: {isFlying: true}
+
+Electron -> "Pixel Stream": Load iframe
+"Pixel Stream" -> "Pixel Stream": Auto-click start
+"Pixel Stream" --> Electron: Video Stream (WebRTC)
+Electron -> Electron: Display in window
+
+@enduml
+
+
+@startuml Error_Alert_Flow
+title Error & Alert Detection & Notification
+
+participant "System"
+participant "Detector"
+participant "Manager"
+participant Dashboard
+participant Electron
+participant Logs
+
+System -> Detector: Error Occurs
+Detector -> Manager: Create Alert
+
+alt Severity == CRITICAL
+  Manager -> Logs: Log Alert
+  Manager -> Dashboard: WebSocket (Red)
+  Manager -> Electron: IPC Alert
+  Manager -> Manager: Email Notification
+else Severity == WARNING
+  Manager -> Logs: Log Alert
+  Manager -> Dashboard: WebSocket (Yellow)
+else Severity == INFO
+  Manager -> Logs: Log Alert
+  Manager -> Dashboard: WebSocket (Blue)
+end
+
+@enduml
+
+
+@startuml File_Transfer_Flow
+title File Transfer Process
+
+participant User
+participant Client
+participant Server
+participant Storage
+
+User -> Client: Select File
+Client -> Client: Validate\nChecksum\nChunk (5MB)
+
+loop For each chunk
+  Client -> Server: POST /upload
+  Server -> Storage: Write chunk
+  Storage --> Server: OK
+  Server --> Client: Progress
+end
+
+Client -> Server: POST /finalize
+Server -> Server: Reassemble\nVerify
+Server -> Storage: Move to permanent
+Storage --> Server: Success
+Server --> Client: file_id
+
+@enduml
+
+
+@startuml UE5_Remote_API
+title UE5 Remote Control API
+
+package "UE5 Program" {
+  interface "Remote API\n:30010"
+  interface "Actor Lookup"
+  interface "Level Blueprint"
+  interface "Drone Actor"
+}
+
+package "Functions" {
+  interface "Fly()"
+  interface "Land()"
+  interface "SetLocation(x,y,z)"
+  interface "ChangeView()"
+}
+
+"Remote API\n:30010" --> "Actor Lookup"
+"Actor Lookup" --> "Level Blueprint"
+"Level Blueprint" --> "Drone Actor"
+"Drone Actor" --> "Fly()"
+"Drone Actor" --> "Land()"
+"Drone Actor" --> "SetLocation(x,y,z)"
+"Drone Actor" --> "ChangeView()"
+
+@enduml
+
+
+@startuml Ray_Cluster_Integration
+title Ray Cluster Architecture
+
+package "Ray Cluster" {
+  interface "Head Node"
+  interface "Worker 1"
+  interface "Worker 2"
+  interface "Worker N"
+  database "Object Store"
+}
+
+package "Application" {
+  interface "Cluster Manager"
+  interface "Task Submitter"
+}
+
+"Cluster Manager" --> "Head Node"
+"Task Submitter" --> "Head Node"
+"Head Node" --> "Worker 1"
+"Head Node" --> "Worker 2"
+"Head Node" --> "Worker N"
+"Worker 1" --> "Object Store"
+"Worker 2" --> "Object Store"
+
+@enduml
+
+
+@startuml System_State_Machine
+title Drone Flight Control - State Machine
+
+[*] --> Idle
+
+Idle --> TakingOff: User clicks\n"Start Flight"\nAPI: isFlying=true
+
+TakingOff --> Flying: Altitude reached\nAPI updated
+
+Flying --> Landing: User clicks "Land"\nOR Auto-land
+
+Flying --> Error: Connection lost\nOR Error
+
+Landing --> Idle: Landed\nAPI: isFlying=false
+
+Error --> Idle: Reset OR\nAuto-recovery
+
+TakingOff --> Error: Takeoff failed
+
+Flying --> Flying: Position changed
+
+@enduml
+
+
+@startuml Electron_App_IPC
+title Electron Application Architecture
+
+package "Main Process" {
+  interface "main.js"
+  interface "Drone Monitor"
+  interface "Stream Manager"
+}
+
+package "Renderer Process" {
+  interface "renderer.js"
+  interface "StreamUI"
+  interface "index.html"
+}
+
+package "External APIs" {
+  interface "Dashboard API\n:8000"
+  interface "Pixel Stream\n:80"
+}
+
+"Drone Monitor" --> "Dashboard API\n:8000": GET /status (500ms)
+"Drone Monitor" --> "main.js": flight:started event
+"main.js" --> "renderer.js": IPC stream:status
+"renderer.js" --> "StreamUI"
+"StreamUI" --> "index.html"
+"StreamUI" --> "Pixel Stream\n:80": Load iframe
+
+@enduml
+
+
+@startuml Notification_System
+title Alert & Notification System
+
+package "Detection" {
+  interface "API Check"
+  interface "UE5 Check"
+  interface "File Check"
+  interface "Ray Check"
+}
+
+package "Processing" {
+  interface "Classifier"
+  interface "Severity"
+  interface "Alert Gen"
+}
+
+package "Channels" {
+  interface "WebSocket"
+  interface "IPC"
+  interface "Email"
+  interface "Logs"
+}
+
+"API Check" --> "Classifier"
+"UE5 Check" --> "Classifier"
+"File Check" --> "Classifier"
+"Ray Check" --> "Classifier"
+
+"Classifier" --> "Severity"
+"Severity" --> "Alert Gen"
+
+"Alert Gen" --> "WebSocket"
+"Alert Gen" --> "IPC"
+"Alert Gen" --> "Email"
+"Alert Gen" --> "Logs"
+
+@enduml
+
+
+@startuml Performance_Metrics
+title System Performance Targets
+
+card "API Server" {
+  note bottom
+    Response Time: < 100ms
+    Throughput: 100+ req/s
+  end note
+}
+
+card "Pixel Stream" {
+  note bottom
+    Latency: 100-200ms
+    Resolution: 1920x1080
+    FPS: 30-60
+  end note
+}
+
+card "Electron App" {
+  note bottom
+    Polling: 500ms
+    CPU: < 5%
+    Memory: 150-300MB
+  end note
+}
+
+card "File Transfer" {
+  note bottom
+    Speed: Network dependent
+    Resume: Enabled
+    Verification: MD5/SHA256
+  end note
+}
+
+card "Ray Cluster" {
+  note bottom
+    Task Latency: < 100ms
+    Worker Util: 80-95%
+    Store Access: < 1s
+  end note
+}
+
+@enduml
+
+
+@startuml Network_Topology
+title Campus Network Topology
+
+cloud "Network 10.30.2.0/24" {
+  node "Linux Server" {
+    database "API :8000"
+    database "Files :8081"
+    database "Storage"
+  }
+  
+  node "UE5 Program" {
+    database "Remote :30010"
+    database "Stream :80"
+  }
+  
+  node "Ray Cluster" {
+    database "Head Node"
+    database "Workers"
+  }
+  
+  node "Windows Client" {
+    interface "Electron App"
+    interface "Web Browser"
+  }
+}
+
+"Electron App" -.-> "API :8000": Polling
+"Electron App" -.-> "Stream :80": WebRTC
+"Web Browser" -.-> "Files :8081": HTTP
+"API :8000" -.-> "Remote :30010": Control
+
+@enduml
+
+
+@startuml Deployment_Stages
+title Deployment: Dev → Staging → Production
+
+package "Development" {
+  node "Dev Server" {
+    database "API (debug)"
+    database "Storage"
+    note right: Hot Reload
+  }
+}
+
+package "Staging" {
+  node "Stage Server" {
+    database "API (release)"
+    database "LB"
+    note right: Health Checks
+  }
+}
+
+package "Production" {
+  node "Prod Cluster" {
+    database "API 1"
+    database "API 2"
+    database "LB"
+    database "Replication"
+    note right: Active-Active\nHA Setup
+  }
+}
+
+"Dev Server" -.-> "Stage Server": Deploy
+"Stage Server" -.-> "Prod Cluster": Deploy
+
+@enduml
+
+' ============================================
+' END OF ARCHITECTURE DIAGRAMS (FIXED)
+' ============================================
